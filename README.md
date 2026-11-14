@@ -1,7 +1,7 @@
 # 🔥 PROJECT PYROS — NASA Fire Safety Intelligence Engine
 
 <p align="center">
-  <img src="https://img.shields.io/badge/NASA%20Space%20Apps-2025%20Challenge%20-blue?style=for-the-badge&logo=nasa" alt="NASA Space Apps 2026">
+  <img src="https://img.shields.io/badge/NASA%20Space%20Apps-2026%20Challenge%20-blue?style=for-the-badge&logo=nasa" alt="NASA Space Apps 2026">
   <img src="https://img.shields.io/badge/Production%20Live-pyros.earth-00d2ff?style=for-the-badge" alt="Production Live pyros.earth">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Tests-34%2F34%20PASS%20(100%25)-success?style=for-the-badge" alt="Tests 34/34 Pass">
