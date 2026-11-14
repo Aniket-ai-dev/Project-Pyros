@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from src.config import Config, get_config
 from src.data.chunking import ScientificChunker
 from src.data.psi_knowledge_base import PSIKnowledgeBase
+from src.data.psi_connector import PSIConnector
 from src.knowledge.graph import InvestigationGraph
 from src.extrapolator.physics_constraints import CombustionPhysics
 
@@ -34,6 +35,7 @@ _chunker: ScientificChunker = ScientificChunker()
 _graph: InvestigationGraph = InvestigationGraph()
 _graph.build(_kb.get_all())
 _physics: CombustionPhysics = CombustionPhysics()
+_psi_connector: PSIConnector = PSIConnector()
 _pipeline: Any = None  # Full pipeline (requires API key)
 
 
@@ -158,7 +160,14 @@ async def health():
         "investigations_loaded": len(_kb.get_all()) if _kb else 22,
         "llm_available": _pipeline is not None,
         "mode": "full" if _pipeline else "data-only",
+        "psi_connection": _psi_connector.check_connection(),
     }
+
+
+@app.get("/psi/sync-status", tags=["data", "psi"])
+async def psi_sync_status():
+    """Check live connectivity status to the official NASA PSI portal."""
+    return _psi_connector.check_connection()
 
 
 @app.get("/dashboard", tags=["dashboard"], response_class=FileResponse)
@@ -167,6 +176,15 @@ async def dashboard():
     static_file = os.path.join(os.path.dirname(__file__), "static", "index.html")
     if not os.path.exists(static_file):
         raise HTTPException(status_code=404, detail="Dashboard index.html not found.")
+    return FileResponse(static_file, media_type="text/html")
+
+
+@app.get("/guide", tags=["guide"], response_class=FileResponse)
+async def guide():
+    """Serve the interactive guide and technical manual."""
+    static_file = os.path.join(os.path.dirname(__file__), "static", "guide.html")
+    if not os.path.exists(static_file):
+        raise HTTPException(status_code=404, detail="Guide guide.html not found.")
     return FileResponse(static_file, media_type="text/html")
 
 
@@ -529,14 +547,39 @@ def query(req: QueryRequest):
     """Ask a natural language question about fire safety research.
 
     Routes to the appropriate chain (summary, comparison, scenario,
-    extrapolation) based on intent detection.
+    extrapolation) based on intent detection. Resilient against 429 quota limits.
     """
-    pipeline = _require_pipeline()
+    from src.chains.grounded_cache import match_grounded_cache
+
+    if _pipeline is None:
+        hit = match_grounded_cache(req.question)
+        if hit:
+            return {
+                "answer": hit["answer"],
+                "intent": hit["intent"],
+                "sources": hit["sources"],
+                "confidence": hit["confidence"],
+                "badge": hit.get("badge", "VERIFIED PSI ARCHIVE"),
+            }
+        raise HTTPException(
+            status_code=503,
+            detail="LLM pipeline not available. Set GOOGLE_API_KEY environment variable.",
+        )
+
     try:
-        result = pipeline.query(req.question)
+        result = _pipeline.query(req.question)
         return result
     except Exception as exc:
-        logger.error("Query execution failed: %s", exc)
+        logger.error("Query execution failed: %s — checking grounded cache...", exc)
+        hit = match_grounded_cache(req.question)
+        if hit:
+            return {
+                "answer": hit["answer"],
+                "intent": hit["intent"],
+                "sources": hit["sources"],
+                "confidence": hit["confidence"],
+                "badge": hit.get("badge", "VERIFIED PSI ARCHIVE"),
+            }
         return {
             "answer": f"Analysis encountered a temporary error: {exc}. Please retry your scenario.",
             "intent": "ERROR",

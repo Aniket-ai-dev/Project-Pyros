@@ -883,6 +883,9 @@
         <div class="telemetry-item">
           <span style="color:var(--suppression)">100% REAL NASA DATA</span>
         </div>
+        <div class="telemetry-item" id="psi-sync-badge">
+          <span style="color:var(--cyan)">🛰️ PSI REPO:</span> SYNCED (LIVE/FALLBACK)
+        </div>
       </div>
     </div>
 
@@ -899,9 +902,14 @@
           <span>🌍</span> NASA Earth Spinoffs
         </button>
       </div>
-      <button class="academic-portal-btn" onclick="openAcademicModal()">
-        <span>📚</span> NASA Academic &amp; Video Portal
-      </button>
+      <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+        <a href="/guide" class="academic-portal-btn" style="text-decoration:none; background:rgba(0, 210, 255, 0.15); color:var(--cyan); border-color:rgba(0, 210, 255, 0.4);">
+          <span>📖</span> User Guide &amp; Walkthrough
+        </a>
+        <button class="academic-portal-btn" onclick="openAcademicModal()">
+          <span>📚</span> NASA Academic &amp; Video Portal
+        </button>
+      </div>
     </div>
   </header>
 

@@ -74,6 +74,18 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertIn("closeAcademicModal", html)
         self.assertIn("W1oXykoz9zg", html)  # YouTube ScienceCasts embed
         self.assertIn("NASA Policy Notice", html)  # Mandatory NASA disclaimer
+        self.assertIn("/guide", html)  # Link to walkthrough guide
+
+    def test_guide_endpoint(self) -> None:
+        response = self.client.get("/guide")
+        self.assertEqual(response.status_code, 200)
+        html = response.text
+        self.assertIn("System User Guide", html)
+        self.assertIn("Module 1: The Combustion Science Challenge", html)
+        self.assertIn("Module 2: Dashboard Navigation &amp; Mission Modes", html)
+        self.assertIn("Module 3: Step-by-Step Analytical Workflow", html)
+        self.assertIn("/dashboard", html)
+
 
     def test_physics_bounds_endpoint(self) -> None:
         payload = {"gravity_g": 0.16, "o2_pct": 34.0, "pressure_psi": 10.2}
@@ -82,3 +94,29 @@ class TestAPIEndpoints(unittest.TestCase):
         data = response.json()["bounds"]
         self.assertAlmostEqual(data["oxygen_partial_pressure_psi"]["value"], 3.468, places=2)
         self.assertGreater(data["flame_height_scaling"]["estimated_mm"], 30.0)
+
+    def test_psi_sync_status(self) -> None:
+        response = self.client.get("/psi/sync-status")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn(data["status"], ("online", "fallback_active"))
+        self.assertEqual(data["verified_investigations"], 22)
+        self.assertIn("repository", data)
+
+    def test_grounded_cache_resilience(self) -> None:
+        from src.chains.grounded_cache import match_grounded_cache
+        hit = match_grounded_cache("Predict flammability of solid polymers in a Lunar habitat at 34% O2 and 10.2 psi")
+        self.assertIsNotNone(hit)
+        self.assertIn("Lunar Habitat", hit["answer"])
+        self.assertIn("bass", hit["sources"])
+        self.assertTrue(hit["cache_hit"])
+
+    def test_query_endpoint_with_cache_fallback(self) -> None:
+        payload = {"question": "Predict flammability of solid polymers in a Lunar habitat at 34% O2 and 10.2 psi"}
+        response = self.client.post("/query", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("answer", data)
+        self.assertTrue(len(data["answer"]) > 100)
+
+
