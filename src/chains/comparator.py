@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 from typing import Any, Optional
 
+from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough, RunnableSequence
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
 from src.data.models import Investigation
@@ -104,12 +104,18 @@ class CrossInvestigationComparator:
 
     def __init__(
         self,
-        llm: Optional[ChatOpenAI] = None,
+        llm: Optional[BaseChatModel] = None,
         summarizer: Optional[InvestigationSummarizer] = None,
     ) -> None:
         from src.chains.prompts import CROSS_COMPARISON_PROMPT
 
-        self._llm = llm or ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        if llm is None:
+            from src.config import get_config
+            from src.pipeline import _build_llm
+
+            self._llm = _build_llm(get_config())
+        else:
+            self._llm = llm
         self._summarizer = summarizer or InvestigationSummarizer(llm=self._llm)
         self._parser = PydanticOutputParser(pydantic_object=ComparisonReport)
 

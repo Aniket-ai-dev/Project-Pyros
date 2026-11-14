@@ -20,8 +20,14 @@ class Config:
     """
 
     # ── LLM settings ────────────────────────────────────────────────
-    llm_provider: str = "openai"  # openai | google | anthropic
-    llm_model: str = "gpt-4o"
+    llm_provider: str = os.getenv(
+        "LLM_PROVIDER",
+        "google" if os.getenv("GOOGLE_API_KEY") and not os.getenv("OPENAI_API_KEY") else "openai",
+    )
+    llm_model: str = os.getenv(
+        "LLM_MODEL",
+        "gemini-1.5-flash" if os.getenv("LLM_PROVIDER") == "google" or (os.getenv("GOOGLE_API_KEY") and not os.getenv("OPENAI_API_KEY")) else "gpt-4o",
+    )
     llm_temperature: float = 0.1  # low for scientific accuracy
     llm_max_tokens: int = 4096
 

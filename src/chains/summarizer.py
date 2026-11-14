@@ -11,9 +11,9 @@ import asyncio
 import json
 from typing import Any, Optional
 
+from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableSequence
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
 from src.data.models import Investigation
@@ -126,10 +126,16 @@ class InvestigationSummarizer:
         temperature=0)``.
     """
 
-    def __init__(self, llm: Optional[ChatOpenAI] = None) -> None:
+    def __init__(self, llm: Optional[BaseChatModel] = None) -> None:
         from src.chains.prompts import INVESTIGATION_SUMMARY_PROMPT
 
-        self._llm = llm or ChatOpenAI(model="gpt-4o-mini", temperature=0)
+        if llm is None:
+            from src.config import get_config
+            from src.pipeline import _build_llm
+
+            self._llm = _build_llm(get_config())
+        else:
+            self._llm = llm
         self._parser = PydanticOutputParser(pydantic_object=InvestigationSummary)
 
         # Build LCEL chain: passthrough → prompt → llm → parser

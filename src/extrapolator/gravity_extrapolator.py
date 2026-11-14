@@ -197,8 +197,10 @@ class GravityExtrapolator:
     @property
     def llm(self) -> BaseChatModel:
         if self._llm is None:
-            from langchain_openai import ChatOpenAI
-            self._llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+            from src.config import get_config
+            from src.pipeline import _build_llm
+
+            self._llm = _build_llm(get_config())
         return self._llm
 
     # ── Main entry point ─────────────────────────────────────────────
