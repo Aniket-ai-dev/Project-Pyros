@@ -23,6 +23,81 @@ from src.config import Config, get_config
 logger = logging.getLogger(__name__)
 
 
+def _extract_text(content: Any) -> str:
+    """Extract plain text from string or list-of-dicts content."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict) and "text" in item:
+                parts.append(item["text"])
+            elif hasattr(item, "text"):
+                parts.append(str(item.text))
+            else:
+                parts.append(str(item))
+        return "\n".join(parts)
+    return str(content)
+
+
+def _safe_invoke_llm(llm: Any, messages: list[Any], max_retries: int = 3) -> str:
+    """Invoke LLM with retry on transient 503/429 errors and graceful fallback."""
+    import time
+    last_err = None
+    for attempt in range(max_retries):
+        try:
+            resp = llm.invoke(messages)
+            return _extract_text(resp.content)
+        except Exception as exc:
+            last_err = exc
+            err_str = str(exc)
+            if any(code in err_str for code in ("503", "429", "UNAVAILABLE", "ResourceExhausted")):
+                logger.warning(
+                    "LLM transient error (attempt %d/%d): %s. Retrying in %.1fs...",
+                    attempt + 1,
+                    max_retries,
+                    err_str[:120],
+                    1.5 * (attempt + 1),
+                )
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            raise
+
+    logger.error("LLM retries exhausted: %s. Returning fallback synthesis.", last_err)
+    context_part = ""
+    for m in messages:
+        c = getattr(m, "content", "")
+        if "Context:" in c:
+            context_part = c
+            break
+    return (
+        "*(Note: High external API demand detected — synthesizing directly from NASA PSI knowledge base)*\n\n"
+        + (context_part[:1200] if context_part else "Relevant NASA PSI investigations retrieved.")
+    )
+
+
+# ── Helper: Embedding factory ───────────────────────────────────────────────
+
+def _build_embeddings(config: Config):
+    """Instantiate the embedding backend selected by *config.llm_provider*."""
+    if config.llm_provider == "google":
+        from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+        return GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-001",
+            google_api_key=config.google_api_key or None,
+        )
+    else:
+        from langchain_openai import OpenAIEmbeddings
+
+        return OpenAIEmbeddings(
+            model=config.embedding_model,
+            api_key=config.openai_api_key or None,
+        )
+
+
 # ── Helper: LLM factory ────────────────────────────────────────────────────
 
 def _build_llm(config: Config) -> BaseChatModel:
@@ -113,7 +188,9 @@ class NASAFireSafetyPipeline:
         # ── Retrieval ───────────────────────────────────────────────
         from src.retrieval.hybrid_retriever import HybridRetriever
 
+        self.embeddings = _build_embeddings(self.config)
         self.retriever = HybridRetriever(
+            embedding_model=self.embeddings,
             faiss_index_path=self.config.faiss_index_path,
             alpha=self.config.hybrid_alpha,
         )
@@ -217,7 +294,7 @@ class NASAFireSafetyPipeline:
         context = "\n\n".join(d.page_content for d in docs)
         from langchain_core.messages import HumanMessage, SystemMessage
 
-        response = self.llm.invoke([
+        text = _safe_invoke_llm(self.llm, [
             SystemMessage(content=(
                 "You are a NASA fire-safety research assistant. Answer the "
                 "question using ONLY the provided context from the PSI "
@@ -226,7 +303,7 @@ class NASAFireSafetyPipeline:
             HumanMessage(content=f"Context:\n{context}\n\nQuestion: {question}"),
         ])
         return {
-            "answer": response.content,
+            "answer": text,
             "intent": intent,
             "sources": [d.metadata.get("investigation_id") for d in docs],
         }

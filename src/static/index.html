@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg-dark: #070b14;
@@ -265,6 +266,102 @@
       color: var(--text-muted);
     }
 
+    /* AI Scenario Analyzer */
+    .ai-card {
+      background: linear-gradient(135deg, #0b152d 0%, #070e1e 100%);
+      border: 1px solid var(--cyan);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 0 25px rgba(0, 210, 255, 0.15);
+    }
+    .ai-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .ai-prompt-pills {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .ai-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ai-pill:hover {
+      border-color: var(--cyan);
+      color: #fff;
+      background: rgba(0, 210, 255, 0.1);
+    }
+    .ai-input-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .ai-input {
+      flex: 1;
+      min-width: 300px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-bright);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+    }
+    .ai-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan-glow);
+    }
+    .ai-submit-btn {
+      background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .ai-submit-btn:hover {
+      box-shadow: 0 0 18px rgba(0, 210, 255, 0.5);
+      transform: translateY(-1px);
+    }
+    .ai-result-box {
+      margin-top: 1.25rem;
+      background: rgba(10, 16, 32, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      display: none;
+    }
+    .ai-result-box.active { display: block; }
+    .ai-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* Filters & Search */
     .controls-bar {
       background: var(--bg-card);
@@ -461,6 +558,95 @@
       margin-bottom: 0.5rem;
     }
 
+    /* NASA Insight Banner */
+    .insight-banner {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(13, 21, 39, 0.9) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin: 2rem 0;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .insight-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 0.75rem;
+    }
+    .insight-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .insight-banner p {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    /* Comparison Modal & Table */
+    .compare-btn {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border-bright);
+      color: var(--cyan);
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .compare-btn:hover {
+      background: var(--cyan);
+      color: #070b14;
+      border-color: var(--cyan);
+    }
+    .compare-select {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-bright);
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+    .compare-matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.25rem;
+      font-size: 0.85rem;
+    }
+    .compare-matrix-table th, .compare-matrix-table td {
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .compare-matrix-table th {
+      background: var(--bg-panel);
+      color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .compare-matrix-table tr:nth-child(even) td {
+      background: rgba(13, 21, 39, 0.4);
+    }
+
     /* Footer */
     footer {
       max-width: 1440px;
@@ -559,40 +745,120 @@
           </div>
         </div>
 
-        <!-- Metric Outputs -->
-        <div class="results-panel">
+        <!-- Metric Outputs (6 Cards) -->
+        <div class="results-panel" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
           <div class="metric-card">
             <div class="metric-title">Relative Buoyancy</div>
             <div class="metric-value" id="res-buoyancy">16.0%</div>
-            <div class="metric-desc">Grashof scaling vs Earth baseline (1.00)</div>
+            <div class="metric-desc">Grashof scaling (Gr ∝ g) vs Earth</div>
           </div>
 
           <div class="metric-card">
             <div class="metric-title">Convection Velocity</div>
             <div class="metric-value" id="res-convection">0.222 m/s</div>
-            <div class="metric-desc">Earth baseline: 0.554 m/s (V ~ √g)</div>
+            <div class="metric-desc">Natural flow V ~ √(g·β·ΔT·L)</div>
           </div>
 
           <div class="metric-card">
-            <div class="metric-title">O₂ Flammability Factor</div>
-            <div class="metric-value" id="res-o2-factor" style="color:var(--hazard);">2.38x</div>
-            <div class="metric-desc">Elevated material flammability vs 21% O₂</div>
+            <div class="metric-title">Oxygen Partial Pressure</div>
+            <div class="metric-value" id="res-po2" style="color:var(--cyan);">3.47 psi</div>
+            <div class="metric-desc" id="res-po2-desc">NORMOXIC (Earth-equivalent: 3.09 psi)</div>
           </div>
 
           <div class="metric-card">
-            <div class="metric-title">Flame Height (Scaling)</div>
-            <div class="metric-value" id="res-flame-height">187.5 mm</div>
-            <div class="metric-desc">From 30mm Earth flame (H ~ 1/g)</div>
+            <div class="metric-title">Flammability Factor</div>
+            <div class="metric-value" id="res-o2-factor" style="color:var(--hazard);">1.18x</div>
+            <div class="metric-desc">NASA-STD-6001 scaling (P_O2 / 3.09)^1.4</div>
           </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Flame Height (Roper)</div>
+            <div class="metric-value" id="res-flame-height">47.4 mm</div>
+            <div class="metric-desc" id="res-flame-desc">Roper scaling L_f ~ g^(-0.25) (Earth: 30mm)</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Extinction Regime</div>
+            <div class="metric-value" id="res-quiescent" style="color:var(--suppression); font-size:1.05rem;">STABLE FLOW</div>
+            <div class="metric-desc" id="res-quiescent-desc">Convective oxidizer supply intact</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Telemetry Chart -->
+      <div style="margin-top:1.5rem; background:rgba(13,21,39,0.7); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+          <span style="font-size:0.8rem; font-family:'JetBrains Mono'; text-transform:uppercase; color:var(--cyan); letter-spacing:0.5px;">📈 Dynamic Partial-Gravity Combustion Scaling (0g ➔ 1g)</span>
+          <span style="font-size:0.75rem; color:var(--text-muted); font-family:'JetBrains Mono';" id="chart-marker-label">Telemetry: 0.16 g (Moon)</span>
+        </div>
+        <div style="position:relative; height:220px; width:100%;">
+          <canvas id="gravity-chart"></canvas>
         </div>
       </div>
     </section>
 
+    <!-- SUPER INTELLIGENCE: AI SCENARIO & HABITABILITY ANALYZER -->
+    <section class="ai-card">
+      <div class="ai-header">
+        <div>
+          <h2>AI Fire Scenario &amp; Habitability Analyzer</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem;">
+            Ask natural language questions or explore space exploration fire scenarios evaluated by Super Intelligence (SI)
+          </p>
+        </div>
+        <div class="badge-challenge" style="border-color:#10b981; color:#10b981; background:rgba(16, 185, 129, 0.1);">
+          SI REASONING • GEMINI 3.5 FLASH
+        </div>
+      </div>
+
+      <div class="ai-prompt-pills">
+        <span style="font-size:0.75rem; color:var(--text-dim); align-self:center;">QUICK PROMPTS:</span>
+        <button class="ai-pill" onclick="setQueryPrompt('Predict flammability of solid polymers in a Lunar habitat at 34% O2 and 10.2 psi')">🌕 Lunar Base Solid Flammability</button>
+        <button class="ai-pill" onclick="setQueryPrompt('Explain how the BASS experiment tested solid materials in microgravity')">🧵 BASS Materials Flammability</button>
+        <button class="ai-pill" onclick="setQueryPrompt('Why was the SAME smoke detection instrument repurposed for dust in DAFT?')">🔍 SAME vs DAFT Repurposing</button>
+        <button class="ai-pill" onclick="setQueryPrompt('How does CFI-G 85% oxygen inside-out flame inform spacecraft fire safety?')">🧪 CFI-G Extreme Oxygen Flame</button>
+        <button class="ai-pill" onclick="setQueryPrompt('Which fire suppressants were evaluated in the FLEX droplet experiments?')">🧯 FLEX CO2 and Helium Suppression</button>
+      </div>
+
+      <div class="ai-input-group">
+        <input type="text" id="ai-query-input" class="ai-input" placeholder="Type a fire safety scenario or question (e.g., 'What happens if Nomex fabric burns in a lunar rover at 34% O2?')..." onkeydown="if(event.key === 'Enter') runAIQuery()">
+        <button class="ai-submit-btn" id="ai-btn" onclick="runAIQuery()">
+          <span>Run AI Analysis</span>
+        </button>
+      </div>
+
+      <div class="ai-result-box" id="ai-result-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <span style="font-size:0.75rem; font-family:'JetBrains Mono'; text-transform:uppercase; color:var(--cyan);" id="ai-intent-tag">ANALYSIS RESULT</span>
+          <span style="font-size:0.75rem; color:var(--text-dim);" id="ai-sources-tag"></span>
+        </div>
+        <div id="ai-answer-content" style="font-size:0.9rem; line-height:1.7; color:var(--text-main); white-space:pre-wrap;"></div>
+      </div>
+    </section>
+
+    <!-- NASA ENGINEERING INSIGHT: DUAL-USE SENSOR CALLOUT -->
+    <section class="insight-banner">
+      <div class="insight-badge">
+        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#f59e0b; margin-right:4px;"></span>
+        NASA SENSOR INNOVATION • DUAL-USE DISCOVERY
+      </div>
+      <div class="insight-title">From Spacecraft Smoke Detection to Lunar Regolith Dust: The SAME ➔ DAFT Evolution</div>
+      <p>
+        During the Apollo lunar expeditions, abrasive lunar regolith tracked inside the cabin caused severe respiratory inflammation and degraded environmental life-support systems. In microgravity fire research, the optical and ionization sensors developed for the <strong>SAME (Smoke Aerosol Measurement Experiment)</strong> and <strong>SAME-R</strong> studies were discovered to be exquisitely sensitive to microscopic particle distributions.
+      </p>
+      <p style="margin-top:0.6rem; color:var(--text-muted);">
+        NASA engineers directly repurposed this identical flight hardware for the <strong>DAFT (Dust and Aerosol Measurement Feasibility Test)</strong> and <strong>DAFT-2</strong> investigations to measure cabin dust aerosols. For future Artemis Moon bases and pressurized rovers, this provides the critical design precedent for <em>dual-mode aerosol monitoring</em>: distinguishing benign airborne lunar regolith from deadly electrical or pyrolytic smoke particles to eliminate false alarms.
+      </p>
+    </section>
+
     <!-- INVESTIGATION EXPLORER -->
     <section>
-      <div class="section-title">
-        <span>NASA PSI Combustion Investigations</span>
-        <span class="tag" id="count-tag">Loading 22 investigations...</span>
+      <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <span>NASA PSI Combustion Investigations</span>
+          <span class="tag" id="count-tag">Loading 22 investigations...</span>
+        </div>
+        <button class="compare-btn" onclick="openCompareModal()">⚖️ Compare Any 2 Investigations</button>
       </div>
 
       <div class="controls-bar">
@@ -628,6 +894,39 @@
       <button class="modal-close" onclick="closeModal()">&times;</button>
       <div id="modal-content">
         <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FOR INVESTIGATION COMPARISON -->
+  <div class="modal-backdrop" id="compare-modal" onclick="if(event.target === this) closeCompareModal()">
+    <div class="modal-box" style="max-width:960px;">
+      <button class="modal-close" onclick="closeCompareModal()">&times;</button>
+      <div style="margin-bottom:1.25rem;">
+        <h2 style="color:#fff; font-family:'JetBrains Mono'; font-size:1.3rem;">Investigation Comparative Matrix</h2>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem;">
+          Cross-compare experimental objectives, fuels, burner geometry, atmospheric conditions, and knowledge graph links.
+        </p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap:1rem; align-items:flex-end; background:var(--bg-panel); padding:1rem; border-radius:8px; border:1px solid var(--border);">
+        <div>
+          <label style="font-size:0.75rem; color:var(--cyan); text-transform:uppercase; font-family:'JetBrains Mono'; display:block; margin-bottom:0.35rem;">Investigation A</label>
+          <select id="compare-sel-1" class="compare-select"></select>
+        </div>
+        <div>
+          <label style="font-size:0.75rem; color:var(--cyan); text-transform:uppercase; font-family:'JetBrains Mono'; display:block; margin-bottom:0.35rem;">Investigation B</label>
+          <select id="compare-sel-2" class="compare-select"></select>
+        </div>
+        <div>
+          <button class="ai-submit-btn" style="padding:0.55rem 1.25rem; font-size:0.85rem;" onclick="runComparison()">
+            <span>Compare</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="compare-result-container" style="margin-top:1.5rem;">
+        <div style="color:var(--text-dim); text-align:center; padding:2rem;">Select two investigations above and click Compare to view side-by-side specs and knowledge graph connections.</div>
       </div>
     </div>
   </div>
@@ -826,6 +1125,252 @@
       document.getElementById('modal').classList.remove('open');
     }
 
+    // AI Scenario Analyzer Logic
+    function setQueryPrompt(promptText) {
+      const input = document.getElementById('ai-query-input');
+      input.value = promptText;
+      runAIQuery();
+    }
+
+    async function runAIQuery() {
+      const input = document.getElementById('ai-query-input');
+      const q = input.value.trim();
+      if (!q) return;
+
+      const btn = document.getElementById('ai-btn');
+      const resultBox = document.getElementById('ai-result-box');
+      const contentBox = document.getElementById('ai-answer-content');
+      const intentTag = document.getElementById('ai-intent-tag');
+      const sourcesTag = document.getElementById('ai-sources-tag');
+
+      btn.innerHTML = '<span class="ai-spinner"></span> Analyzing...';
+      btn.disabled = true;
+      resultBox.classList.add('active');
+      contentBox.innerHTML = '<span style="color:var(--text-muted);">Consulting NASA PSI knowledge base & physics engine...</span>';
+
+      try {
+        const res = await fetch('/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server responded with ${res.status}`);
+        }
+        const data = await res.json();
+        intentTag.textContent = `INTENT: ${data.intent || 'FIRE SAFETY'}`;
+        sourcesTag.textContent = (data.sources && data.sources.length) ? `Sources: ${data.sources.join(', ')}` : '';
+
+        let answerText = data.answer;
+        if (typeof answerText === 'object') {
+          answerText = answerText.llm_hypothesis || answerText.final_report || JSON.stringify(answerText, null, 2);
+        }
+        contentBox.textContent = answerText;
+      } catch (err) {
+        contentBox.textContent = `Error querying AI engine: ${err.message}`;
+      } finally {
+        btn.innerHTML = '<span>Run AI Analysis</span>';
+        btn.disabled = false;
+      }
+    }
+
+    // Comparison Modal Logic
+    function openCompareModal() {
+      const sel1 = document.getElementById('compare-sel-1');
+      const sel2 = document.getElementById('compare-sel-2');
+      sel1.innerHTML = '';
+      sel2.innerHTML = '';
+
+      allInvestigations.forEach((inv, idx) => {
+        const opt1 = document.createElement('option');
+        opt1.value = inv.id;
+        opt1.textContent = `${inv.acronym} — ${inv.name}`;
+        const opt2 = document.createElement('option');
+        opt2.value = inv.id;
+        opt2.textContent = `${inv.acronym} — ${inv.name}`;
+
+        if (inv.id === 'bass') opt1.selected = true;
+        if (inv.id === 'bass2' || (idx === 1 && !opt2.selected)) opt2.selected = true;
+
+        sel1.appendChild(opt1);
+        sel2.appendChild(opt2);
+      });
+
+      document.getElementById('compare-modal').classList.add('open');
+      runComparison();
+    }
+
+    function closeCompareModal() {
+      document.getElementById('compare-modal').classList.remove('open');
+    }
+
+    async function runComparison() {
+      const id1 = document.getElementById('compare-sel-1').value;
+      const id2 = document.getElementById('compare-sel-2').value;
+      const container = document.getElementById('compare-result-container');
+
+      if (!id1 || !id2) return;
+      container.innerHTML = '<div style="color:var(--text-muted); padding:2rem; text-align:center;">Retrieving investigation matrices and computing knowledge graph relationships...</div>';
+
+      try {
+        const [res1, res2, resRel] = await Promise.all([
+          fetch(`/investigations/${id1}`).then(r => r.json()),
+          fetch(`/investigations/${id2}`).then(r => r.json()),
+          fetch(`/investigations/${id1}/compare/${id2}`).then(r => r.json()).catch(() => ({ explanation: 'Direct relationship computed from knowledge graph.' }))
+        ]);
+
+        const formatFuels = (fuels) => (fuels || []).map(f => typeof f === 'string' ? f : (f.material_name || f.name)).join(', ') || 'N/A';
+        const formatAtms = (atms) => (atms || []).map(a => `${a.oxygen_pct}% O₂, ${a.pressure_psi} psi (${a.diluent || 'N2'})`).join('; ') || 'N/A';
+
+        container.innerHTML = `
+          <div style="background:rgba(0, 210, 255, 0.05); border:1px solid var(--border-bright); padding:1rem; border-radius:6px; margin-bottom:1.25rem;">
+            <span style="font-size:0.75rem; font-family:'JetBrains Mono'; text-transform:uppercase; color:var(--cyan); display:block; margin-bottom:0.4rem;">Graph Relationship Insight</span>
+            <div style="font-size:0.88rem; color:var(--text-main); white-space:pre-wrap;">${resRel.explanation || 'Related via NASA PSI combustion facilities.'}</div>
+          </div>
+
+          <table class="compare-matrix-table">
+            <thead>
+              <tr>
+                <th style="width:25%;">Parameter</th>
+                <th style="width:37.5%; color:#fff;">${res1.acronym} (${res1.name})</th>
+                <th style="width:37.5%; color:#fff;">${res2.acronym} (${res2.name})</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Fire Safety Pillar</td>
+                <td><span class="inv-pillar-badge badge-${(res1.fire_safety_pillar || 'prevention').toLowerCase()}">${res1.fire_safety_pillar}</span></td>
+                <td><span class="inv-pillar-badge badge-${(res2.fire_safety_pillar || 'prevention').toLowerCase()}">${res2.fire_safety_pillar}</span></td>
+              </tr>
+              <tr>
+                <td>Hardware Facility</td>
+                <td><strong>${res1.hardware_facility || 'N/A'}</strong></td>
+                <td><strong>${res2.hardware_facility || 'N/A'}</strong></td>
+              </tr>
+              <tr>
+                <td>Gravity Condition</td>
+                <td>${res1.gravity || 'MICROGRAVITY'}</td>
+                <td>${res2.gravity || 'MICROGRAVITY'}</td>
+              </tr>
+              <tr>
+                <td>Fuels &amp; Burners</td>
+                <td>${formatFuels(res1.fuels)}</td>
+                <td>${formatFuels(res2.fuels)}</td>
+              </tr>
+              <tr>
+                <td>Tested Atmospheres</td>
+                <td>${formatAtms(res1.atmosphere)}</td>
+                <td>${formatAtms(res2.atmosphere)}</td>
+              </tr>
+              <tr>
+                <td>Primary Objective</td>
+                <td>${res1.objectives || 'Archived in NASA PSI'}</td>
+                <td>${res2.objectives || 'Archived in NASA PSI'}</td>
+              </tr>
+              <tr>
+                <td>Earth Fire Application</td>
+                <td>${(res1.earth_applications || []).join('; ') || 'Terrestrial fire standards'}</td>
+                <td>${(res2.earth_applications || []).join('; ') || 'Terrestrial fire standards'}</td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div style="color:var(--hazard); padding:2rem;">Error executing comparison: ${err.message}</div>`;
+      }
+    }
+
+    // Dynamic Chart.js Setup
+    let gravityChart = null;
+
+    function initChart() {
+      const canvas = document.getElementById('gravity-chart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      const gSteps = [];
+      const buoyancyData = [];
+      const flameHeightData = [];
+      const spreadEnvelopeData = [];
+
+      for (let i = 0; i <= 100; i += 2) {
+        const gVal = i / 100;
+        gSteps.push(gVal.toFixed(2));
+        buoyancyData.push(gVal);
+        const fScale = gVal === 0 ? 2.5 : Math.min(3.0, Math.max(1.0, Math.pow(Math.max(0.01, gVal), -0.25)));
+        flameHeightData.push(parseFloat(fScale.toFixed(2)));
+        spreadEnvelopeData.push(parseFloat((0.5 + 0.5 * Math.pow(gVal, 0.5)).toFixed(2)));
+      }
+
+      gravityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: gSteps,
+          datasets: [
+            {
+              label: 'Buoyancy (Gr / Gr_Earth)',
+              data: buoyancyData,
+              borderColor: '#00d2ff',
+              backgroundColor: 'rgba(0, 210, 255, 0.1)',
+              borderWidth: 2,
+              pointRadius: 0,
+              fill: true,
+              tension: 0.1
+            },
+            {
+              label: 'Flame Height (Roper Lf / Lf_Earth)',
+              data: flameHeightData,
+              borderColor: '#f59e0b',
+              borderWidth: 2,
+              borderDash: [4, 4],
+              pointRadius: 0,
+              fill: false,
+              tension: 0.2
+            },
+            {
+              label: 'Upward Spread Envelope',
+              data: spreadEnvelopeData,
+              borderColor: '#10b981',
+              borderWidth: 1.5,
+              pointRadius: 0,
+              fill: false,
+              tension: 0.2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+            },
+            tooltip: {
+              backgroundColor: '#0d1527',
+              borderColor: '#2a4175',
+              borderWidth: 1,
+              titleColor: '#00d2ff',
+              bodyColor: '#e2e8f0'
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Target Gravity (fraction of Earth-g)', color: '#64748b', font: { size: 10 } },
+              ticks: { color: '#64748b', maxTicksLimit: 11 },
+              grid: { color: 'rgba(42, 65, 117, 0.2)' }
+            },
+            y: {
+              title: { display: true, text: 'Scaling Factor vs Earth (1.0)', color: '#64748b', font: { size: 10 } },
+              ticks: { color: '#64748b' },
+              grid: { color: 'rgba(42, 65, 117, 0.2)' }
+            }
+          }
+        }
+      });
+    }
+
     // Physics Calculator Logic
     async function updatePhysics() {
       const g = parseFloat(document.getElementById('input-g').value);
@@ -835,6 +1380,16 @@
       document.getElementById('val-g').textContent = `${g.toFixed(2)} g`;
       document.getElementById('val-o2').textContent = `${o2.toFixed(1)} %`;
       document.getElementById('val-p').textContent = `${p.toFixed(1)} psi`;
+
+      // Update Chart Telemetry Label
+      const markerLabel = document.getElementById('chart-marker-label');
+      if (markerLabel) {
+        let envName = 'Earth Baseline';
+        if (g < 0.02) envName = 'ISS Microgravity (0g)';
+        else if (g <= 0.22) envName = 'Moon Partial-g (~0.16g)';
+        else if (g <= 0.45) envName = 'Mars Partial-g (~0.38g)';
+        markerLabel.textContent = `Telemetry: ${g.toFixed(2)} g (${envName}) | P_O2: ${(p * o2 / 100).toFixed(2)} psi`;
+      }
 
       try {
         const res = await fetch('/physics/bounds', {
@@ -851,11 +1406,40 @@
         if (data.natural_convection_velocity_m_s) {
           document.getElementById('res-convection').textContent = `${data.natural_convection_velocity_m_s.value.toFixed(3)} m/s`;
         }
+        if (data.oxygen_partial_pressure_psi) {
+          document.getElementById('res-po2').textContent = `${data.oxygen_partial_pressure_psi.value.toFixed(2)} psi`;
+          document.getElementById('res-po2-desc').textContent = `${data.oxygen_partial_pressure_psi.regime}`;
+          const po2El = document.getElementById('res-po2');
+          if (data.oxygen_partial_pressure_psi.value > 3.6) {
+            po2El.style.color = 'var(--hazard)';
+          } else if (data.oxygen_partial_pressure_psi.value < 2.5) {
+            po2El.style.color = '#f59e0b';
+          } else {
+            po2El.style.color = 'var(--cyan)';
+          }
+        }
         if (data.oxygen_enhancement_factor) {
           document.getElementById('res-o2-factor').textContent = `${data.oxygen_enhancement_factor.value.toFixed(2)}x`;
         }
         if (data.flame_height_scaling) {
           document.getElementById('res-flame-height').textContent = `${data.flame_height_scaling.estimated_mm.toFixed(1)} mm`;
+          const flameDesc = document.getElementById('res-flame-desc');
+          if (flameDesc && data.flame_height_scaling.regime) {
+            flameDesc.textContent = `${data.flame_height_scaling.regime} (Earth: 30mm)`;
+          }
+        }
+        if (data.quiescent_extinction) {
+          const qEl = document.getElementById('res-quiescent');
+          const qDesc = document.getElementById('res-quiescent-desc');
+          if (data.quiescent_extinction.quiescent_regime) {
+            qEl.textContent = 'SELF-EXTINGUISHING';
+            qEl.style.color = 'var(--detection)';
+            qDesc.textContent = 'Zero-g suffocation: forced flow (>0.5 cm/s) required';
+          } else {
+            qEl.textContent = 'STABLE FLOW';
+            qEl.style.color = 'var(--suppression)';
+            qDesc.textContent = 'Convective or forced oxidizer supply intact';
+          }
         }
       } catch (e) {
         console.error("Physics calculation error", e);
@@ -871,7 +1455,10 @@
       updatePhysics();
     }
 
-    window.onload = init;
+    window.onload = () => {
+      init();
+      initChart();
+    };
   </script>
 </body>
 </html>

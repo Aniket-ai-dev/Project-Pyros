@@ -245,15 +245,26 @@ async def compute_physics_bounds(req: PhysicsBoundsRequest):
     """
     g = req.gravity_g
     o2 = req.o2_pct
+    p = req.pressure_psi
 
     buoyancy = _physics.buoyancy_strength(g)
     conv_vel = _physics.natural_convection_velocity(g)
-    o2_factor = _physics.oxygen_enhancement_factor(o2)
+    p_o2 = _physics.oxygen_partial_pressure_psi(p, o2)
+    o2_factor = _physics.oxygen_enhancement_factor(o2, pressure_psi=p)
     flame_height, flame_conf = _physics.flame_height_scaling(g, 30.0)
     spread_lo, spread_hi = _physics.spread_rate_bounds(g, 0.5, 2.0)
+    quiescent = _physics.quiescent_extinction_check(g)
+
+    # Determine oxygen regime relative to Earth sea level (3.09 psi)
+    if p_o2 > 3.6:
+        o2_regime = "HYPEROXIC (Elevated Flammability Risk)"
+    elif p_o2 < 2.5:
+        o2_regime = "HYPOXIC (Oxygen Deprived)"
+    else:
+        o2_regime = "NORMOXIC (Earth-Equivalent Metabolism)"
 
     return {
-        "target": {"gravity_g": g, "o2_pct": o2, "pressure_psi": req.pressure_psi},
+        "target": {"gravity_g": g, "o2_pct": o2, "pressure_psi": p},
         "bounds": {
             "buoyancy_strength": {
                 "value": round(buoyancy, 4),
@@ -263,20 +274,27 @@ async def compute_physics_bounds(req: PhysicsBoundsRequest):
                 "value": round(conv_vel, 4),
                 "earth_baseline": round(_physics.natural_convection_velocity(1.0), 4),
             },
+            "oxygen_partial_pressure_psi": {
+                "value": round(p_o2, 2),
+                "earth_baseline_psi": 3.09,
+                "regime": o2_regime,
+            },
             "oxygen_enhancement_factor": {
                 "value": round(o2_factor, 2),
-                "description": f"Materials are ~{o2_factor:.1f}x more flammable than at 21% O2",
+                "description": f"Materials are ~{o2_factor:.2f}x more flammable based on partial pressure",
             },
             "flame_height_scaling": {
                 "estimated_mm": round(flame_height, 1),
                 "confidence": flame_conf,
                 "earth_baseline_mm": 30.0,
+                "regime": "Spherical / diffusion-bounded" if g < 0.02 else "Roper buoyancy-governed",
             },
             "flame_spread_rate_mm_s": {
                 "lower_bound": round(spread_lo, 2),
                 "upper_bound": round(spread_hi, 2),
                 "note": "Representative solid fuel, horizontal orientation",
             },
+            "quiescent_extinction": quiescent,
         },
     }
 
@@ -309,19 +327,27 @@ def _require_pipeline():
 
 
 @app.post("/query", tags=["analysis"])
-async def query(req: QueryRequest):
+def query(req: QueryRequest):
     """Ask a natural language question about fire safety research.
 
     Routes to the appropriate chain (summary, comparison, scenario,
     extrapolation) based on intent detection.
     """
     pipeline = _require_pipeline()
-    result = pipeline.query(req.question)
-    return result
+    try:
+        result = pipeline.query(req.question)
+        return result
+    except Exception as exc:
+        logger.error("Query execution failed: %s", exc)
+        return {
+            "answer": f"Analysis encountered a temporary error: {exc}. Please retry your scenario.",
+            "intent": "ERROR",
+            "sources": [],
+        }
 
 
 @app.post("/scenario", tags=["analysis"])
-async def scenario_analysis(req: ScenarioRequest):
+def scenario_analysis(req: ScenarioRequest):
     """Full scenario analysis: retrieve, rank, compare, and extrapolate.
 
     Best for questions like: "What do we know about fire in a lunar
@@ -333,7 +359,7 @@ async def scenario_analysis(req: ScenarioRequest):
 
 
 @app.post("/compare", tags=["analysis"])
-async def compare_investigations(req: CompareRequest):
+def compare_investigations(req: CompareRequest):
     """Cross-investigation comparison using LLM synthesis.
 
     Provide 2-5 investigation IDs to compare their experimental
@@ -348,7 +374,7 @@ async def compare_investigations(req: CompareRequest):
 
 
 @app.post("/extrapolate", tags=["analysis"])
-async def extrapolate(req: ExtrapolateRequest):
+def extrapolate(req: ExtrapolateRequest):
     """Partial-gravity flammability extrapolation.
 
     Uses physics-bounded LLM reasoning to predict combustion behavior

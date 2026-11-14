@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 @dataclass
@@ -26,7 +29,7 @@ class Config:
     )
     llm_model: str = os.getenv(
         "LLM_MODEL",
-        "gemini-1.5-flash" if os.getenv("LLM_PROVIDER") == "google" or (os.getenv("GOOGLE_API_KEY") and not os.getenv("OPENAI_API_KEY")) else "gpt-4o",
+        "gemini-3.5-flash" if os.getenv("LLM_PROVIDER") == "google" or (os.getenv("GOOGLE_API_KEY") and not os.getenv("OPENAI_API_KEY")) else "gpt-4o",
     )
     llm_temperature: float = 0.1  # low for scientific accuracy
     llm_max_tokens: int = 4096
@@ -57,4 +60,16 @@ class Config:
 
 def get_config() -> Config:
     """Factory that returns a default :class:`Config` instance."""
-    return Config()
+    load_dotenv()
+    provider = os.getenv(
+        "LLM_PROVIDER",
+        "google" if os.getenv("GOOGLE_API_KEY") and not os.getenv("OPENAI_API_KEY") else "openai",
+    )
+    model = os.getenv(
+        "LLM_MODEL",
+        "gemini-3.5-flash" if provider == "google" else "gpt-4o",
+    )
+    return Config(
+        llm_provider=provider,
+        llm_model=model,
+    )

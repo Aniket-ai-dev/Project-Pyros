@@ -35,6 +35,25 @@ from src.extrapolator.report_generator import ExtrapolationReportGenerator
 logger = logging.getLogger(__name__)
 
 
+def _extract_text(content: Any) -> str:
+    """Extract plain text from string or list-of-dicts content."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict) and "text" in item:
+                parts.append(item["text"])
+            elif hasattr(item, "text"):
+                parts.append(str(item.text))
+            else:
+                parts.append(str(item))
+        return "\n".join(parts)
+    return str(content)
+
+
 # ── State schema ─────────────────────────────────────────────────────────
 
 class ExtrapolatorState(TypedDict, total=False):
@@ -268,7 +287,7 @@ class GravityExtrapolator:
             HumanMessage(content=state["query"]),
         ])
 
-        content = response.content.strip()
+        content = _extract_text(response.content).strip()
         # Strip markdown fences
         if content.startswith("```"):
             lines = content.splitlines()
@@ -505,7 +524,7 @@ class GravityExtrapolator:
             HumanMessage(content=prompt),
         ])
 
-        state["llm_hypothesis"] = response.content.strip()
+        state["llm_hypothesis"] = _extract_text(response.content).strip()
         return state
 
     # ── Node 5: Assess Confidence ────────────────────────────────────
@@ -529,7 +548,7 @@ class GravityExtrapolator:
             HumanMessage(content=prompt),
         ])
 
-        state["confidence_assessment"] = response.content.strip()
+        state["confidence_assessment"] = _extract_text(response.content).strip()
 
         # Add standard caveats
         standard_caveats = [

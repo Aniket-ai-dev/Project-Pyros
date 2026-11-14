@@ -39,7 +39,13 @@ class HybridRetriever:
         faiss_index_path: str = "data/vectorstore",
         alpha: float = 0.6,
     ) -> None:
-        self.embedding_model = embedding_model or OpenAIEmbeddings()
+        if embedding_model is None:
+            from src.config import get_config
+            from src.pipeline import _build_embeddings
+
+            self.embedding_model = _build_embeddings(get_config())
+        else:
+            self.embedding_model = embedding_model
         self.faiss_index_path = faiss_index_path
         self.alpha = alpha
 
@@ -63,19 +69,39 @@ class HybridRetriever:
         """
         self._documents = list(documents)
 
-        # --- Dense (FAISS) ---
-        self._faiss_store = FAISS.from_documents(
-            self._documents,
-            self.embedding_model,
-        )
-        os.makedirs(self.faiss_index_path, exist_ok=True)
-        self._faiss_store.save_local(self.faiss_index_path)
-
         # --- Sparse (BM25) ---
         tokenized_corpus = [
             doc.page_content.lower().split() for doc in self._documents
         ]
         self._bm25_index = BM25Okapi(tokenized_corpus)
+
+        # --- Dense (FAISS) ---
+        try:
+            if os.path.exists(os.path.join(self.faiss_index_path, "index.faiss")):
+                self._faiss_store = FAISS.load_local(
+                    self.faiss_index_path,
+                    self.embedding_model,
+                    allow_dangerous_deserialization=True,
+                )
+            else:
+                batch_size = 40
+                self._faiss_store = FAISS.from_documents(
+                    self._documents[:batch_size],
+                    self.embedding_model,
+                )
+                for i in range(batch_size, len(self._documents), batch_size):
+                    import time
+                    time.sleep(1.5)
+                    self._faiss_store.add_documents(self._documents[i:i + batch_size])
+
+                os.makedirs(self.faiss_index_path, exist_ok=True)
+                self._faiss_store.save_local(self.faiss_index_path)
+        except Exception as exc:
+            logger.warning(
+                "Dense FAISS index unavailable (%s) — operating in resilient BM25 mode.",
+                exc,
+            )
+            self._faiss_store = None
 
     def load_index(self) -> None:
         """Load a previously saved FAISS index from disk.
@@ -138,7 +164,7 @@ class HybridRetriever:
             List of ``(Document, score)`` tuples sorted by descending
             combined RRF score.
         """
-        if self._faiss_store is None or self._bm25_index is None:
+        if self._bm25_index is None:
             raise RuntimeError(
                 "Index not initialised. Call build_index() or load_index() first."
             )
@@ -147,9 +173,12 @@ class HybridRetriever:
         fetch_k = max(top_k * 4, 50)
 
         # --- Dense results ---
-        dense_results: list[tuple[Document, float]] = (
-            self._faiss_store.similarity_search_with_score(query, k=fetch_k)
-        )
+        dense_results: list[tuple[Document, float]] = []
+        if self._faiss_store is not None:
+            try:
+                dense_results = self._faiss_store.similarity_search_with_score(query, k=fetch_k)
+            except Exception:
+                dense_results = []
 
         # --- Sparse results ---
         tokenized_query = query.lower().split()

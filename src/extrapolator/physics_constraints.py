@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -75,11 +76,16 @@ class CombustionPhysics:
     ) -> tuple[float, float]:
         """Estimate laminar diffusion-flame height at partial gravity.
 
-        In the buoyancy-dominated regime the visible flame length of a
-        laminar jet diffusion flame scales as  h ~ g^{-1}  (Burke–Schumann /
-        Roper theory).  At very low gravity the regime transitions to
-        momentum-dominated and the inverse scaling breaks down, so
-        confidence drops.
+        In the buoyancy-dominated regime, Roper (1977) and classical laminar
+        diffusion flame theory establish that flame height scales weakly with
+        buoyancy as L_f ~ g^(-0.25) to g^(-0.33).
+        
+        As gravity approaches microgravity (g -> 0), buoyant acceleration drops
+        to zero and the flame transitions from buoyancy-dominated to
+        momentum-dominated and diffusion-controlled (spherical/hemispherical).
+        In this regime, flame length is governed by the fuel jet momentum and
+        mass diffusivity, asymptotically leveling off at ~2.5x to 3.0x the
+        1g height while expanding radially. It does NOT diverge to infinity.
 
         Args:
             gravity_g: Target gravity level (fraction of Earth-g).
@@ -89,21 +95,22 @@ class CombustionPhysics:
             Tuple of (estimated_height_mm, confidence) where confidence ∈ [0, 1].
         """
         if gravity_g <= 0.0:
-            # At true microgravity the g^{-1} scaling diverges; flame becomes
-            # spherical/hemispherical — height concept loses meaning.
-            return (earth_flame_height_mm * 10.0, 0.1)
+            # In true microgravity, spherical/diffusion regime dominates.
+            # Axial elongation is bounded by momentum diffusion (~2.5x 1g).
+            return (earth_flame_height_mm * 2.5, 0.4)
 
-        # h ~ g^{-1}  →  h(g) = h(1g) * (1/g)
-        estimated = earth_flame_height_mm / gravity_g
+        g_clamped = max(0.01, float(gravity_g))
+        # Roper buoyancy scaling L_f ~ g^(-0.25), bounded between 1.0x and 3.0x
+        scale_factor = min(3.0, max(1.0, g_clamped ** -0.25))
+        estimated = earth_flame_height_mm * scale_factor
 
-        # Confidence decreases as we move further from 1 g because transition
-        # effects (momentum-dominated regime) become more important.
+        # Confidence is high near 1g and moderate in bounded partial-g
         if gravity_g >= 0.5:
-            confidence = 0.8
+            confidence = 0.85
         elif gravity_g >= 0.1:
-            confidence = 0.6
+            confidence = 0.70
         else:
-            confidence = 0.3
+            confidence = 0.45
 
         return (estimated, confidence)
 
@@ -257,31 +264,80 @@ class CombustionPhysics:
         return (max(0.0, lower), upper)
 
     # ------------------------------------------------------------------ #
-    #  Oxygen enhancement
+    #  Oxygen enhancement & Partial Pressure
     # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def oxygen_partial_pressure_psi(pressure_psi: float, o2_pct: float) -> float:
+        """Compute the oxygen partial pressure (P_O2) in psi.
+
+        P_O2 = P_total * (O2% / 100).
+        Standard Earth sea-level: 14.7 psi * 0.21 = 3.087 psi (normoxic).
+        """
+        return max(0.0, float(pressure_psi)) * (max(0.0, float(o2_pct)) / 100.0)
 
     @staticmethod
     def oxygen_enhancement_factor(
         o2_pct: float,
+        pressure_psi: float = 14.7,
         baseline_o2: float = 21.0,
+        baseline_pressure_psi: float = 14.7,
     ) -> float:
-        """How much more flammable things are at elevated O₂.
+        """How much more flammable materials are under elevated partial pressure of O2.
 
-        Approximate power-law scaling for material flammability with O₂
-        concentration.  Many material properties (flame spread rate, peak
-        heat release) scale roughly as (O₂%)^n with n ≈ 1.5–2.0 for
-        typical solid fuels (ASTM D2863 / NASA-STD-6001 data).
+        In aerospace combustion and NASA-STD-6001 materials testing, flammability,
+        ignition delay, and flame spread are governed by the oxygen partial
+        pressure (P_O2 = P_total * O2%), which dictates the molar concentration
+        of oxidizer at the reaction zone.
 
-        We use n = 1.8 as a representative exponent.
+        Baseline reference: Sea-level standard air (21% O2 at 14.7 psi -> P_O2 = 3.087 psi).
+        - Sea-level Earth: 21% at 14.7 psi -> P_O2 = 3.09 psi -> 1.00x (Normoxic)
+        - Lunar Base: 30% at 10.2 psi -> P_O2 = 3.06 psi -> ~0.99x (Normoxic baseline)
+        - Lunar Base (Elevated): 34% at 10.2 psi -> P_O2 = 3.47 psi -> 1.18x
+        - Spacesuit EVA: 100% at 4.3 psi -> P_O2 = 4.30 psi -> 1.58x (Hyperoxic risk)
+        - CFI-G extreme: 85% at 14.7 psi -> P_O2 = 12.50 psi -> 6.94x
+
+        Power-law scaling: Enhancement = (P_O2 / P_O2_baseline)^1.4
 
         Args:
-            o2_pct: Actual oxygen percentage.
-            baseline_o2: Reference oxygen percentage (default 21 % air).
+            o2_pct: Actual oxygen percentage (e.g. 21.0, 30.0, 100.0).
+            pressure_psi: Total atmospheric pressure in psi (default: 14.7 psi).
+            baseline_o2: Reference oxygen percentage (default: 21.0%).
+            baseline_pressure_psi: Reference pressure (default: 14.7 psi).
 
         Returns:
-            Multiplicative enhancement factor (1.0 at baseline O₂).
+            Multiplicative enhancement factor relative to standard sea-level air.
         """
-        if baseline_o2 <= 0.0:
+        p_o2_baseline = baseline_pressure_psi * (baseline_o2 / 100.0)
+        if p_o2_baseline <= 0.0:
             return 1.0
-        exponent = 1.8
-        return (max(0.0, o2_pct) / baseline_o2) ** exponent
+
+        p_o2_actual = CombustionPhysics.oxygen_partial_pressure_psi(pressure_psi, o2_pct)
+        exponent = 1.4
+        return (p_o2_actual / p_o2_baseline) ** exponent
+
+    @staticmethod
+    def quiescent_extinction_check(gravity_g: float, flow_velocity_cm_s: float = 0.0) -> dict[str, Any]:
+        """Assess the quiescent extinction boundary in microgravity.
+
+        In microgravity (g ~ 0), buoyant upward flow ceases completely (V_buoyant -> 0).
+        Without forced ventilation (> 0.5 - 2.0 cm/s), laminar diffusion flames
+        accumulate combustion products (CO2, H2O) and soot in a spherical cloud,
+        starving the reaction zone of oxygen and radiatively cooling until
+        self-extinction occurs (as observed in ACME BRE and BASS quiescent tests).
+
+        Returns:
+            Dict containing extinction status, risk level, and engineering guidance.
+        """
+        is_quiescent = (gravity_g < 0.01) and (flow_velocity_cm_s < 0.5)
+        return {
+            "quiescent_regime": is_quiescent,
+            "buoyancy_absent": gravity_g < 0.01,
+            "extinction_risk": "HIGH_SELF_EXTINGUISHING" if is_quiescent else "STABLE_PROPAGATION",
+            "guidance": (
+                "Flames in zero-gravity will self-extinguish due to oxygen starvation "
+                "unless forced ventilation (> 0.5 cm/s) supplies fresh oxidizer."
+                if is_quiescent
+                else "Convective or forced flow sustains oxidizer transport to the flame zone."
+            ),
+        }

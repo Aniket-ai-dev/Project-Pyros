@@ -19,6 +19,10 @@ import textwrap
 # Ensure project root is on path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from src.data.psi_knowledge_base import PSIKnowledgeBase
 from src.data.chunking import ScientificChunker
 from src.knowledge.graph import InvestigationGraph
