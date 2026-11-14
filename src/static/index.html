@@ -654,7 +654,8 @@
     async function init() {
       try {
         const res = await fetch('/investigations');
-        allInvestigations = await res.json();
+        const raw = await res.json();
+        allInvestigations = Array.isArray(raw) ? raw : (raw.investigations || []);
         renderInvestigations(allInvestigations);
         document.getElementById('count-tag').textContent = `${allInvestigations.length} investigations loaded`;
         updatePhysics();
@@ -668,14 +669,23 @@
       const grid = document.getElementById('inv-grid');
       grid.innerHTML = '';
 
-      if (invs.length === 0) {
+      if (!invs || invs.length === 0) {
         grid.innerHTML = '<div style="color:var(--text-dim); padding:2rem;">No matching investigations found.</div>';
         return;
       }
 
       invs.forEach(inv => {
-        const pillarClass = `badge-${inv.fire_safety_pillar.toLowerCase()}`;
-        const fuels = inv.fuels.map(f => f.material_name).slice(0, 3).join(', ');
+        const pillar = inv.fire_safety_pillar || inv.pillar || 'PREVENTION';
+        const pillarClass = `badge-${pillar.toLowerCase()}`;
+        const hw = inv.hardware_facility || inv.hardware || 'N/A';
+        const relevance = inv.relevance_to_crew_habitat ?? inv.relevance ?? 0.8;
+
+        let fuels = 'N/A';
+        if (Array.isArray(inv.fuels) && inv.fuels.length > 0) {
+          fuels = inv.fuels.map(f => typeof f === 'string' ? f : (f.material_name || f.name || 'Fuel')).slice(0, 3).join(', ');
+        } else if (Array.isArray(inv.fuel_types) && inv.fuel_types.length > 0) {
+          fuels = inv.fuel_types.join(', ');
+        }
 
         const card = document.createElement('div');
         card.className = 'inv-card';
@@ -685,12 +695,12 @@
           <div>
             <div class="inv-card-header">
               <span class="inv-acronym">${inv.acronym}</span>
-              <span class="inv-pillar-badge ${pillarClass}">${inv.fire_safety_pillar}</span>
+              <span class="inv-pillar-badge ${pillarClass}">${pillar}</span>
             </div>
             <div class="inv-name">${inv.name}</div>
             <div class="inv-tags">
-              <span class="inv-tag">${inv.hardware_facility}</span>
-              <span class="inv-tag">${inv.gravity}</span>
+              <span class="inv-tag">${hw}</span>
+              <span class="inv-tag">${inv.gravity || 'MICROGRAVITY'}</span>
               <span class="inv-tag">${inv.project || 'NASA PSI'}</span>
             </div>
             <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
@@ -701,9 +711,9 @@
             <div class="inv-relevance">
               <span>Crew Habitat Relevance</span>
               <div class="relevance-bar">
-                <div class="relevance-fill" style="width: ${inv.relevance_to_crew_habitat * 100}%"></div>
+                <div class="relevance-fill" style="width: ${relevance * 100}%"></div>
               </div>
-              <span style="font-family:'JetBrains Mono'; font-weight:600; color:#fff;">${inv.relevance_to_crew_habitat.toFixed(1)}</span>
+              <span style="font-family:'JetBrains Mono'; font-weight:600; color:#fff;">${relevance.toFixed(1)}</span>
             </div>
           </div>
         `;
@@ -714,13 +724,30 @@
     function filterInvestigations() {
       const q = document.getElementById('search-input').value.toLowerCase();
       const filtered = allInvestigations.filter(inv => {
-        const matchesPillar = (currentPillar === 'ALL' || inv.fire_safety_pillar === currentPillar);
-        const matchesHw = (currentHw === 'ALL' || inv.hardware_facility.toLowerCase().includes(currentHw.toLowerCase()));
+        const pillar = inv.fire_safety_pillar || inv.pillar || '';
+        const hw = inv.hardware_facility || inv.hardware || '';
+        const name = inv.name || '';
+        const acronym = inv.acronym || '';
+        const objectives = inv.objectives || '';
+
+        const matchesPillar = (currentPillar === 'ALL' || pillar.toUpperCase() === currentPillar);
+        const matchesHw = (currentHw === 'ALL' || hw.toLowerCase().includes(currentHw.toLowerCase()));
+
+        let fuelMatch = false;
+        if (Array.isArray(inv.fuels)) {
+          fuelMatch = inv.fuels.some(f => (typeof f === 'string' ? f : (f.material_name || '')).toLowerCase().includes(q));
+        }
+        if (Array.isArray(inv.fuel_types)) {
+          fuelMatch = fuelMatch || inv.fuel_types.some(t => t.toLowerCase().includes(q));
+        }
+
         const matchesQuery = !q ||
-          inv.name.toLowerCase().includes(q) ||
-          inv.acronym.toLowerCase().includes(q) ||
-          inv.objectives.toLowerCase().includes(q) ||
-          inv.fuels.some(f => f.material_name.toLowerCase().includes(q));
+          name.toLowerCase().includes(q) ||
+          acronym.toLowerCase().includes(q) ||
+          objectives.toLowerCase().includes(q) ||
+          hw.toLowerCase().includes(q) ||
+          fuelMatch;
+
         return matchesPillar && matchesHw && matchesQuery;
       });
       renderInvestigations(filtered);
@@ -741,48 +768,58 @@
       filterInvestigations();
     }
 
-    function showModal(inv) {
+    async function showModal(inv) {
       const content = document.getElementById('modal-content');
-      const fuelsHtml = inv.fuels.map(f => `<li><strong>${f.material_name}</strong> (${f.fuel_type}) — shape: ${f.sample_shape || 'standard'}, dimensions: ${f.sample_dimensions_cm || 'N/A'}</li>`).join('');
-      const atmsHtml = inv.atmosphere.map(a => `<li><strong>${a.oxygen_pct}% O₂</strong>, ${a.pressure_psi} psi (diluent: ${a.diluent}, flow: ${a.flow_velocity_cm_s} cm/s)</li>`).join('');
-      const findingsHtml = inv.key_findings.map(k => `<li>${k}</li>`).join('');
-      const earthHtml = inv.earth_applications.map(e => `<li>${e}</li>`).join('');
-
-      content.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
-          <div>
-            <h2 style="color:#fff; font-family:'JetBrains Mono'">${inv.acronym} — ${inv.name}</h2>
-            <p style="color:var(--cyan); font-size:0.85rem;">Hardware: ${inv.hardware_facility} | Gravity: ${inv.gravity}</p>
-          </div>
-          <span class="inv-pillar-badge badge-${inv.fire_safety_pillar.toLowerCase()}">${inv.fire_safety_pillar}</span>
-        </div>
-
-        <div class="modal-section">
-          <h4>Experimental Objectives</h4>
-          <p style="font-size:0.9rem; color:var(--text-main);">${inv.objectives}</p>
-        </div>
-
-        <div class="modal-section">
-          <h4>Fuels &amp; Burner Specifications</h4>
-          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${fuelsHtml}</ul>
-        </div>
-
-        <div class="modal-section">
-          <h4>Tested Atmospheric Conditions</h4>
-          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${atmsHtml}</ul>
-        </div>
-
-        <div class="modal-section">
-          <h4>Key Scientific Findings</h4>
-          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${findingsHtml}</ul>
-        </div>
-
-        <div class="modal-section">
-          <h4>Applications to Earth Fire Safety</h4>
-          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${earthHtml}</ul>
-        </div>
-      `;
+      content.innerHTML = '<div style="color:var(--text-muted); padding:2rem;">Loading detailed investigation data from NASA PSI...</div>';
       document.getElementById('modal').classList.add('open');
+
+      try {
+        const res = await fetch(`/investigations/${inv.id}`);
+        const full = await res.json();
+
+        const fuelsHtml = (full.fuels || []).map(f => `<li><strong>${f.material_name || f}</strong> (${f.fuel_type || 'standard'}) — shape: ${f.sample_shape || 'standard'}, dimensions: ${f.sample_dimensions_cm || 'N/A'}</li>`).join('');
+        const atmsHtml = (full.atmosphere || []).map(a => `<li><strong>${a.oxygen_pct}% O₂</strong>, ${a.pressure_psi} psi (diluent: ${a.diluent}, flow: ${a.flow_velocity_cm_s} cm/s)</li>`).join('');
+        const findingsHtml = (full.key_findings || []).map(k => `<li>${k}</li>`).join('');
+        const earthHtml = (full.earth_applications || []).map(e => `<li>${e}</li>`).join('');
+
+        content.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+            <div>
+              <h2 style="color:#fff; font-family:'JetBrains Mono'">${full.acronym} — ${full.name}</h2>
+              <p style="color:var(--cyan); font-size:0.85rem;">Hardware: ${full.hardware_facility || full.hardware} | Gravity: ${full.gravity}</p>
+            </div>
+            <span class="inv-pillar-badge badge-${(full.fire_safety_pillar || full.pillar).toLowerCase()}">${full.fire_safety_pillar || full.pillar}</span>
+          </div>
+
+          <div class="modal-section">
+            <h4>Experimental Objectives</h4>
+            <p style="font-size:0.9rem; color:var(--text-main);">${full.objectives || 'N/A'}</p>
+          </div>
+
+          <div class="modal-section">
+            <h4>Fuels &amp; Burner Specifications</h4>
+            <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${fuelsHtml || '<li>Standard test fuels</li>'}</ul>
+          </div>
+
+          <div class="modal-section">
+            <h4>Tested Atmospheric Conditions</h4>
+            <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${atmsHtml || '<li>Variable O₂ and pressure</li>'}</ul>
+          </div>
+
+          <div class="modal-section">
+            <h4>Key Scientific Findings</h4>
+            <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${findingsHtml || '<li>Experimental data archived in NASA PSI</li>'}</ul>
+          </div>
+
+          <div class="modal-section">
+            <h4>Applications to Earth Fire Safety</h4>
+            <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${earthHtml || '<li>Terrestrial fire standards</li>'}</ul>
+          </div>
+        `;
+      } catch (err) {
+        console.error("Failed to load details", err);
+        content.innerHTML = `<div style="color:var(--hazard); padding:2rem;">Error loading investigation details: ${err.message}</div>`;
+      }
     }
 
     function closeModal() {
@@ -805,12 +842,21 @@
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({gravity_g: g, o2_pct: o2, pressure_psi: p})
         });
-        const data = await res.json();
+        const raw = await res.json();
+        const data = raw.bounds || raw;
 
-        document.getElementById('res-buoyancy').textContent = `${(data.buoyancy_strength.value * 100).toFixed(1)}%`;
-        document.getElementById('res-convection').textContent = `${data.natural_convection_velocity_m_s.value.toFixed(3)} m/s`;
-        document.getElementById('res-o2-factor').textContent = `${data.oxygen_enhancement_factor.value.toFixed(2)}x`;
-        document.getElementById('res-flame-height').textContent = `${data.flame_height_scaling.estimated_mm.toFixed(1)} mm`;
+        if (data.buoyancy_strength) {
+          document.getElementById('res-buoyancy').textContent = `${(data.buoyancy_strength.value * 100).toFixed(1)}%`;
+        }
+        if (data.natural_convection_velocity_m_s) {
+          document.getElementById('res-convection').textContent = `${data.natural_convection_velocity_m_s.value.toFixed(3)} m/s`;
+        }
+        if (data.oxygen_enhancement_factor) {
+          document.getElementById('res-o2-factor').textContent = `${data.oxygen_enhancement_factor.value.toFixed(2)}x`;
+        }
+        if (data.flame_height_scaling) {
+          document.getElementById('res-flame-height').textContent = `${data.flame_height_scaling.estimated_mm.toFixed(1)} mm`;
+        }
       } catch (e) {
         console.error("Physics calculation error", e);
       }

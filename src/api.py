@@ -370,9 +370,13 @@ def _inv_summary(inv) -> dict:
         "acronym": inv.acronym,
         "project": inv.project,
         "hardware": inv.hardware_facility,
+        "hardware_facility": inv.hardware_facility,
         "pillar": inv.fire_safety_pillar.value,
+        "fire_safety_pillar": inv.fire_safety_pillar.value,
         "gravity": inv.gravity.value,
         "relevance": inv.relevance_to_crew_habitat,
+        "relevance_to_crew_habitat": inv.relevance_to_crew_habitat,
+        "fuels": [f.model_dump() for f in inv.fuels],
         "fuel_types": sorted({f.fuel_type.value for f in inv.fuels}),
         "o2_range": f"{min(o2_values)}-{max(o2_values)}%" if o2_values else "N/A",
     }
