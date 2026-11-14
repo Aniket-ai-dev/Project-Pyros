@@ -1,7 +1,7 @@
 # 🔥 PROJECT PYROS — NASA Fire Safety Intelligence Engine
 
 <p align="center">
-  <img src="https://img.shields.io/badge/NASA%20Space%20Apps-2025%20Challenge%20Winner%20Track-blue?style=for-the-badge&logo=nasa" alt="NASA Space Apps 2025">
+  <img src="https://img.shields.io/badge/NASA%20Space%20Apps-2025%20Challenge%20-blue?style=for-the-badge&logo=nasa" alt="NASA Space Apps 2026">
   <img src="https://img.shields.io/badge/Production%20Live-pyros.earth-00d2ff?style=for-the-badge" alt="Production Live pyros.earth">
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Tests-34%2F34%20PASS%20(100%25)-success?style=for-the-badge" alt="Tests 34/34 Pass">
@@ -336,7 +336,7 @@ python scripts/verify.py
 
 > **NASA Policy Notice:** NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites. For non-U.S. Government websites, participants must comply with any data use parameters of that specific website.
 >
-> **Research Disclaimer:** PROJECT PYROS is an academic research platform developed for the NASA Space Apps Challenge 2025. Extrapolated combustion predictions are intended for preliminary engineering trade studies and mission concept formulation. Flight-critical safety decisions must be confirmed with published NASA-STD-6001 test data.
+> **Research Disclaimer:** PROJECT PYROS is an academic research platform developed for the NASA Space Apps Challenge 2026. Extrapolated combustion predictions are intended for preliminary engineering trade studies and mission concept formulation. Flight-critical safety decisions must be confirmed with published NASA-STD-6001 test data.
 
 ---
 
