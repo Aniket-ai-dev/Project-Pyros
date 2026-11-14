@@ -341,6 +341,6 @@ python scripts/verify.py
 ---
 
 <p align="center">
-  <strong>Built with pride for the NASA International Space Apps Challenge 2025 🚀</strong><br>
+  <strong>Built with pride for the NASA International Space Apps Challenge 2026 🚀</strong><br>
   <em>Dedicated to the memory of the crews of Apollo 1, Apollo 13, and Space Station Mir.</em>
 </p>
