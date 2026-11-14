@@ -97,27 +97,28 @@ Choose any ICANN-accredited registrar:
 In the **Render Dashboard**:
 1. Open your `nasa-fire-safety-engine` service.
 2. Go to **Settings** &rarr; **Custom Domains**.
-3. Click **Add Custom Domain** and enter your domain:
-   - Example: `nasafiresafety.space` and `www.nasafiresafety.space`.
+3. Click **Add Custom Domain** and enter:
+   - `pyros.earth` and `www.pyros.earth`.
 
-### Step 3: Configure DNS Records at Your Registrar
-Open your DNS management panel at your registrar (or Cloudflare) and create these two records:
+### Step 3: Configure DNS Records at Porkbun
+Open your DNS management panel at Porkbun for `pyros.earth` and create these two records:
 
 | Record Type | Name / Host | Target / Value | TTL |
 | :--- | :--- | :--- | :--- |
 | **CNAME** | `www` | `nasa-fire-safety-engine.onrender.com` | Auto or 300 |
 | **A** (or ALIAS/ANAME) | `@` (root) | `216.24.57.1` *(Render's Root IP)* | Auto or 300 |
 
-*Note: If using Cloudflare, make sure the proxy status is set to DNS only (Grey cloud) during initial SSL verification.*
+*Note: Porkbun auto-manages DNS propagation. Once saved, Render automatically verifies and provisions the SSL certificate.*
 
 ---
 
 ## 5. SSL/TLS Certificate Verification
 
-- Both Render and Railway automatically issue and renew a free **Let's Encrypt SSL Certificate** once DNS propagation completes (usually 5 to 30 minutes).
+- Both Render and Railway automatically issue and renew a free **Let's Encrypt SSL Certificate** once DNS propagation completes (usually 5 to 15 minutes).
 - Once active, your dashboard will load securely under:
   ```
-  https://www.yourdomain.space/dashboard
+  https://pyros.earth/dashboard
+  https://pyros.earth/guide
   ```
 
 ---

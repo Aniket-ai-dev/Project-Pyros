@@ -80,7 +80,8 @@ class TestAPIEndpoints(unittest.TestCase):
         response = self.client.get("/guide")
         self.assertEqual(response.status_code, 200)
         html = response.text
-        self.assertIn("System User Guide", html)
+        self.assertIn("PROJECT PYROS", html)
+        self.assertIn("pyros.earth", html)
         self.assertIn("Module 1: The Combustion Science Challenge", html)
         self.assertIn("Module 2: Dashboard Navigation &amp; Mission Modes", html)
         self.assertIn("Module 3: Step-by-Step Analytical Workflow", html)
