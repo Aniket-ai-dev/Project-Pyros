@@ -1146,7 +1146,21 @@
       btn.innerHTML = '<span class="ai-spinner"></span> Analyzing...';
       btn.disabled = true;
       resultBox.classList.add('active');
-      contentBox.innerHTML = '<span style="color:var(--text-muted);">Consulting NASA PSI knowledge base & physics engine...</span>';
+
+      const steps = [
+        '⚡ Step 1/4: Parsing flight scenario (target gravity, O₂ concentration, atmospheric pressure)...',
+        '🔬 Step 2/4: Computing physics bounds (Grashof buoyancy Gr ∝ g, convection velocity, Roper flame bounds)...',
+        '🛰️ Step 3/4: Cross-referencing NASA PSI investigation datasets (BASS, Saffire, ACME)...',
+        '🧠 Step 4/4: Synthesizing combustion physics extrapolation with Super Intelligence (Gemini)...'
+      ];
+      let stepIdx = 0;
+      contentBox.innerHTML = `<div style="color:var(--cyan); font-family:'JetBrains Mono'; font-size:0.85rem;"><span class="ai-spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></span>${steps[0]}</div>`;
+      const progressTimer = setInterval(() => {
+        stepIdx++;
+        if (stepIdx < steps.length) {
+          contentBox.innerHTML = `<div style="color:var(--cyan); font-family:'JetBrains Mono'; font-size:0.85rem;"><span class="ai-spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></span>${steps[stepIdx]}</div>`;
+        }
+      }, 1800);
 
       try {
         const res = await fetch('/query', {
@@ -1164,12 +1178,13 @@
 
         let answerText = data.answer;
         if (typeof answerText === 'object') {
-          answerText = answerText.llm_hypothesis || answerText.final_report || JSON.stringify(answerText, null, 2);
+          answerText = answerText.final_report || answerText.llm_hypothesis || JSON.stringify(answerText, null, 2);
         }
         contentBox.textContent = answerText;
       } catch (err) {
         contentBox.textContent = `Error querying AI engine: ${err.message}`;
       } finally {
+        clearInterval(progressTimer);
         btn.innerHTML = '<span>Run AI Analysis</span>';
         btn.disabled = false;
       }
