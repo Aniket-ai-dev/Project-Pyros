@@ -647,6 +647,200 @@
       background: rgba(13, 21, 39, 0.4);
     }
 
+    /* Mission Mode Tab Navigation */
+    .mission-tabs {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .mission-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.5rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    .mission-tab-btn:hover {
+      color: #fff;
+      background: var(--bg-card);
+    }
+    .mission-tab-btn.active {
+      color: var(--cyan);
+      background: rgba(0, 210, 255, 0.1);
+      border-color: rgba(0, 210, 255, 0.3);
+    }
+    .academic-portal-btn {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .academic-portal-btn:hover {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    /* Mission Views */
+    .mission-view { display: none; }
+    .mission-view.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Incident Cards */
+    .incident-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--hazard);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .incident-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .incident-title {
+      font-size: 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+    .incident-telemetry-badge {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+    .telemetry-strip {
+      display: flex;
+      gap: 1.5rem;
+      background: var(--bg-panel);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+    }
+    .telemetry-strip strong { color: var(--cyan); }
+    .simulate-btn {
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.15rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .simulate-btn:hover {
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+      transform: translateY(-1px);
+    }
+
+    /* Spinoff Cards */
+    .spinoff-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--suppression);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .spinoff-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .spinoff-title {
+      font-size: 1.2rem;
+      color: #fff;
+      font-weight: 600;
+    }
+    .spinoff-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+    .spinoff-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .spinoff-col {
+      background: var(--bg-panel);
+      padding: 0.9rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .spinoff-col h5 {
+      color: var(--cyan);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 0.4rem;
+    }
+    .spinoff-col p {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+
+    /* Academic Modal Video & Grid */
+    .video-responsive {
+      position: relative;
+      padding-bottom: 56.25%; /* 16:9 */
+      height: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+    }
+    .video-responsive iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
     /* Footer */
     footer {
       max-width: 1440px;
@@ -691,10 +885,31 @@
         </div>
       </div>
     </div>
+
+    <!-- MISSION MODE TAB NAVIGATION -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; border-top:1px solid var(--border); padding-top:0.75rem; flex-wrap:wrap; gap:0.75rem;">
+      <div class="mission-tabs">
+        <button class="mission-tab-btn active" id="tab-btn-telemetry" onclick="switchMissionTab('telemetry')">
+          <span>🛰️</span> Mission Telemetry &amp; Investigations
+        </button>
+        <button class="mission-tab-btn" id="tab-btn-incidents" onclick="switchMissionTab('incidents')">
+          <span>🔥</span> Historical Incidents (Apollo &amp; Mir)
+        </button>
+        <button class="mission-tab-btn" id="tab-btn-spinoffs" onclick="switchMissionTab('spinoffs')">
+          <span>🌍</span> NASA Earth Spinoffs
+        </button>
+      </div>
+      <button class="academic-portal-btn" onclick="openAcademicModal()">
+        <span>📚</span> NASA Academic &amp; Video Portal
+      </button>
+    </div>
   </header>
 
   <!-- DASHBOARD LAYOUT -->
   <main class="dashboard-layout">
+
+    <!-- MISSION VIEW 1: TELEMETRY & INVESTIGATIONS -->
+    <div id="view-telemetry" class="mission-view active">
 
     <!-- THE HARDEST CHALLENGE: PARTIAL-GRAVITY EXTRAPOLATOR -->
     <section class="physics-card">
@@ -733,7 +948,7 @@
               <span>Oxygen Concentration (O₂ %)</span>
               <span class="val" id="val-o2">34.0 %</span>
             </label>
-            <input type="range" id="input-o2" min="15" max="85" step="0.5" value="34" oninput="updatePhysics()">
+            <input type="range" id="input-o2" min="10" max="100" step="0.5" value="34" oninput="updatePhysics()">
           </div>
 
           <div class="slider-box">
@@ -741,7 +956,7 @@
               <span>Atmospheric Pressure (psi)</span>
               <span class="val" id="val-p">10.2 psi</span>
             </label>
-            <input type="range" id="input-p" min="3" max="15" step="0.1" value="10.2" oninput="updatePhysics()">
+            <input type="range" id="input-p" min="2" max="20" step="0.1" value="10.2" oninput="updatePhysics()">
           </div>
         </div>
 
@@ -885,8 +1100,43 @@
         <!-- Filled dynamically -->
       </div>
     </section>
+  </div> <!-- END VIEW-TELEMETRY -->
 
-  </main>
+  <!-- MISSION VIEW 2: HISTORICAL SPACEFLIGHT INCIDENT RECONSTRUCTOR -->
+  <div id="view-incidents" class="mission-view">
+    <div class="insight-banner" style="border-color:rgba(239, 68, 68, 0.4); background:linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(13, 21, 39, 0.9) 100%); margin-top:0;">
+      <div class="insight-badge" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border-color:rgba(239, 68, 68, 0.4);">
+        MISSION ASSURANCE • FAILURE POST-MORTEM &amp; SIMULATION
+      </div>
+      <div class="insight-title">Historical Spaceflight Fire Incidents: Reconstructed Telemetry &amp; PSI Remedies</div>
+      <p>
+        Throughout human space exploration, fires in enclosed, oxygen-rich, or microgravity environments have posed existential threats. The <strong>Apollo 1</strong> pre-launch flash fire, <strong>Apollo 13</strong> cryogenic oxygen tank explosion, and <strong>Space Station Mir</strong> oxygen candle fire directly established modern fire safety standards. Below, review reconstructed flight telemetry, deterministic physics breakdowns, and modern NASA PSI investigations engineered to ensure history never repeats on the Moon or Mars.
+      </p>
+    </div>
+
+    <div id="incidents-container">
+      <div style="color:var(--text-muted); padding:2rem; text-align:center;">Loading historical spaceflight incidents...</div>
+    </div>
+  </div>
+
+  <!-- MISSION VIEW 3: NASA EARTH SPINOFF IMPACT MATRIX -->
+  <div id="view-spinoffs" class="mission-view">
+    <div class="insight-banner" style="border-color:rgba(16, 185, 129, 0.4); background:linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(13, 21, 39, 0.9) 100%); margin-top:0;">
+      <div class="insight-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981; border-color:rgba(16, 185, 129, 0.4);">
+        TECHNOLOGY TRANSFER • SAVING LIVES ON EARTH
+      </div>
+      <div class="insight-title">From Spaceflight to Terrestrial Safety: NASA Combustion &amp; Life Support Spinoffs</div>
+      <p>
+        Microgravity combustion science does not remain in orbit. Technologies engineered to survive extreme oxygen concentrations, diagnose microscopic aerosols, and insulate astronauts have directly revolutionized municipal firefighting and underground industrial mining. Below are three premier official NASA Spinoff technologies derived directly from space fire safety research.
+      </p>
+    </div>
+
+    <div id="spinoffs-container">
+      <div style="color:var(--text-muted); padding:2rem; text-align:center;">Loading NASA Earth spinoffs...</div>
+    </div>
+  </div>
+
+</main>
 
   <!-- MODAL FOR INVESTIGATION DETAILS -->
   <div class="modal-backdrop" id="modal" onclick="if(event.target === this) closeModal()">
@@ -927,6 +1177,84 @@
 
       <div id="compare-result-container" style="margin-top:1.5rem;">
         <div style="color:var(--text-dim); text-align:center; padding:2rem;">Select two investigations above and click Compare to view side-by-side specs and knowledge graph connections.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FOR NASA ACADEMIC RESEARCH & VIDEO PORTAL -->
+  <div class="modal-backdrop" id="academic-modal" onclick="if(event.target === this) closeAcademicModal()">
+    <div class="modal-box" style="max-width:960px;">
+      <button class="modal-close" onclick="closeAcademicModal()">&times;</button>
+      <div style="margin-bottom:1.25rem;">
+        <div style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(59, 130, 246, 0.15); color:#93c5fd; border:1px solid rgba(59, 130, 246, 0.4); padding:0.25rem 0.75rem; border-radius:9999px; font-size:0.75rem; font-family:'JetBrains Mono'; font-weight:600; margin-bottom:0.5rem;">
+          OFFICIAL NASA RESEARCH RESOURCES
+        </div>
+        <h2 style="color:#fff; font-family:'JetBrains Mono'; font-size:1.35rem;">NASA ISS Combustion Science Academic Portal</h2>
+        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem;">
+          Curated primary literature, technical guides, and multimedia for aerospace researchers, professors, and engineers.
+        </p>
+      </div>
+
+      <!-- Video Section -->
+      <div style="background:var(--bg-panel); border:1px solid var(--border); border-radius:8px; padding:1.25rem; margin-bottom:1.5rem;">
+        <h4 style="color:var(--cyan); font-size:0.85rem; text-transform:uppercase; font-family:'JetBrains Mono'; margin-bottom:0.75rem;">
+          🎥 NASA ScienceCasts: The Power of Studying Combustion on the ISS
+        </h4>
+        <div class="video-responsive">
+          <iframe src="https://www.youtube-nocookie.com/embed/W1oXykoz9zg" title="NASA ScienceCasts: The Power of Studying Combustion on the ISS" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+          An official NASA documentary on microgravity combustion research aboard the International Space Station, detailing how the absence of buoyant updrafts reveals pure spherical diffusion flames and low-temperature cool flame chemistry.
+        </p>
+      </div>
+
+      <!-- Researcher's Guide Breakdown -->
+      <div style="background:var(--bg-panel); border:1px solid var(--border); border-radius:8px; padding:1.25rem; margin-bottom:1.5rem;">
+        <h4 style="color:var(--cyan); font-size:0.85rem; text-transform:uppercase; font-family:'JetBrains Mono'; margin-bottom:0.75rem;">
+          📖 A Researcher's Guide to International Space Station Combustion Science (50+ Pages)
+        </h4>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:0.75rem; font-size:0.85rem;">
+          <div style="background:var(--bg-card); padding:0.75rem; border-radius:6px; border:1px solid var(--border);">
+            <strong style="color:#fff; display:block; margin-bottom:0.25rem;">Chapter 1: The Microgravity Advantage</strong>
+            <span style="color:var(--text-muted);">Elimination of buoyancy, simplified 1D spherical symmetry, and chemical kinetics isolation.</span>
+          </div>
+          <div style="background:var(--bg-card); padding:0.75rem; border-radius:6px; border:1px solid var(--border);">
+            <strong style="color:#fff; display:block; margin-bottom:0.25rem;">Chapter 2: Hardware Facilities</strong>
+            <span style="color:var(--text-muted);">Technical specs for CIR, MDCA droplets, ACME gas burners, and Microgravity Science Glovebox (MSG).</span>
+          </div>
+          <div style="background:var(--bg-card); padding:0.75rem; border-radius:6px; border:1px solid var(--border);">
+            <strong style="color:#fff; display:block; margin-bottom:0.25rem;">Chapter 3: Spacecraft Fire Safety</strong>
+            <span style="color:var(--text-muted);">Flow duct flammability, solid material screening, soot formation, and quenching distances.</span>
+          </div>
+          <div style="background:var(--bg-card); padding:0.75rem; border-radius:6px; border:1px solid var(--border);">
+            <strong style="color:#fff; display:block; margin-bottom:0.25rem;">Chapter 4: Future Exploration Frontiers</strong>
+            <span style="color:var(--text-muted);">Fire safety requirements for pressurized rovers, Lunar bases, and transit habitats to Mars.</span>
+          </div>
+        </div>
+        <div style="margin-top:1rem;">
+          <a href="https://www.nasa.gov/missions/station/a-researchers-guide-to-combustion-science/" target="_blank" style="color:var(--cyan); font-size:0.85rem; font-family:'JetBrains Mono'; text-decoration:none;">
+            ➔ Download Full 50-Page NASA Researcher's Guide (Official NASA PDF)
+          </a>
+        </div>
+      </div>
+
+      <!-- Official Primary Repositories -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+        <div style="background:var(--bg-panel); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <h5 style="color:#fff; font-size:0.85rem; font-family:'JetBrains Mono'; margin-bottom:0.35rem;">NASA PSI Data Repository</h5>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">Access the raw experimental datasets, video telemetry, and sensor logs from NASA Glenn.</p>
+          <a href="https://psi.nasa.gov/physci/repo/search?q=combustion" target="_blank" style="color:var(--cyan); font-size:0.8rem; font-family:'JetBrains Mono'; text-decoration:none;">psi.nasa.gov ➔</a>
+        </div>
+        <div style="background:var(--bg-panel); border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <h5 style="color:#fff; font-size:0.85rem; font-family:'JetBrains Mono'; margin-bottom:0.35rem;">NASA Glenn Combustion Science</h5>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.75rem;">Physical Sciences Research Program combustion facility overviews and principal investigator logs.</p>
+          <a href="https://www.nasa.gov/glenn/glenn-expertise-space-exploration/physical-sciences-program/combustion-science/" target="_blank" style="color:var(--cyan); font-size:0.8rem; font-family:'JetBrains Mono'; text-decoration:none;">nasa.gov/glenn ➔</a>
+        </div>
+      </div>
+
+      <!-- Mandatory NASA Disclaimer -->
+      <div style="padding:0.85rem 1rem; background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.3); border-radius:6px; font-size:0.78rem; color:var(--text-dim); line-height:1.5;">
+        <strong>NASA Policy Notice:</strong> NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites. For non-U.S. Government websites, participants must comply with any data use parameters of that specific website.
       </div>
     </div>
   </div>
@@ -1468,6 +1796,179 @@
       document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
       updatePhysics();
+    }
+
+    // Mission Mode Tabs & Incidents / Spinoffs Handlers
+    let incidentsLoaded = false;
+    let spinoffsLoaded = false;
+
+    function switchMissionTab(viewName) {
+      document.querySelectorAll('.mission-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.mission-tab-btn').forEach(b => b.classList.remove('active'));
+
+      const targetView = document.getElementById(`view-${viewName}`);
+      const targetBtn = document.getElementById(`tab-btn-${viewName}`);
+      if (targetView) targetView.classList.add('active');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      if (viewName === 'incidents' && !incidentsLoaded) {
+        loadIncidents();
+      }
+      if (viewName === 'spinoffs' && !spinoffsLoaded) {
+        loadSpinoffs();
+      }
+    }
+
+    function openAcademicModal() {
+      document.getElementById('academic-modal').classList.add('open');
+    }
+
+    function closeAcademicModal() {
+      document.getElementById('academic-modal').classList.remove('open');
+    }
+
+    function simulateIncident(g, o2, p) {
+      switchMissionTab('telemetry');
+      document.getElementById('input-g').value = g;
+      document.getElementById('input-o2').value = o2;
+      document.getElementById('input-p').value = p;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      updatePhysics();
+      const card = document.querySelector('.physics-card');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    async function loadIncidents() {
+      const container = document.getElementById('incidents-container');
+      container.innerHTML = '<div style="color:var(--text-muted); padding:2rem; text-align:center;">Retrieving historical spaceflight records and PSI remedies...</div>';
+      try {
+        const res = await fetch('/incidents');
+        const incidents = await res.json();
+        incidentsLoaded = true;
+        container.innerHTML = '';
+
+        incidents.forEach(inc => {
+          const card = document.createElement('div');
+          card.className = 'incident-card';
+
+          const atm = inc.atmosphere || {};
+          const sim = inc.sim_params || { gravity_g: atm.gravity_g || 1.0, o2_pct: atm.oxygen_pct || 21, pressure_psi: atm.pressure_psi || 14.7 };
+
+          const failureList = (inc.failure_mechanisms || []).map(m => `<li>${m}</li>`).join('');
+          const psiList = (inc.psi_remedies || []).map(r => `<li><strong>${r.investigation}:</strong> ${r.contribution}</li>`).join('');
+
+          card.innerHTML = `
+            <div class="incident-header">
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-dim); font-family:'JetBrains Mono'; text-transform:uppercase;">${inc.date} • ${inc.mission_type}</div>
+                <div class="incident-title">${inc.name}</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">Crew: ${inc.crew}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem;">
+                <span class="incident-telemetry-badge">${atm.hazard_rating || 'CRITICAL ANOMALY'}</span>
+                <button class="simulate-btn" onclick="simulateIncident(${sim.gravity_g}, ${sim.o2_pct}, ${sim.pressure_psi})">
+                  <span>⚡</span> Simulate in Extrapolator
+                </button>
+              </div>
+            </div>
+
+            <div class="telemetry-strip">
+              <div>Gravity: <strong>${atm.gravity_g !== undefined ? atm.gravity_g + ' g' : 'N/A'}</strong></div>
+              <div>Oxygen: <strong>${atm.oxygen_pct}%</strong></div>
+              <div>Pressure: <strong>${atm.pressure_psi} psi</strong></div>
+              <div>Diluent: <strong>${atm.diluent || 'N/A'}</strong></div>
+              <div>PO₂ Partial Pressure: <strong style="color:var(--hazard);">${atm.po2_psi ? atm.po2_psi + ' psi' : 'N/A'}</strong></div>
+            </div>
+
+            <div style="margin-bottom:1rem; font-size:0.88rem; color:var(--text-main); line-height:1.6;">
+              <strong style="color:var(--hazard);">Root Cause:</strong> ${inc.root_cause}
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-top:1rem;">
+              <div style="background:var(--bg-panel); padding:1rem; border-radius:6px; border:1px solid var(--border);">
+                <h5 style="color:#f87171; font-size:0.75rem; text-transform:uppercase; font-family:'JetBrains Mono'; margin-bottom:0.5rem;">Physical Failure Cascades</h5>
+                <ul style="padding-left:1.15rem; font-size:0.82rem; color:var(--text-muted); line-height:1.5;">${failureList}</ul>
+              </div>
+              <div style="background:var(--bg-panel); padding:1rem; border-radius:6px; border:1px solid var(--border);">
+                <h5 style="color:var(--cyan); font-size:0.75rem; text-transform:uppercase; font-family:'JetBrains Mono'; margin-bottom:0.5rem;">Modern NASA PSI Prevention &amp; Remedies</h5>
+                <ul style="padding-left:1.15rem; font-size:0.82rem; color:var(--text-muted); line-height:1.5;">${psiList}</ul>
+              </div>
+            </div>
+
+            <div style="margin-top:1rem; display:flex; justify-content:flex-end;">
+              <a href="${inc.official_url}" target="_blank" style="color:var(--cyan); font-size:0.8rem; font-family:'JetBrains Mono'; text-decoration:none;">
+                Official NASA Safety Center Record ➔
+              </a>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        container.innerHTML = `<div style="color:var(--hazard); padding:2rem; text-align:center;">Failed to load historical incidents: ${err.message}</div>`;
+      }
+    }
+
+    async function loadSpinoffs() {
+      const container = document.getElementById('spinoffs-container');
+      container.innerHTML = '<div style="color:var(--text-muted); padding:2rem; text-align:center;">Retrieving NASA Spinoff database records...</div>';
+      try {
+        const res = await fetch('/spinoffs');
+        const spinoffs = await res.json();
+        spinoffsLoaded = true;
+        container.innerHTML = '';
+
+        spinoffs.forEach(spin => {
+          const card = document.createElement('div');
+          card.className = 'spinoff-card';
+
+          const metricsHtml = Object.entries(spin.metrics || {}).map(([k, v]) => `
+            <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); border-radius:4px; padding:0.4rem 0.6rem; text-align:center;">
+              <div style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase;">${k.replace(/_/g, ' ')}</div>
+              <div style="font-size:1rem; font-weight:700; color:#10b981; font-family:'JetBrains Mono';">${v}</div>
+            </div>
+          `).join('');
+
+          card.innerHTML = `
+            <div class="spinoff-header">
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-dim); font-family:'JetBrains Mono';">NASA SPINOFF ID: ${spin.spinoff_id} • ${spin.decade}</div>
+                <div class="spinoff-title">${spin.title}</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">Key Beneficiary: <span style="color:#fff;">${spin.beneficiary}</span></div>
+              </div>
+              <span class="spinoff-badge">SAVING LIVES ON EARTH</span>
+            </div>
+
+            <div class="spinoff-grid">
+              <div class="spinoff-col">
+                <h5>🚀 NASA Spaceflight Origin</h5>
+                <p>${spin.space_origin}</p>
+              </div>
+              <div class="spinoff-col">
+                <h5>🔬 NASA PSI Research Synergy</h5>
+                <p>${spin.psi_connection}</p>
+              </div>
+              <div class="spinoff-col">
+                <h5>🌍 Terrestrial Society Impact</h5>
+                <p>${spin.terrestrial_impact}</p>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border);">
+              <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                ${metricsHtml}
+              </div>
+              <a href="${spin.official_url}" target="_blank" style="color:var(--suppression); font-size:0.8rem; font-family:'JetBrains Mono'; text-decoration:none;">
+                Official NASA Spinoff Article (spinoff.nasa.gov) ➔
+              </a>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        container.innerHTML = `<div style="color:var(--hazard); padding:2rem; text-align:center;">Failed to load NASA Spinoffs: ${err.message}</div>`;
+      }
     }
 
     window.onload = () => {
