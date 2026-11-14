@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NASA PSI Fire Safety Intelligence Engine — Mission Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #070b14;
+      --bg-card: #0d1527;
+      --bg-card-hover: #121d36;
+      --bg-panel: #0a1020;
+      --border: #1a2849;
+      --border-bright: #2a4175;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --cyan: #00d2ff;
+      --cyan-glow: rgba(0, 210, 255, 0.2);
+      --prevention: #3b82f6;
+      --prevention-bg: rgba(59, 130, 246, 0.15);
+      --detection: #f59e0b;
+      --detection-bg: rgba(245, 158, 11, 0.15);
+      --suppression: #10b981;
+      --suppression-bg: rgba(16, 185, 129, 0.15);
+      --hazard: #ef4444;
+      --hazard-bg: rgba(239, 68, 68, 0.15);
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.5;
+      padding-bottom: 60px;
+      overflow-x: hidden;
+    }
+
+    /* Header & Telemetry Bar */
+    header {
+      background: linear-gradient(180deg, #0d172e 0%, #070b14 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+    .header-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .nasa-insignia {
+      background: #e11d48;
+      color: white;
+      font-weight: 900;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      box-shadow: 0 0 15px rgba(225, 29, 72, 0.4);
+    }
+    .title-group h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+    .title-group p {
+      font-size: 0.8rem;
+      color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .telemetry-bar {
+      display: flex;
+      gap: 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    .telemetry-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .telemetry-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--suppression);
+      box-shadow: 0 0 8px var(--suppression);
+    }
+
+    /* Main Container & Layout */
+    .dashboard-layout {
+      max-width: 1440px;
+      margin: 1.5rem auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    /* Section Headers */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-title span.tag {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Calculator Banner / Hardest Challenge */
+    .physics-card {
+      background: linear-gradient(135deg, #0d1933 0%, #0a1122 100%);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    .physics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .physics-header h2 {
+      font-size: 1.3rem;
+      color: #ffffff;
+    }
+    .badge-challenge {
+      background: rgba(0, 210, 255, 0.15);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+    .presets-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .preset-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-btn:hover, .preset-btn.active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(0, 210, 255, 0.08);
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 2rem;
+    }
+    @media (max-width: 900px) {
+      .calc-grid { grid-template-columns: 1fr; }
+    }
+    .sliders-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .slider-box label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+    .slider-box label span.val {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--cyan);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--cyan);
+    }
+
+    .results-panel {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    .metric-card {
+      background: rgba(13, 21, 39, 0.7);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .metric-title {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .metric-value {
+      font-size: 1.4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #fff;
+      margin: 0.3rem 0;
+    }
+    .metric-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Filters & Search */
+    .controls-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .search-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 280px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+    .filters-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-btn {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      color: #fff;
+      border-color: var(--border-bright);
+      background: var(--border);
+    }
+    .filter-btn.active[data-pillar="PREVENTION"] { border-color: var(--prevention); color: var(--prevention); }
+    .filter-btn.active[data-pillar="DETECTION"] { border-color: var(--detection); color: var(--detection); }
+    .filter-btn.active[data-pillar="SUPPRESSION"] { border-color: var(--suppression); color: var(--suppression); }
+
+    /* Investigation Grid */
+    .investigation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+    .inv-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+      position: relative;
+    }
+    .inv-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .inv-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    .inv-acronym {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .inv-name {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .inv-pillar-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-prevention { background: var(--prevention-bg); color: var(--prevention); border: 1px solid var(--prevention); }
+    .badge-detection { background: var(--detection-bg); color: var(--detection); border: 1px solid var(--detection); }
+    .badge-suppression { background: var(--suppression-bg); color: var(--suppression); border: 1px solid var(--suppression); }
+
+    .inv-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.75rem 0;
+    }
+    .inv-tag {
+      font-size: 0.75rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .inv-relevance {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+      border-top: 1px solid var(--border);
+      padding-top: 0.75rem;
+    }
+    .relevance-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--bg-panel);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .relevance-fill {
+      height: 100%;
+      background: var(--cyan);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      padding: 1.5rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+    .modal-close {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { color: #fff; border-color: var(--hazard); }
+    .modal-section { margin-top: 1.5rem; }
+    .modal-section h4 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--cyan);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Footer */
+    footer {
+      max-width: 1440px;
+      margin: 3rem auto 0;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="nasa-insignia">NASA PSI</div>
+        <div class="title-group">
+          <h1>Fire Safety Intelligence Engine</h1>
+          <p>Microgravity Combustion Science &amp; Partial-Gravity Extrapolator</p>
+        </div>
+      </div>
+      <div class="telemetry-bar">
+        <div class="telemetry-item">
+          <div class="telemetry-dot"></div>
+          <span>SYSTEM ONLINE</span>
+        </div>
+        <div class="telemetry-item">
+          <span style="color:var(--cyan)">22</span> INVESTIGATIONS
+        </div>
+        <div class="telemetry-item">
+          <span style="color:var(--cyan)">352</span> GRAPH EDGES
+        </div>
+        <div class="telemetry-item">
+          <span style="color:var(--suppression)">100% REAL NASA DATA</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- DASHBOARD LAYOUT -->
+  <main class="dashboard-layout">
+
+    <!-- THE HARDEST CHALLENGE: PARTIAL-GRAVITY EXTRAPOLATOR -->
+    <section class="physics-card">
+      <div class="physics-header">
+        <div>
+          <h2>Partial-Gravity Flammability Extrapolator</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem;">
+            Deterministic physics constraints bounding combustion behavior between 0g (ISS) and 1g (Earth)
+          </p>
+        </div>
+        <div class="badge-challenge">THE HARDEST CHALLENGE — PHYSICS BOUNDED</div>
+      </div>
+
+      <div class="presets-group">
+        <span style="font-size:0.8rem; color:var(--text-dim); align-self:center; margin-right:0.5rem;">QUICK SCENARIOS:</span>
+        <button class="preset-btn active" onclick="applyPreset(0.16, 34.0, 10.2, this)">🌕 Moon Base Habitat (34% O₂, 10.2 psi)</button>
+        <button class="preset-btn" onclick="applyPreset(0.38, 21.0, 14.7, this)">🔴 Mars Surface (21% O₂, 14.7 psi)</button>
+        <button class="preset-btn" onclick="applyPreset(0.00, 21.0, 14.7, this)">🛰️ ISS Microgravity (21% O₂, 14.7 psi)</button>
+        <button class="preset-btn" onclick="applyPreset(0.16, 100.0, 4.3, this)">🧑‍🚀 Spacesuit EVA (100% O₂, 4.3 psi)</button>
+        <button class="preset-btn" onclick="applyPreset(0.00, 85.0, 14.7, this)">🧪 CFI-G High-O₂ Flame (85% O₂)</button>
+      </div>
+
+      <div class="calc-grid">
+        <!-- Sliders -->
+        <div class="sliders-panel">
+          <div class="slider-box">
+            <label>
+              <span>Target Gravity (fraction of Earth-g)</span>
+              <span class="val" id="val-g">0.16 g</span>
+            </label>
+            <input type="range" id="input-g" min="0" max="1" step="0.01" value="0.16" oninput="updatePhysics()">
+          </div>
+
+          <div class="slider-box">
+            <label>
+              <span>Oxygen Concentration (O₂ %)</span>
+              <span class="val" id="val-o2">34.0 %</span>
+            </label>
+            <input type="range" id="input-o2" min="15" max="85" step="0.5" value="34" oninput="updatePhysics()">
+          </div>
+
+          <div class="slider-box">
+            <label>
+              <span>Atmospheric Pressure (psi)</span>
+              <span class="val" id="val-p">10.2 psi</span>
+            </label>
+            <input type="range" id="input-p" min="3" max="15" step="0.1" value="10.2" oninput="updatePhysics()">
+          </div>
+        </div>
+
+        <!-- Metric Outputs -->
+        <div class="results-panel">
+          <div class="metric-card">
+            <div class="metric-title">Relative Buoyancy</div>
+            <div class="metric-value" id="res-buoyancy">16.0%</div>
+            <div class="metric-desc">Grashof scaling vs Earth baseline (1.00)</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Convection Velocity</div>
+            <div class="metric-value" id="res-convection">0.222 m/s</div>
+            <div class="metric-desc">Earth baseline: 0.554 m/s (V ~ √g)</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">O₂ Flammability Factor</div>
+            <div class="metric-value" id="res-o2-factor" style="color:var(--hazard);">2.38x</div>
+            <div class="metric-desc">Elevated material flammability vs 21% O₂</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Flame Height (Scaling)</div>
+            <div class="metric-value" id="res-flame-height">187.5 mm</div>
+            <div class="metric-desc">From 30mm Earth flame (H ~ 1/g)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVESTIGATION EXPLORER -->
+    <section>
+      <div class="section-title">
+        <span>NASA PSI Combustion Investigations</span>
+        <span class="tag" id="count-tag">Loading 22 investigations...</span>
+      </div>
+
+      <div class="controls-bar">
+        <div class="search-row">
+          <input type="text" id="search-input" class="search-input" placeholder="Search investigations, fuels, sensors, or hardware (e.g., 'BASS', 'PMMA', 'SAME', 'CIR')..." oninput="filterInvestigations()">
+        </div>
+        <div class="filters-row">
+          <span style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase;">Pillars:</span>
+          <button class="filter-btn active" data-pillar="ALL" onclick="setPillarFilter('ALL', this)">All</button>
+          <button class="filter-btn" data-pillar="PREVENTION" onclick="setPillarFilter('PREVENTION', this)">Prevention (16)</button>
+          <button class="filter-btn" data-pillar="DETECTION" onclick="setPillarFilter('DETECTION', this)">Detection (4)</button>
+          <button class="filter-btn" data-pillar="SUPPRESSION" onclick="setPillarFilter('SUPPRESSION', this)">Suppression (2)</button>
+
+          <span style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; margin-left:1rem;">Hardware:</span>
+          <button class="filter-btn active" data-hw="ALL" onclick="setHwFilter('ALL', this)">All</button>
+          <button class="filter-btn" data-hw="CIR" onclick="setHwFilter('CIR', this)">CIR</button>
+          <button class="filter-btn" data-hw="MSG" onclick="setHwFilter('MSG', this)">MSG</button>
+          <button class="filter-btn" data-hw="Cygnus" onclick="setHwFilter('Cygnus', this)">Cygnus</button>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="investigation-grid" id="inv-grid" style="margin-top:1.5rem;">
+        <!-- Filled dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL FOR INVESTIGATION DETAILS -->
+  <div class="modal-backdrop" id="modal" onclick="if(event.target === this) closeModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div id="modal-content">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      <strong>NASA Space Apps Challenge 2025</strong> — Fire in Space Challenge
+    </div>
+    <div>
+      Data Source: <a href="https://psi.nasa.gov/" target="_blank" style="color:var(--cyan); text-decoration:none;">NASA Physical Sciences Informatics (PSI)</a>
+    </div>
+    <div>
+      Super Intelligence (SI) Bounded Architecture • Zero Mockup Data
+    </div>
+  </footer>
+
+  <script>
+    let allInvestigations = [];
+    let currentPillar = 'ALL';
+    let currentHw = 'ALL';
+
+    // Fetch all investigations on load
+    async function init() {
+      try {
+        const res = await fetch('/investigations');
+        allInvestigations = await res.json();
+        renderInvestigations(allInvestigations);
+        document.getElementById('count-tag').textContent = `${allInvestigations.length} investigations loaded`;
+        updatePhysics();
+      } catch (e) {
+        console.error("Failed to load investigations", e);
+        document.getElementById('count-tag').textContent = 'Error loading data';
+      }
+    }
+
+    function renderInvestigations(invs) {
+      const grid = document.getElementById('inv-grid');
+      grid.innerHTML = '';
+
+      if (invs.length === 0) {
+        grid.innerHTML = '<div style="color:var(--text-dim); padding:2rem;">No matching investigations found.</div>';
+        return;
+      }
+
+      invs.forEach(inv => {
+        const pillarClass = `badge-${inv.fire_safety_pillar.toLowerCase()}`;
+        const fuels = inv.fuels.map(f => f.material_name).slice(0, 3).join(', ');
+
+        const card = document.createElement('div');
+        card.className = 'inv-card';
+        card.onclick = () => showModal(inv);
+
+        card.innerHTML = `
+          <div>
+            <div class="inv-card-header">
+              <span class="inv-acronym">${inv.acronym}</span>
+              <span class="inv-pillar-badge ${pillarClass}">${inv.fire_safety_pillar}</span>
+            </div>
+            <div class="inv-name">${inv.name}</div>
+            <div class="inv-tags">
+              <span class="inv-tag">${inv.hardware_facility}</span>
+              <span class="inv-tag">${inv.gravity}</span>
+              <span class="inv-tag">${inv.project || 'NASA PSI'}</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">
+              <strong>Fuels:</strong> ${fuels}
+            </div>
+          </div>
+          <div>
+            <div class="inv-relevance">
+              <span>Crew Habitat Relevance</span>
+              <div class="relevance-bar">
+                <div class="relevance-fill" style="width: ${inv.relevance_to_crew_habitat * 100}%"></div>
+              </div>
+              <span style="font-family:'JetBrains Mono'; font-weight:600; color:#fff;">${inv.relevance_to_crew_habitat.toFixed(1)}</span>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterInvestigations() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const filtered = allInvestigations.filter(inv => {
+        const matchesPillar = (currentPillar === 'ALL' || inv.fire_safety_pillar === currentPillar);
+        const matchesHw = (currentHw === 'ALL' || inv.hardware_facility.toLowerCase().includes(currentHw.toLowerCase()));
+        const matchesQuery = !q ||
+          inv.name.toLowerCase().includes(q) ||
+          inv.acronym.toLowerCase().includes(q) ||
+          inv.objectives.toLowerCase().includes(q) ||
+          inv.fuels.some(f => f.material_name.toLowerCase().includes(q));
+        return matchesPillar && matchesHw && matchesQuery;
+      });
+      renderInvestigations(filtered);
+      document.getElementById('count-tag').textContent = `${filtered.length} of ${allInvestigations.length} investigations`;
+    }
+
+    function setPillarFilter(pillar, btn) {
+      currentPillar = pillar;
+      document.querySelectorAll('[data-pillar]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterInvestigations();
+    }
+
+    function setHwFilter(hw, btn) {
+      currentHw = hw;
+      document.querySelectorAll('[data-hw]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterInvestigations();
+    }
+
+    function showModal(inv) {
+      const content = document.getElementById('modal-content');
+      const fuelsHtml = inv.fuels.map(f => `<li><strong>${f.material_name}</strong> (${f.fuel_type}) — shape: ${f.sample_shape || 'standard'}, dimensions: ${f.sample_dimensions_cm || 'N/A'}</li>`).join('');
+      const atmsHtml = inv.atmosphere.map(a => `<li><strong>${a.oxygen_pct}% O₂</strong>, ${a.pressure_psi} psi (diluent: ${a.diluent}, flow: ${a.flow_velocity_cm_s} cm/s)</li>`).join('');
+      const findingsHtml = inv.key_findings.map(k => `<li>${k}</li>`).join('');
+      const earthHtml = inv.earth_applications.map(e => `<li>${e}</li>`).join('');
+
+      content.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+          <div>
+            <h2 style="color:#fff; font-family:'JetBrains Mono'">${inv.acronym} — ${inv.name}</h2>
+            <p style="color:var(--cyan); font-size:0.85rem;">Hardware: ${inv.hardware_facility} | Gravity: ${inv.gravity}</p>
+          </div>
+          <span class="inv-pillar-badge badge-${inv.fire_safety_pillar.toLowerCase()}">${inv.fire_safety_pillar}</span>
+        </div>
+
+        <div class="modal-section">
+          <h4>Experimental Objectives</h4>
+          <p style="font-size:0.9rem; color:var(--text-main);">${inv.objectives}</p>
+        </div>
+
+        <div class="modal-section">
+          <h4>Fuels &amp; Burner Specifications</h4>
+          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${fuelsHtml}</ul>
+        </div>
+
+        <div class="modal-section">
+          <h4>Tested Atmospheric Conditions</h4>
+          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${atmsHtml}</ul>
+        </div>
+
+        <div class="modal-section">
+          <h4>Key Scientific Findings</h4>
+          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${findingsHtml}</ul>
+        </div>
+
+        <div class="modal-section">
+          <h4>Applications to Earth Fire Safety</h4>
+          <ul style="padding-left:1.25rem; font-size:0.85rem; color:var(--text-muted);">${earthHtml}</ul>
+        </div>
+      `;
+      document.getElementById('modal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+    }
+
+    // Physics Calculator Logic
+    async function updatePhysics() {
+      const g = parseFloat(document.getElementById('input-g').value);
+      const o2 = parseFloat(document.getElementById('input-o2').value);
+      const p = parseFloat(document.getElementById('input-p').value);
+
+      document.getElementById('val-g').textContent = `${g.toFixed(2)} g`;
+      document.getElementById('val-o2').textContent = `${o2.toFixed(1)} %`;
+      document.getElementById('val-p').textContent = `${p.toFixed(1)} psi`;
+
+      try {
+        const res = await fetch('/physics/bounds', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({gravity_g: g, o2_pct: o2, pressure_psi: p})
+        });
+        const data = await res.json();
+
+        document.getElementById('res-buoyancy').textContent = `${(data.buoyancy_strength.value * 100).toFixed(1)}%`;
+        document.getElementById('res-convection').textContent = `${data.natural_convection_velocity_m_s.value.toFixed(3)} m/s`;
+        document.getElementById('res-o2-factor').textContent = `${data.oxygen_enhancement_factor.value.toFixed(2)}x`;
+        document.getElementById('res-flame-height').textContent = `${data.flame_height_scaling.estimated_mm.toFixed(1)} mm`;
+      } catch (e) {
+        console.error("Physics calculation error", e);
+      }
+    }
+
+    function applyPreset(g, o2, p, btn) {
+      document.getElementById('input-g').value = g;
+      document.getElementById('input-o2').value = o2;
+      document.getElementById('input-p').value = p;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      updatePhysics();
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
