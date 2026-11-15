@@ -43,7 +43,8 @@ export class SpaceStationApp {
     this.sparkTimer = 0.0;
 
     // NASA Backend Service & Investigation Explorer
-    this.nasaDataService = new NASADataService('http://localhost:8000');
+    this.apiUrl = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000';
+    this.nasaDataService = new NASADataService(this.apiUrl);
     this.explorer = null;
     this.nasaDebounceTimer = null;
     this.nasaParams = {
@@ -943,7 +944,7 @@ export class SpaceStationApp {
           } else {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 90000);
-            const fetchRes = await fetch('http://localhost:8000/scenario', {
+            const fetchRes = await fetch(`${this.apiUrl || 'http://localhost:8000'}/scenario`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ scenario: scenarioText.trim() }),
