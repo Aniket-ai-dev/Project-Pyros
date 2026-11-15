@@ -1215,9 +1215,13 @@ class PSIKnowledgeBase:
         Raises:
             KeyError: If no investigation matches the given ID.
         """
-        if id not in self._by_id:
-            raise KeyError(f"No investigation with id '{id}'. Available: {sorted(self._by_id.keys())}")
-        return self._by_id[id]
+        if id in self._by_id:
+            return self._by_id[id]
+        clean_id = id.lower().replace("-", "").replace("_", "")
+        for key, inv in self._by_id.items():
+            if key.lower().replace("-", "").replace("_", "") == clean_id:
+                return inv
+        raise KeyError(f"No investigation with id '{id}'. Available: {sorted(self._by_id.keys())}")
 
     def get_by_pillar(self, pillar: str) -> list[Investigation]:
         """Return all investigations matching a fire-safety pillar.

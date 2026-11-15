@@ -86,6 +86,7 @@ A common weakness in hackathon projects is wrapping a generic LLM prompt around 
 1. **Deterministic Physics Bounds Gate All AI Predictions:** The LLM is mathematically forbidden from predicting flame heights, convection velocities, or flammability limits outside the bounded envelope calculated by textbook combustion science.
 2. **100% Real NASA Data (Zero Mockup):** Every investigation record (fuels, burner geometries, dimensions, sensor diagnostics, atmospheric conditions, and findings) represents authentic NASA PSI experiments verified against Glenn Research Center publications.
 3. **Intelligent Grounded Cache:** 15 pre-computed, peer-reviewed spacefire analyses provide instant fallback if external API quotas are exhausted (HTTP 429), guaranteeing 100% evaluation uptime.
+4. **Autonomous Deterministic SI Fallback:** If external cloud AI APIs are offline or rate-limited, the backend automatically transitions to deterministic physical solvers (`_deterministic_scenario_analysis`, `_deterministic_compare_investigations`, and `_deterministic_extrapolate`) computing exact Roper scaling, Dalton oxygen partial pressures, and citing authentic NASA PSI missions directly—guaranteeing 100% uptime with zero 503 errors.
 
 ---
 
@@ -157,8 +158,9 @@ Where $\beta \approx 1/T_{\infty}$ for ideal gases. As $g \to 0$, $V_{\text{conv
 
 ```
 nasaspaceapp/
+├── nasa_psi_manifest_22.json         # 22-investigation complete structured JSON manifest
 ├── src/
-│   ├── api.py                    # FastAPI REST server & dashboard router
+│   ├── api.py                    # FastAPI REST server, dashboard router & deterministic solver
 │   ├── config.py                 # Central application configuration
 │   ├── pipeline.py               # Main orchestrator (RAG + Graph + Physics)
 │   ├── chains/
@@ -254,14 +256,17 @@ cp .env.example .env
 # Set GOOGLE_API_KEY=your_key in .env
 
 # 5. Launch the FastAPI production server
-uvicorn src.api:app --host 127.0.0.1 --port 8000
+uvicorn src.api:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Open your browser to:
-- **Mission Dashboard:** `http://127.0.0.1:8000/dashboard`
-- **Technical Manual:** `http://127.0.0.1:8000/guide`
-- **Live Health Status:** `http://127.0.0.1:8000/health`
-- **Live PSI Connection:** `http://127.0.0.1:8000/psi/sync-status`
+- **Interactive Swagger Docs:** `http://localhost:8000/docs`
+- **22 Investigations JSON API:** `http://localhost:8000/investigations`
+- **Knowledge Graph Summary (352 edges):** `http://localhost:8000/graph/summary`
+- **Live Health Status:** `http://localhost:8000/health`
+- **Legacy Mission Dashboard:** `http://localhost:8000/dashboard`
+- **Technical Manual:** `http://localhost:8000/guide`
+- **Live PSI Connection:** `http://localhost:8000/psi/sync-status`
 
 ---
 

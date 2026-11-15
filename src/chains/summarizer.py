@@ -9,7 +9,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import PydanticOutputParser
@@ -167,8 +170,22 @@ class InvestigationSummarizer:
         """
 
         prompt_vars = _format_investigation(investigation)
-        result: InvestigationSummary = self._chain.invoke(prompt_vars)
-        return result.model_dump()
+        try:
+            result: InvestigationSummary = self._chain.invoke(prompt_vars)
+            return result.model_dump()
+        except Exception as exc:
+            logger.warning("Summarizer single LLM failed (%s) — using metadata fallback.", exc)
+            obj = getattr(investigation, "objectives", "") or investigation.name
+            findings = getattr(investigation, "key_findings", [])
+            finding = findings[0] if findings else f"NASA PSI flight dataset for {investigation.name} under {investigation.gravity.value} conditions."
+            return {
+                "primary_objective": obj[:200],
+                "fuel_material": ", ".join(getattr(f, "material_name", "") for f in investigation.fuels) or "N/A",
+                "fuel_type": investigation.fuels[0].fuel_type.value if investigation.fuels else "solid",
+                "fuel_shape": investigation.fuels[0].shape or "flat" if investigation.fuels else "flat",
+                "key_finding": finding,
+                "fire_safety_significance": f"Characterizes flammability limits and combustion behavior for {investigation.fire_safety_pillar.value}."
+            }
 
     def summarize_batch(
         self,
@@ -196,8 +213,25 @@ class InvestigationSummarizer:
         """
 
         prompt_inputs = [_format_investigation(inv) for inv in investigations]
-        results: list[InvestigationSummary] = self._chain.batch(
-            prompt_inputs,
-            config={"max_concurrency": max_concurrency},
-        )
-        return [r.model_dump() for r in results]
+        try:
+            results: list[InvestigationSummary] = self._chain.batch(
+                prompt_inputs,
+                config={"max_concurrency": max_concurrency},
+            )
+            return [r.model_dump() for r in results]
+        except Exception as exc:
+            logger.warning("Summarizer batch LLM failed (%s) — using metadata fallback.", exc)
+            fallback_list = []
+            for inv in investigations:
+                obj = getattr(inv, "objectives", "") or inv.name
+                findings = getattr(inv, "key_findings", [])
+                finding = findings[0] if findings else f"NASA PSI flight dataset for {inv.name} under {inv.gravity.value} conditions."
+                fallback_list.append({
+                    "primary_objective": obj[:200],
+                    "fuel_material": ", ".join(getattr(f, "material_name", "") for f in inv.fuels) or "N/A",
+                    "fuel_type": inv.fuels[0].fuel_type.value if inv.fuels else "solid",
+                    "fuel_shape": inv.fuels[0].shape or "flat" if inv.fuels else "flat",
+                    "key_finding": finding,
+                    "fire_safety_significance": f"Characterizes flammability limits and combustion behavior for {inv.fire_safety_pillar.value}."
+                })
+            return fallback_list

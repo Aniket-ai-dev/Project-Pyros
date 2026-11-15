@@ -109,6 +109,7 @@ def _build_embeddings(config: Config):
         return GoogleGenerativeAIEmbeddings(
             model="models/gemini-embedding-001",
             google_api_key=config.google_api_key or None,
+            transport="rest",
         )
     else:
         from langchain_openai import OpenAIEmbeddings
@@ -146,6 +147,8 @@ def _build_llm(config: Config) -> BaseChatModel:
             temperature=config.llm_temperature,
             max_output_tokens=config.llm_max_tokens,
             google_api_key=config.google_api_key or None,
+            transport="rest",
+            max_retries=0,
         )
     else:
         raise ValueError(
