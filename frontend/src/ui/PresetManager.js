@@ -7,7 +7,7 @@
 export const FLIGHT_PRESETS = [
   {
     id: 'candle-earth',
-    name: '🕯️ Real Earth Candle (1.0g)',
+    name: 'Real Earth Candle (1.0g)',
     badge: '1.0g // 21% O₂',
     description: 'Classic Earth candle. Natural buoyant convection stretches the flame into a graceful teardrop with a blue base cup, dark unburned vapor core, and luminous golden-white soot cap.',
     config: {
@@ -26,7 +26,7 @@ export const FLIGHT_PRESETS = [
   },
   {
     id: 'candle-iss',
-    name: '🛰️ ISS Zero-G Spherical Candle (0.0g)',
+    name: 'ISS Zero-G Spherical Candle (0.0g)',
     badge: '0.0g // Pure Blue Dome',
     description: 'NASA ISS microgravity candle. Buoyant convection vanishes completely. Isotropic molecular diffusion produces a calm, spherical blue dome flame centered around the wick.',
     config: {
@@ -45,7 +45,7 @@ export const FLIGHT_PRESETS = [
   },
   {
     id: 'candle-lunar',
-    name: '🌕 Lunar Gravity Candle (0.165g)',
+    name: 'Lunar Gravity Candle (0.165g)',
     badge: '0.165g (1.62 m/s²)',
     description: 'Moon surface gravity. Weak buoyant convection produces a fat, bulbous dome flame twice as wide as Earth with a slow, lazy 2-4 Hz flicker.',
     config: {
@@ -64,7 +64,7 @@ export const FLIGHT_PRESETS = [
   },
   {
     id: 'candle-mars',
-    name: '🔴 Mars Atmosphere Candle (0.38g)',
+    name: 'Mars Atmosphere Candle (0.38g)',
     badge: '0.38g (3.72 m/s²)',
     description: 'Mars atmospheric gravity testing. Intermediate buoyancy creates a wider flame than Earth with distinct periodic vortex shedding.',
     config: {
@@ -83,7 +83,7 @@ export const FLIGHT_PRESETS = [
   },
   {
     id: 'candle-hypoxic',
-    name: '⚠️ Hypoxic Starvation (11% O₂)',
+    name: 'Hypoxic Starvation (11% O₂)',
     badge: 'Low O₂ // Heavy Smoke',
     description: 'Atmospheric oxygen drops below the limiting oxygen index (LOI). Flame starves, cools rapidly, produces heavy black unburned soot smoke, and suffocates.',
     config: {
@@ -102,7 +102,7 @@ export const FLIGHT_PRESETS = [
   },
   {
     id: 'candle-hyper',
-    name: '⚡ Hyperoxic Pure O₂ Candle (100% O₂)',
+    name: 'Hyperoxic Pure O₂ Candle (100% O₂)',
     badge: '100% O₂ // Ultra-Intense',
     description: 'Pure oxidizer environment. Arrhenius reaction accelerates exponentially, producing a blinding blue-white incandescent flame with zero soot and ultra-high heat release.',
     config: {
@@ -121,7 +121,7 @@ export const FLIGHT_PRESETS = [
   },
   {
     id: 'candle-wind',
-    name: '💨 Candle in Crosswind',
+    name: 'Candle in Crosswind',
     badge: 'Wind: 0.35 m/s',
     description: 'Aerodynamic crosswind deflects the flame horizontally, causing turbulent wake vortex shedding and flame elongation.',
     config: {
@@ -140,7 +140,7 @@ export const FLIGHT_PRESETS = [
   },
   {
     id: 'burner-jet',
-    name: '🚀 NASA CIR Aerospike Burner',
+    name: 'NASA CIR Aerospike Burner',
     badge: 'Propane Jet',
     description: 'Stainless-steel aerospace combustion chamber burner jet with high velocity fuel injection and tungsten pilot igniters.',
     config: {

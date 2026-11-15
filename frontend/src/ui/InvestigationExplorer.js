@@ -5,7 +5,7 @@
  * - Filterable catalog of the 22 NASA microgravity combustion missions
  * - Multi-criteria filters: Pillar, Fuel Type, Hardware, Min Relevance
  * - Full deep-dive scientific dossier modal for each mission
- * - "⚡ Replicate in Room Candle" action that configures the 3D candle chamber
+ * - "Replicate in Room Candle" action that configures the 3D candle chamber
  */
 
 export class InvestigationExplorer {
@@ -30,6 +30,11 @@ export class InvestigationExplorer {
   }
 
   createDOM() {
+    const existingExplorer = document.getElementById('nasa-explorer-modal');
+    if (existingExplorer) existingExplorer.remove();
+    const existingDetail = document.getElementById('nasa-detail-modal');
+    if (existingDetail) existingDetail.remove();
+
     // 1. Main Explorer Modal Container
     const explorerEl = document.createElement('div');
     explorerEl.id = 'nasa-explorer-modal';
@@ -51,7 +56,7 @@ export class InvestigationExplorer {
               <span class="status-dot"></span>
               <span class="status-label">Checking Backend...</span>
             </span>
-            <button id="btn-close-explorer" class="nasa-modal-close-btn" aria-label="Close Explorer">&times;</button>
+            <button id="btn-close-explorer" class="nasa-modal-close-btn" aria-label="Close Explorer">[CLOSE]</button>
           </div>
         </div>
 
@@ -319,7 +324,7 @@ export class InvestigationExplorer {
           <div class="empty-state">
             <h3 style="color:#f43f5e;margin-bottom:8px;">Dossier Unavailable</h3>
             <p>Could not retrieve NASA flight investigation dossier for #${id}.</p>
-            <button id="btn-close-detail" class="nasa-modal-close-btn">&times;</button>
+            <button id="btn-close-detail" class="nasa-modal-close-btn">[CLOSE]</button>
           </div>
         `;
         const closeBtn = document.getElementById('btn-close-detail');
@@ -348,7 +353,7 @@ export class InvestigationExplorer {
             <td><span class="gas-tag">${diluentVal}</span></td>
             <td>
               <button class="btn-apply-atmos" data-idx="${idx}" title="Set Room Candle to these exact atmospheric values">
-                ⚡ Test in Candle
+                [TEST IN CANDLE]
               </button>
             </td>
           </tr>
@@ -430,7 +435,7 @@ export class InvestigationExplorer {
         : ['Demonstrated altered combustion kinetics and flammability boundaries in microgravity conditions.'];
       const findingsHtml = findingsList.map(kf => `
         <li class="finding-item">
-          <span class="finding-bullet">✦</span>
+          <span class="finding-bullet">-</span>
           <span>${kf}</span>
         </li>
       `).join('');
@@ -441,7 +446,7 @@ export class InvestigationExplorer {
         : ['Advances combustion modeling for high-efficiency burners and commercial aerospace safety systems.'];
       const earthHtml = earthList.map(ea => `
         <li class="earth-item">
-          <span class="earth-bullet">🌍</span>
+          <span class="earth-bullet">[APP]</span>
           <span>${ea}</span>
         </li>
       `).join('');
@@ -476,7 +481,7 @@ export class InvestigationExplorer {
               <span class="dossier-tag relevance">RELEVANCE: ${relevanceDisplay}%</span>
             </div>
           </div>
-          <button id="btn-close-detail" class="nasa-modal-close-btn">&times;</button>
+          <button id="btn-close-detail" class="nasa-modal-close-btn">[CLOSE]</button>
         </div>
 
         <!-- Dossier Body Scroll -->
@@ -578,7 +583,7 @@ export class InvestigationExplorer {
               <select id="compare-select-target" class="compare-select">
                 ${compareOptions}
               </select>
-              <button id="btn-trigger-compare" class="btn-trigger-compare">⚡ Compare Investigations</button>
+              <button id="btn-trigger-compare" class="btn-trigger-compare">Compare Investigations</button>
             </div>
             <div id="compare-result-container"></div>
           </section>
@@ -685,7 +690,7 @@ export class InvestigationExplorer {
           } catch (e) {
             compareResultContainer.innerHTML = `<p style="color:#f43f5e; font-size:11px;">Comparison failed: ${e.message}</p>`;
           } finally {
-            btnCompare.textContent = '⚡ Compare Investigations';
+            btnCompare.textContent = 'Compare Investigations';
             btnCompare.disabled = false;
           }
         });
@@ -709,10 +714,10 @@ export class InvestigationExplorer {
             });
 
             // Flash button feedback
-            btn.textContent = '✓ Active in Room';
+            btn.textContent = '[ACTIVE IN ROOM]';
             btn.classList.add('applied');
             setTimeout(() => {
-              btn.textContent = '⚡ Test in Candle';
+              btn.textContent = '[TEST IN CANDLE]';
               btn.classList.remove('applied');
             }, 2000);
           }
@@ -724,7 +729,7 @@ export class InvestigationExplorer {
         <div class="empty-state">
           <h3 style="color:#f43f5e;margin-bottom:8px;">Error Loading Dossier</h3>
           <p>${err.message || 'An unexpected runtime error occurred.'}</p>
-          <button id="btn-close-detail" class="nasa-modal-close-btn">&times;</button>
+          <button id="btn-close-detail" class="nasa-modal-close-btn">[CLOSE]</button>
         </div>
       `;
       const detailClose = document.getElementById('btn-close-detail');

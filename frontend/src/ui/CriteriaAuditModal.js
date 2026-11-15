@@ -52,7 +52,7 @@ export class CriteriaAuditModal {
               <span class="status-pulse-dot"></span>
               <span id="audit-status-text">Verifying Live Backend (:8000)...</span>
             </div>
-            <button id="btn-close-audit" class="nasa-modal-close-btn" aria-label="Close Audit">&times;</button>
+            <button id="btn-close-audit" class="nasa-modal-close-btn" aria-label="Close Audit">[CLOSE]</button>
           </div>
         </div>
 
@@ -174,7 +174,7 @@ export class CriteriaAuditModal {
                     <strong>Spacecraft Smoke Detector</strong>
                     <p>Designed to detect early sub-micron soot particles in ISS microgravity cabins.</p>
                   </div>
-                  <div class="diag-arrow">➔ <span>Hardware Reused</span> ➔</div>
+                  <div class="diag-arrow">--&gt; <span>Hardware Reused</span> --&gt;</div>
                   <div class="diag-node">
                     <span class="diag-tag">DAFT & DAFT-2 (2010-2012)</span>
                     <strong>Lunar Regolith Dust Sensor</strong>
@@ -182,7 +182,7 @@ export class CriteriaAuditModal {
                   </div>
                 </div>
                 <div class="repurposing-verdict">
-                  ✦ Proves dual-use spaceflight instrumentation: from combustion smoke mitigation directly to planetary regolith dust safety.
+                  Proves dual-use spaceflight instrumentation: from combustion smoke mitigation directly to planetary regolith dust safety.
                 </div>
               </div>
             </div>
@@ -249,7 +249,7 @@ export class CriteriaAuditModal {
             <!-- Live Interactive Calculator -->
             <div class="audit-calc-box">
               <div class="calc-box-head">
-                <h4>⚡ Live Oxygen Partial Pressure & Flammability Calculator</h4>
+                <h4>Live Oxygen Partial Pressure & Flammability Calculator</h4>
                 <span class="calc-sub">Powered dynamically by CombustionPhysics.oxygen_partial_pressure_psi</span>
               </div>
               <div class="calc-controls-row">
@@ -323,7 +323,7 @@ export class CriteriaAuditModal {
             <!-- Live Gravity Slider Bounding Tester -->
             <div class="audit-calc-box">
               <div class="calc-box-head">
-                <h4>⚡ Live Gravity Extrapolation Bounding Tool (0.00g to 1.00g)</h4>
+                <h4>Live Gravity Extrapolation Bounding Tool (0.00g to 1.00g)</h4>
                 <span class="calc-sub">Bound flame elongation and convective drafts across spaceflight environments</span>
               </div>
               <div class="gravity-slider-row">
@@ -368,7 +368,7 @@ export class CriteriaAuditModal {
               <!-- Spinoff 1 -->
               <div class="spinoff-card">
                 <div class="spinoff-card-top">
-                  <span class="spinoff-icon">💧</span>
+                  <span class="spinoff-icon">[WATER MIST]</span>
                   <div class="spinoff-head-text">
                     <h4>Fine Water Mist & Clean Extinguishers</h4>
                     <span class="spinoff-nasa-source">Source: ISS Water Mist Fire Extinguisher (PFE) & FLEX</span>
@@ -383,7 +383,7 @@ export class CriteriaAuditModal {
               <!-- Spinoff 2 -->
               <div class="spinoff-card">
                 <div class="spinoff-card-top">
-                  <span class="spinoff-icon">🚨</span>
+                  <span class="spinoff-icon">[DETECTION]</span>
                   <div class="spinoff-head-text">
                     <h4>Dual-Mode Underground Mine Smoke/Dust Sensors</h4>
                     <span class="spinoff-nasa-source">Source: SAME / SAME-R & DAFT Sensor Repurposing</span>
@@ -398,7 +398,7 @@ export class CriteriaAuditModal {
               <!-- Spinoff 3 -->
               <div class="spinoff-card">
                 <div class="spinoff-card-top">
-                  <span class="spinoff-icon">🛡️</span>
+                  <span class="spinoff-icon">[PROTECTION]</span>
                   <div class="spinoff-head-text">
                     <h4>Municipal Firefighter Turnout Gear & Thermal Fabrics</h4>
                     <span class="spinoff-nasa-source">Source: BASS, BASS-II & Saffire Materials Testing</span>
@@ -413,7 +413,7 @@ export class CriteriaAuditModal {
               <!-- Spinoff 4 -->
               <div class="spinoff-card">
                 <div class="spinoff-card-top">
-                  <span class="spinoff-icon">🫁</span>
+                  <span class="spinoff-icon">[ECLSS]</span>
                   <div class="spinoff-head-text">
                     <h4>Lightweight Composite SCBA Air Cylinders</h4>
                     <span class="spinoff-nasa-source">Source: NASA Life Support Systems (ECLSS)</span>
@@ -431,12 +431,12 @@ export class CriteriaAuditModal {
         <!-- Tour Footer Navigation Controls -->
         <div class="audit-footer-nav">
           <div class="audit-footer-left">
-            <span class="compliance-badge">✦ VERIFIED 100% NASA CHALLENGE COMPLIANCE</span>
+            <span class="compliance-badge">[VERIFIED] 100% NASA CHALLENGE COMPLIANCE</span>
             <span class="footer-step-counter">Objective <strong id="audit-step-counter-txt">1</strong> of 5</span>
           </div>
           <div class="audit-footer-right">
-            <button id="btn-audit-prev" class="audit-nav-btn prev" disabled>← Previous Objective</button>
-            <button id="btn-audit-next" class="audit-nav-btn next">Verify Next Objective →</button>
+            <button id="btn-audit-prev" class="audit-nav-btn prev" disabled>Previous Objective</button>
+            <button id="btn-audit-next" class="audit-nav-btn next">Verify Next Objective</button>
           </div>
         </div>
       </div>
@@ -575,10 +575,10 @@ export class CriteriaAuditModal {
     if (prevBtn) prevBtn.disabled = step === 1;
     if (nextBtn) {
       if (step === this.totalSteps) {
-        nextBtn.textContent = '✓ Complete Tour & Return to Scene';
+        nextBtn.textContent = 'Complete Tour & Return to Scene';
         nextBtn.classList.add('complete');
       } else {
-        nextBtn.textContent = 'Verify Next Objective →';
+        nextBtn.textContent = 'Verify Next Objective';
         nextBtn.classList.remove('complete');
       }
     }

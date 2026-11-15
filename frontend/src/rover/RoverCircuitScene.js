@@ -27,7 +27,7 @@
  *   - Cool, dramatic low-key cinematic ambient lighting with warm local fire emission.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
 
 export class RoverCircuitScene {
   constructor(scene) {
@@ -676,15 +676,21 @@ export class RoverCircuitScene {
     const mbL = 0.95;
     const mbThick = 0.012;
 
-    // Procedural Dark Obsidian/Green Solder Mask Texture
+    // Procedural Dark Obsidian/Green Solder Mask Texture (Optimized 512x512)
     this.traceCanvas = document.createElement('canvas');
-    this.traceCanvas.width = 1024;
-    this.traceCanvas.height = 1024;
+    this.traceCanvas.width = 512;
+    this.traceCanvas.height = 512;
     this.traceCtx = this.traceCanvas.getContext('2d');
+
+    // Pre-bake static copper & substrate layers once
+    this.staticTraceCanvas = document.createElement('canvas');
+    this.staticTraceCanvas.width = 512;
+    this.staticTraceCanvas.height = 512;
+    this.bakeStaticMotherboardCanvas();
     this.renderMotherboardCanvas(0);
 
     this.traceTexture = new THREE.CanvasTexture(this.traceCanvas);
-    this.traceTexture.anisotropy = 4;
+    this.traceTexture.anisotropy = 2;
 
     this.pcbMaterial = new THREE.MeshStandardMaterial({
       color: 0x0c1410, // Dark matte obsidian solder mask
@@ -735,10 +741,11 @@ export class RoverCircuitScene {
     });
   }
 
-  renderMotherboardCanvas(timeOffset = 0) {
-    const ctx = this.traceCtx;
-    const w = 1024;
-    const h = 1024;
+  bakeStaticMotherboardCanvas() {
+    if (!this.staticTraceCanvas) return;
+    const ctx = this.staticTraceCanvas.getContext('2d');
+    const w = 512;
+    const h = 512;
 
     // Dark technical substrate
     ctx.fillStyle = '#08120d';
@@ -755,39 +762,54 @@ export class RoverCircuitScene {
     }
 
     // High-Density Circuit Traces
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 1.8;
     ctx.strokeStyle = 'rgba(180, 83, 9, 0.55)'; // Base copper
-    for (let y = 100; y < 900; y += 45) {
+    for (let y = 50; y < 450; y += 24) {
       ctx.beginPath();
-      ctx.moveTo(100, y);
-      ctx.lineTo(400, y);
-      ctx.lineTo(460, y + 30);
-      ctx.lineTo(900, y + 30);
+      ctx.moveTo(50, y);
+      ctx.lineTo(200, y);
+      ctx.lineTo(230, y + 16);
+      ctx.lineTo(460, y + 16);
       ctx.stroke();
     }
 
-    // Subtle silkscreen markings (Technical, not giant labels)
+    // Subtle silkscreen markings
     ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-    ctx.font = '10px monospace';
-    ctx.fillText('JPL // 1044-AVX-BP • 28V_ISO • CLASS-S', 40, 40);
-    ctx.fillText('TP101-TP132 • DIFFERENTIAL_BUS', 40, 60);
+    ctx.font = '8px monospace';
+    ctx.fillText('JPL // 1044-AVX-BP • 28V_ISO • CLASS-S', 20, 24);
+    ctx.fillText('TP101-TP132 • DIFFERENTIAL_BUS', 20, 36);
+  }
+
+  renderMotherboardCanvas(timeOffset = 0) {
+    const ctx = this.traceCtx;
+    if (!ctx) return;
+    const w = 512;
+    const h = 512;
+
+    // Blit pre-baked static board
+    if (this.staticTraceCanvas) {
+      ctx.drawImage(this.staticTraceCanvas, 0, 0);
+    } else {
+      ctx.fillStyle = '#08120d';
+      ctx.fillRect(0, 0, w, h);
+    }
 
     // Animated power pulses along primary supply traces
     if (!this.simState.isolationTripped) {
       const speed = this.simState.stage >= 4 ? 4.2 : 1.6;
       const phase = (timeOffset * speed) % 1.0;
-      ctx.lineWidth = 2.0;
+      ctx.lineWidth = 1.8;
       ctx.strokeStyle = this.simState.stage >= 4
         ? `rgba(239, 68, 68, ${0.7 + Math.sin(timeOffset * 22) * 0.3})`
         : 'rgba(56, 189, 248, 0.75)';
-      ctx.setLineDash([8, 24]);
-      ctx.lineDashOffset = -phase * 32;
+      ctx.setLineDash([6, 18]);
+      ctx.lineDashOffset = -phase * 24;
 
       ctx.beginPath();
-      ctx.moveTo(150, 480);
-      ctx.lineTo(480, 480);
-      ctx.lineTo(540, 520);
-      ctx.lineTo(880, 520);
+      ctx.moveTo(75, 240);
+      ctx.lineTo(240, 240);
+      ctx.lineTo(270, 260);
+      ctx.lineTo(440, 260);
       ctx.stroke();
       ctx.setLineDash([]);
     }
@@ -1456,13 +1478,17 @@ export class RoverCircuitScene {
   // 11. ANIMATION TICK & LOCALIZED FIRE DYNAMICS
   // =========================================================================
   update(dt, elapsedSeconds) {
-    const origin = this.epicenterPos.clone();
+    if (!this._origin) this._origin = new THREE.Vector3();
+    const origin = this._origin.copy(this.epicenterPos);
     origin.y += 0.02;
 
-    // 1. Update Animated PCB Power Traces
+    // 1. Update Animated PCB Power Traces (Throttled to ~30 FPS for silky performance)
     if (this.traceTexture && this.traceCtx) {
-      this.renderMotherboardCanvas(elapsedSeconds);
-      this.traceTexture.needsUpdate = true;
+      if (!this._lastTraceTime || elapsedSeconds - this._lastTraceTime > 0.033) {
+        this._lastTraceTime = elapsedSeconds;
+        this.renderMotherboardCanvas(elapsedSeconds);
+        this.traceTexture.needsUpdate = true;
+      }
     }
 
     // 2. Micro-Arc Electrical Lightning (Stage 4)

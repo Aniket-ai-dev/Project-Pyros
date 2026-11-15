@@ -4,12 +4,12 @@
  * Controls WebGL rendering, orbital & WASD cameras, telemetry HUD, and Main Menu routing.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
-import { MarsSurfaceScene } from './MarsSurfaceScene.js?v=visible_flame_v31';
-import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js?v=v112_syntax_fix';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { MarsSurfaceScene } from './MarsSurfaceScene.js';
+import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js';
 
-class MarsApp {
+export class MarsApp {
   constructor() {
     this.canvas = document.getElementById('canvas-mars');
     this.renderer = null;
@@ -17,6 +17,8 @@ class MarsApp {
     this.camera = null;
     this.controls = null;
     this.marsScene = null;
+    this.isDestroyed = false;
+    this.rafId = null;
 
     // Camera animation state
     this.isTransitioning = false;
@@ -46,13 +48,14 @@ class MarsApp {
   init() {
     this.setupRenderer();
     this.setupCamera();
-    this.setupKeyboardControls();
+    // Keyboard translation disabled: camera locked strictly to OrbitControls
     this.setupScene();
     this.setupEvents();
     this.setupPyrosMenu();
 
-    window.addEventListener('resize', () => this.onWindowResize());
-    requestAnimationFrame((t) => this.renderLoop(t));
+    this._onResize = () => this.onWindowResize();
+    window.addEventListener('resize', this._onResize);
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
   }
 
   setupRenderer() {
@@ -62,9 +65,11 @@ class MarsApp {
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
+    this.renderer.shadowMap.needsUpdate = true;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
   }
@@ -90,7 +95,7 @@ class MarsApp {
   }
 
   setupKeyboardControls() {
-    window.addEventListener('keydown', (e) => {
+    this._onKeyDown = (e) => {
       switch (e.code) {
         case 'KeyW': case 'ArrowUp': this.keys.forward = true; break;
         case 'KeyS': case 'ArrowDown': this.keys.backward = true; break;
@@ -99,9 +104,9 @@ class MarsApp {
         case 'Space': this.keys.up = true; break;
         case 'ShiftLeft': case 'ShiftRight': this.keys.down = true; break;
       }
-    });
+    };
 
-    window.addEventListener('keyup', (e) => {
+    this._onKeyUp = (e) => {
       switch (e.code) {
         case 'KeyW': case 'ArrowUp': this.keys.forward = false; break;
         case 'KeyS': case 'ArrowDown': this.keys.backward = false; break;
@@ -110,7 +115,10 @@ class MarsApp {
         case 'Space': this.keys.up = false; break;
         case 'ShiftLeft': case 'ShiftRight': this.keys.down = false; break;
       }
-    });
+    };
+
+    window.addEventListener('keydown', this._onKeyDown);
+    window.addEventListener('keyup', this._onKeyUp);
   }
 
   setupScene() {
@@ -186,6 +194,21 @@ class MarsApp {
     const hudPanel = document.getElementById('hud-mars-panel');
     const collapseBtn = document.getElementById('btn-collapse-hud');
 
+    if (hudPanel) {
+      hudPanel.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
+      hudPanel.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
+
     if (toggleHudBtn && hudPanel) {
       toggleHudBtn.addEventListener('click', () => {
         const isCollapsed = hudPanel.classList.toggle('collapsed');
@@ -229,7 +252,7 @@ class MarsApp {
           }
           btnVent.classList.add('reignite');
           if (btnVentLabel) {
-            btnVentLabel.innerHTML = '🔄 Re-pressurize & Reignite (21% O₂)';
+            btnVentLabel.innerHTML = 'Re-pressurize & Reignite (21% O₂)';
           }
         } else {
           // Re-seal & re-pressurize with habitat air (21% O2, 101.3 kPa) -> Reignite flame
@@ -243,7 +266,7 @@ class MarsApp {
           }
           btnVent.classList.remove('reignite');
           if (btnVentLabel) {
-            btnVentLabel.innerHTML = '⚡ Vent Chamber to Mars Air (Simulate Extinction)';
+            btnVentLabel.innerHTML = 'Vent Chamber to Mars Air (Simulate Extinction)';
           }
         }
       });
@@ -273,12 +296,11 @@ class MarsApp {
       }, 400);
     };
 
-    if (btnOpenMenu && mainMenu) {
-      btnOpenMenu.addEventListener('click', () => {
-        mainMenu.style.display = 'flex';
-        requestAnimationFrame(() => {
-          mainMenu.classList.add('active');
-        });
+    if (btnOpenMenu) {
+      btnOpenMenu.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = '/';
       });
     }
 
@@ -321,17 +343,23 @@ class MarsApp {
   updateKeyboardMovement(dt) {
     if (this.isTransitioning) return;
 
+    if (!this._scratchForward) {
+      this._scratchForward = new THREE.Vector3();
+      this._scratchRight = new THREE.Vector3();
+      this._scratchUp = new THREE.Vector3(0, 1, 0);
+      this._scratchDelta = new THREE.Vector3();
+    }
+
     const moveSpeed = 12.0 * dt;
-    const forward = new THREE.Vector3();
+    const forward = this._scratchForward;
     this.camera.getWorldDirection(forward);
     forward.y = 0;
     forward.normalize();
 
-    const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    const right = this._scratchRight.crossVectors(forward, this._scratchUp).normalize();
 
     let moved = false;
-    const delta = new THREE.Vector3();
+    const delta = this._scratchDelta.set(0, 0, 0);
 
     if (this.keys.forward) { delta.addScaledVector(forward, moveSpeed); moved = true; }
     if (this.keys.backward) { delta.addScaledVector(forward, -moveSpeed); moved = true; }
@@ -356,14 +384,15 @@ class MarsApp {
   }
 
   renderLoop(timestamp) {
-    requestAnimationFrame((t) => this.renderLoop(t));
+    if (this.isDestroyed) return;
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
 
     const now = performance.now();
     const dt = Math.min((now - this.lastTimestamp) / 1000, 0.05);
     this.lastTimestamp = now;
 
     this.updateCinematicTransition(now);
-    this.updateKeyboardMovement(dt);
+    // Keyboard translation disabled: locked strictly to OrbitControls
 
     if (this.marsScene) {
       this.marsScene.update(now * 0.001, dt);
@@ -375,9 +404,22 @@ class MarsApp {
 
     this.renderer.render(this.scene, this.camera);
   }
+
+  destroy() {
+    this.isDestroyed = true;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onKeyDown) window.removeEventListener('keydown', this._onKeyDown);
+    if (this._onKeyUp) window.removeEventListener('keyup', this._onKeyUp);
+    if (this.renderer) {
+      try { this.renderer.dispose(); } catch (e) {}
+    }
+    if (this.controls) {
+      try { this.controls.dispose(); } catch (e) {}
+    }
+    if (this.marsScene && typeof this.marsScene.dispose === 'function') {
+      try { this.marsScene.dispose(); } catch (e) {}
+    }
+  }
 }
 
-// Bootstrap Mars Surface App on DOM load
-window.addEventListener('DOMContentLoaded', () => {
-  new MarsApp();
-});

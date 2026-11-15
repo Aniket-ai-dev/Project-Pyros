@@ -26,7 +26,7 @@
  *   - 0.38g partial-gravity surface combustion chamber
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
 
 // =========================================================================
 // FAST 2D GRADIENT NOISE (PERLIN / FBM) FOR GEOLOGICAL SYNTHESIS
@@ -171,8 +171,8 @@ export class MarsSurfaceScene {
   }
 
   create2KRegolithPBRMaps() {
-    const W = 2048;
-    const H = 2048;
+    const W = 1024;
+    const H = 1024;
 
     // 1. Generate High-Res Elevation Heightfield Buffer
     const heightBuffer = new Float32Array(W * H);
@@ -760,8 +760,8 @@ export class MarsSurfaceScene {
     this.sunLight = new THREE.DirectionalLight(0xf59e0b, 1.45);
     this.sunLight.position.set(-65, 26, -55);
     this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.width = 4096;
-    this.sunLight.shadow.mapSize.height = 4096;
+    this.sunLight.shadow.mapSize.width = 1024;
+    this.sunLight.shadow.mapSize.height = 1024;
     this.sunLight.shadow.camera.near = 5;
     this.sunLight.shadow.camera.far = 240;
     this.sunLight.shadow.camera.left = -65;

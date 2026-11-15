@@ -15,7 +15,7 @@
  * - Multi-regime laboratory lighting: Nominal Daylight, Crew Sleep, and Emergency Warning.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
 
 export class SpaceStationScene {
   constructor(scene) {
@@ -947,25 +947,22 @@ export class SpaceStationScene {
     this.ambientLight = new THREE.AmbientLight(0xedf4fc, 1.40);
     this.scene.add(this.ambientLight);
 
-    // 4 Longitudinal Angled Overhead Fixture Rows (The core ISS light source)
-    const zSpan = 10.0;
-    const numPointsPerSide = 5;
+    // 4 Longitudinal Angled Overhead Fixture Rows (The core ISS light source - optimized for 60fps)
+    const zPositions = [-2.6, 2.6];
 
-    for (let i = 0; i < numPointsPerSide; i++) {
-      const z = -zSpan * 0.5 + (i / (numPointsPerSide - 1)) * zSpan;
-
-      // Upper Left 45° Fixture Point Light
-      const pLightL = new THREE.PointLight(0xf2f7ff, 1.35, 4.5, 1.2);
+    zPositions.forEach(z => {
+      // Upper Left 45° Fixture Point Light (Consolidated count for silky-smooth 60fps)
+      const pLightL = new THREE.PointLight(0xf2f7ff, 2.2, 8.5, 1.2);
       pLightL.position.set(-1.35, 1.35, z);
       this.rootGroup.add(pLightL);
       this.lights.push(pLightL);
 
-      // Upper Right 45° Fixture Point Light
-      const pLightR = new THREE.PointLight(0xf2f7ff, 1.35, 4.5, 1.2);
+      // Upper Right 45° Fixture Point Light (Consolidated count for silky-smooth 60fps)
+      const pLightR = new THREE.PointLight(0xf2f7ff, 2.2, 8.5, 1.2);
       pLightR.position.set(1.35, 1.35, z);
       this.rootGroup.add(pLightR);
       this.lights.push(pLightR);
-    }
+    });
 
     // Directional downward fill
     const dirDown = new THREE.DirectionalLight(0xf5f8fc, 1.0);
@@ -1023,7 +1020,7 @@ export class SpaceStationScene {
     stbdLiner.position.set(2.06, 0, 0);
     this.rootGroup.add(stbdLiner);
 
-    // 2. Structural Outer Frame Ribs
+    // 2. Structural Outer Frame Ribs (Instanced for batching)
     const railMat = new THREE.MeshStandardMaterial({
       color: 0x3d4752,
       roughness: 0.35,
@@ -1031,16 +1028,19 @@ export class SpaceStationScene {
     });
 
     const ribCount = 13;
+    const ringGeo = new THREE.RingGeometry(2.05, 2.18, 8);
+    const ringInst = new THREE.InstancedMesh(ringGeo, railMat, ribCount);
+    const dummyRing = new THREE.Object3D();
+    dummyRing.rotation.z = Math.PI / 8; // Align flat floor
+
     for (let i = 0; i < ribCount; i++) {
       const z = -moduleLength * 0.5 + (i / (ribCount - 1)) * moduleLength;
-
-      // Octagonal structural bulkhead ring
-      const ringGeo = new THREE.RingGeometry(2.05, 2.18, 8);
-      const ring = new THREE.Mesh(ringGeo, railMat);
-      ring.position.z = z;
-      ring.rotation.z = Math.PI / 8; // Align flat floor
-      this.rootGroup.add(ring);
+      dummyRing.position.set(0, 0, z);
+      dummyRing.updateMatrix();
+      ringInst.setMatrixAt(i, dummyRing.matrix);
     }
+    ringInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(ringInst);
   }
 
   // =========================================================================
@@ -1075,14 +1075,21 @@ export class SpaceStationScene {
     track.position.set(0, floorY + 0.02, 0);
     this.rootGroup.add(track);
 
-    // Socket holes along the foot track
+    // Socket holes along the foot track (Instanced)
     const socketMat = new THREE.MeshBasicMaterial({ color: 0x0a0e14 });
     const socketGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.04, 12);
-    for (let z = -5.0; z <= 5.0; z += 0.8) {
-      const socket = new THREE.Mesh(socketGeo, socketMat);
-      socket.position.set(0, floorY + 0.03, z);
-      this.rootGroup.add(socket);
-    }
+    const socketZList = [];
+    for (let z = -5.0; z <= 5.0; z += 0.8) socketZList.push(z);
+
+    const socketInst = new THREE.InstancedMesh(socketGeo, socketMat, socketZList.length);
+    const dummySocket = new THREE.Object3D();
+    socketZList.forEach((z, i) => {
+      dummySocket.position.set(0, floorY + 0.03, z);
+      dummySocket.updateMatrix();
+      socketInst.setMatrixAt(i, dummySocket.matrix);
+    });
+    socketInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(socketInst);
 
     // 3. Crew Foot Restraints (Pair of adjustable blue nylon foot anchors)
     const loopMat = new THREE.MeshStandardMaterial({
@@ -1423,6 +1430,11 @@ export class SpaceStationScene {
       { x:  1.285, y: -1.265, rot:  0.679, isUpper: false, signX:  1, signY: -1 }  // Lower Right
     ];
 
+    const clampMatrices = [];
+    const boltMatrices = [];
+    const dummyClamp = new THREE.Object3D();
+    const dummyBolt = new THREE.Object3D();
+
     standoffs.forEach(s => {
       // 1. Continuous Solid 45° Standoff Closure Panel (Guarantees ZERO black void between racks & ceiling/floor)
       const mat = s.isUpper ? upperBlanketMat : lowerPanelMat;
@@ -1464,35 +1476,44 @@ export class SpaceStationScene {
         this.rootGroup.add(pipe);
       });
 
-      // 4. Heavy-Duty Mil-Spec P-Clamps Bolted to Raceway (Every 0.8m)
-      const clampGeo = new THREE.BoxGeometry(0.30, 0.012, 0.035);
+      // 4. Heavy-Duty Mil-Spec P-Clamps Bolted to Raceway (Accumulated for InstancedMesh)
       for (let z = -5.2; z <= 5.2; z += 0.8) {
-        const clampBar = new THREE.Mesh(clampGeo, clampMat);
-        clampBar.position.set(s.x + normX * 0.056, s.y + normY * 0.056, z);
-        clampBar.rotation.z = s.rot;
-        this.rootGroup.add(clampBar);
+        dummyClamp.position.set(s.x + normX * 0.056, s.y + normY * 0.056, z);
+        dummyClamp.rotation.z = s.rot;
+        dummyClamp.updateMatrix();
+        clampMatrices.push(dummyClamp.matrix.clone());
 
-        // Mounting fastener hex bolts at ends
-        const boltGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.016, 6);
-        const boltL = new THREE.Mesh(boltGeo, clampRubberMat);
-        boltL.position.set(
+        dummyBolt.rotation.z = s.rot;
+
+        dummyBolt.position.set(
           s.x + normX * 0.062 + tanX * -0.13,
           s.y + normY * 0.062 + tanY * -0.13,
           z
         );
-        boltL.rotation.z = s.rot;
-        this.rootGroup.add(boltL);
+        dummyBolt.updateMatrix();
+        boltMatrices.push(dummyBolt.matrix.clone());
 
-        const boltR = new THREE.Mesh(boltGeo, clampRubberMat);
-        boltR.position.set(
+        dummyBolt.position.set(
           s.x + normX * 0.062 + tanX * 0.13,
           s.y + normY * 0.062 + tanY * 0.13,
           z
         );
-        boltR.rotation.z = s.rot;
-        this.rootGroup.add(boltR);
+        dummyBolt.updateMatrix();
+        boltMatrices.push(dummyBolt.matrix.clone());
       }
     });
+
+    const clampGeo = new THREE.BoxGeometry(0.30, 0.012, 0.035);
+    const clampInst = new THREE.InstancedMesh(clampGeo, clampMat, clampMatrices.length);
+    clampMatrices.forEach((mat, idx) => clampInst.setMatrixAt(idx, mat));
+    clampInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(clampInst);
+
+    const boltGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.016, 6);
+    const boltInst = new THREE.InstancedMesh(boltGeo, clampRubberMat, boltMatrices.length);
+    boltMatrices.forEach((mat, idx) => boltInst.setMatrixAt(idx, mat));
+    boltInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(boltInst);
   }
 
   // =========================================================================
@@ -1526,111 +1547,151 @@ export class SpaceStationScene {
     // 11 contiguous ISPR rack positions (exactly 1.05m pitch, ZERO gaps anywhere)
     const rackPositions = [-5.00, -3.95, -2.90, -1.85, -0.80, 0.25, 1.30, 2.35, 3.40, 4.45, 5.50];
 
+    const rackMatrices = [];
+    const postMatrices = [];
+    const handleMatrices = [];
+    const ledItems = []; // { matrix, color }
+    const cordMatrices = [];
+
+    const dummyRack = new THREE.Object3D();
+    const dummyPost = new THREE.Object3D();
+    const dummyHandle = new THREE.Object3D();
+    const dummyLed = new THREE.Object3D();
+    const dummyCord = new THREE.Object3D();
+
     // Left Wall Payload Racks (X = -1.82, facing +X)
     rackPositions.forEach((z, idx) => {
       // Skip position -0.8 on left side for the Microgravity Science Glovebox!
       if (Math.abs(z - (-0.8)) < 0.2) return;
 
-      const rack = new THREE.Mesh(new THREE.BoxGeometry(rackDepth, rackHeight, rackWidth), rackMat);
-      rack.position.set(-1.82, 0.02, z);
-      this.rootGroup.add(rack);
+      dummyRack.position.set(-1.82, 0.02, z);
+      dummyRack.rotation.set(0, 0, 0);
+      dummyRack.updateMatrix();
+      rackMatrices.push(dummyRack.matrix.clone());
 
       // Structural Vertical Posts (Machined corner extrusions between racks)
-      const postGeo = new THREE.BoxGeometry(0.045, rackHeight + 0.06, 0.045);
-      const postFront = new THREE.Mesh(postGeo, frameMat);
-      postFront.position.set(-1.60, 0.02, z + rackWidth * 0.5);
-      this.rootGroup.add(postFront);
+      dummyPost.position.set(-1.60, 0.02, z + rackWidth * 0.5);
+      dummyPost.updateMatrix();
+      postMatrices.push(dummyPost.matrix.clone());
 
       if (idx === 0) {
-        const postAft = new THREE.Mesh(postGeo, frameMat);
-        postAft.position.set(-1.60, 0.02, z - rackWidth * 0.5);
-        this.rootGroup.add(postAft);
+        dummyPost.position.set(-1.60, 0.02, z - rackWidth * 0.5);
+        dummyPost.updateMatrix();
+        postMatrices.push(dummyPost.matrix.clone());
       }
 
       // Physical Sub-tier Drawer Handles (4 tiers per rack)
       for (let tier = 0; tier < 4; tier++) {
         const tierY = -0.70 + tier * 0.46;
-        const handle = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.08, 0.016), handleMat);
-        handle.position.set(-1.595, tierY, z + 0.18);
-        this.rootGroup.add(handle);
+        dummyHandle.position.set(-1.595, tierY, z + 0.18);
+        dummyHandle.updateMatrix();
+        handleMatrices.push(dummyHandle.matrix.clone());
 
-        const handle2 = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.08, 0.016), handleMat);
-        handle2.position.set(-1.595, tierY, z - 0.18);
-        this.rootGroup.add(handle2);
+        dummyHandle.position.set(-1.595, tierY, z - 0.18);
+        dummyHandle.updateMatrix();
+        handleMatrices.push(dummyHandle.matrix.clone());
       }
 
       // 3D Status LED Indicator Board on top tier
+      dummyLed.rotation.set(0, 0, Math.PI / 2);
       [-0.15, 0.0, 0.15].forEach((lz, lIdx) => {
         const ledCol = lIdx === 0 ? 0x22c55e : (lIdx === 1 ? 0x38bdf8 : 0xf59e0b);
-        const led = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.007, 0.007, 0.008, 12),
-          new THREE.MeshBasicMaterial({ color: ledCol })
-        );
-        led.rotation.z = Math.PI / 2;
-        led.position.set(-1.598, 0.88, z + lz);
-        this.rootGroup.add(led);
+        dummyLed.position.set(-1.598, 0.88, z + lz);
+        dummyLed.updateMatrix();
+        ledItems.push({ matrix: dummyLed.matrix.clone(), color: new THREE.Color(ledCol) });
       });
 
       // Horizontal Bungee Retention Cord across lower lockers
-      const cord = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.004, 0.004, rackWidth - 0.08, 8),
-        new THREE.MeshBasicMaterial({ color: 0x0284c7 })
-      );
-      cord.position.set(-1.59, -0.42, z);
-      this.rootGroup.add(cord);
+      dummyCord.position.set(-1.59, -0.42, z);
+      dummyCord.updateMatrix();
+      cordMatrices.push(dummyCord.matrix.clone());
     });
 
     // Right Wall Payload Racks (X = +1.82, facing -X)
     rackPositions.forEach((z, idx) => {
-      const rack = new THREE.Mesh(new THREE.BoxGeometry(rackDepth, rackHeight, rackWidth), rackMat);
-      rack.position.set(1.82, 0.02, z);
-      rack.rotation.y = Math.PI; // Face inward
-      this.rootGroup.add(rack);
+      dummyRack.position.set(1.82, 0.02, z);
+      dummyRack.rotation.set(0, Math.PI, 0);
+      dummyRack.updateMatrix();
+      rackMatrices.push(dummyRack.matrix.clone());
 
       // Structural Vertical Posts
-      const postGeo = new THREE.BoxGeometry(0.045, rackHeight + 0.06, 0.045);
-      const postFront = new THREE.Mesh(postGeo, frameMat);
-      postFront.position.set(1.60, 0.02, z + rackWidth * 0.5);
-      this.rootGroup.add(postFront);
+      dummyPost.position.set(1.60, 0.02, z + rackWidth * 0.5);
+      dummyPost.updateMatrix();
+      postMatrices.push(dummyPost.matrix.clone());
 
       if (idx === 0) {
-        const postAft = new THREE.Mesh(postGeo, frameMat);
-        postAft.position.set(1.60, 0.02, z - rackWidth * 0.5);
-        this.rootGroup.add(postAft);
+        dummyPost.position.set(1.60, 0.02, z - rackWidth * 0.5);
+        dummyPost.updateMatrix();
+        postMatrices.push(dummyPost.matrix.clone());
       }
 
       // Physical Sub-tier Drawer Handles
       for (let tier = 0; tier < 4; tier++) {
         const tierY = -0.70 + tier * 0.46;
-        const handle = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.08, 0.016), handleMat);
-        handle.position.set(1.595, tierY, z + 0.18);
-        this.rootGroup.add(handle);
+        dummyHandle.position.set(1.595, tierY, z + 0.18);
+        dummyHandle.updateMatrix();
+        handleMatrices.push(dummyHandle.matrix.clone());
 
-        const handle2 = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.08, 0.016), handleMat);
-        handle2.position.set(1.595, tierY, z - 0.18);
-        this.rootGroup.add(handle2);
+        dummyHandle.position.set(1.595, tierY, z - 0.18);
+        dummyHandle.updateMatrix();
+        handleMatrices.push(dummyHandle.matrix.clone());
       }
 
       // Status LED indicators
+      dummyLed.rotation.set(0, 0, -Math.PI / 2);
       [-0.15, 0.0, 0.15].forEach((lz, lIdx) => {
         const ledCol = lIdx === 0 ? 0x22c55e : (lIdx === 1 ? 0x38bdf8 : 0x10b981);
-        const led = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.007, 0.007, 0.008, 12),
-          new THREE.MeshBasicMaterial({ color: ledCol })
-        );
-        led.rotation.z = -Math.PI / 2;
-        led.position.set(1.598, 0.88, z + lz);
-        this.rootGroup.add(led);
+        dummyLed.position.set(1.598, 0.88, z + lz);
+        dummyLed.updateMatrix();
+        ledItems.push({ matrix: dummyLed.matrix.clone(), color: new THREE.Color(ledCol) });
       });
 
       // Horizontal Bungee Retention Cord
-      const cord = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.004, 0.004, rackWidth - 0.08, 8),
-        new THREE.MeshBasicMaterial({ color: 0x0284c7 })
-      );
-      cord.position.set(1.59, -0.42, z);
-      this.rootGroup.add(cord);
+      dummyCord.position.set(1.59, -0.42, z);
+      dummyCord.updateMatrix();
+      cordMatrices.push(dummyCord.matrix.clone());
     });
+
+    // 1. ISPR Rack Bodies (InstancedMesh)
+    const rackGeo = new THREE.BoxGeometry(rackDepth, rackHeight, rackWidth);
+    const rackInst = new THREE.InstancedMesh(rackGeo, rackMat, rackMatrices.length);
+    rackMatrices.forEach((mat, i) => rackInst.setMatrixAt(i, mat));
+    rackInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(rackInst);
+
+    // 2. Corner Structural Posts (InstancedMesh)
+    const postGeo = new THREE.BoxGeometry(0.045, rackHeight + 0.06, 0.045);
+    const postInst = new THREE.InstancedMesh(postGeo, frameMat, postMatrices.length);
+    postMatrices.forEach((mat, i) => postInst.setMatrixAt(i, mat));
+    postInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(postInst);
+
+    // 3. Physical Sub-tier Drawer Handles (InstancedMesh)
+    const handleGeo = new THREE.BoxGeometry(0.016, 0.08, 0.016);
+    const handleInst = new THREE.InstancedMesh(handleGeo, handleMat, handleMatrices.length);
+    handleMatrices.forEach((mat, i) => handleInst.setMatrixAt(i, mat));
+    handleInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(handleInst);
+
+    // 4. Status LEDs with per-instance color (InstancedMesh)
+    const ledGeo = new THREE.CylinderGeometry(0.007, 0.007, 0.008, 12);
+    const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const ledInst = new THREE.InstancedMesh(ledGeo, ledMat, ledItems.length);
+    ledItems.forEach((item, i) => {
+      ledInst.setMatrixAt(i, item.matrix);
+      ledInst.setColorAt(i, item.color);
+    });
+    ledInst.instanceMatrix.needsUpdate = true;
+    if (ledInst.instanceColor) ledInst.instanceColor.needsUpdate = true;
+    this.rootGroup.add(ledInst);
+
+    // 5. Horizontal Bungee Retention Cords (InstancedMesh)
+    const cordGeo = new THREE.CylinderGeometry(0.004, 0.004, rackWidth - 0.08, 8);
+    const cordMat = new THREE.MeshBasicMaterial({ color: 0x0284c7 });
+    const cordInst = new THREE.InstancedMesh(cordGeo, cordMat, cordMatrices.length);
+    cordMatrices.forEach((mat, i) => cordInst.setMatrixAt(i, mat));
+    cordInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(cordInst);
   }
 
   // =========================================================================
@@ -2399,16 +2460,22 @@ export class SpaceStationScene {
     innerRim.position.set(0, 0, 5.955);
     this.rootGroup.add(innerRim);
 
-    // 24 Machined Aerospace Socket-Head Hex Fasteners around perimeter
+    // 24 Machined Aerospace Socket-Head Hex Fasteners around perimeter (InstancedMesh for 1 draw call)
     const hexBoltMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.95, roughness: 0.18 });
     const hexBoltGeo = new THREE.CylinderGeometry(0.007, 0.007, 0.02, 6);
+    const boltInstanced = new THREE.InstancedMesh(hexBoltGeo, hexBoltMat, 24);
+    const dummyMat = new THREE.Matrix4();
+    const dummyPos = new THREE.Vector3();
+    const dummyQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+    const dummyScale = new THREE.Vector3(1, 1, 1);
     for (let b = 0; b < 24; b++) {
       const bAngle = (b / 24) * Math.PI * 2;
-      const bolt = new THREE.Mesh(hexBoltGeo, hexBoltMat);
-      bolt.rotation.x = Math.PI / 2;
-      bolt.position.set(Math.cos(bAngle) * 1.18, Math.sin(bAngle) * 1.18, 5.95);
-      this.rootGroup.add(bolt);
+      dummyPos.set(Math.cos(bAngle) * 1.18, Math.sin(bAngle) * 1.18, 5.95);
+      dummyMat.compose(dummyPos, dummyQuat, dummyScale);
+      boltInstanced.setMatrixAt(b, dummyMat);
     }
+    boltInstanced.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(boltInstanced);
 
     // 3. Multi-Layer Fused Silica Optical Window Glass Pane
     const windowGlass = new THREE.Mesh(
@@ -2478,7 +2545,7 @@ export class SpaceStationScene {
     // 6. Photorealistic High-Altitude Orbital Observation Backdrop (36880.png)
     // Depicting real deep space stars, electric-blue atmospheric limb, and Earth's topography
     const texLoader = new THREE.TextureLoader();
-    const spaceTex = texLoader.load('./36880.png', (tex) => {
+    const spaceTex = texLoader.load('/36880.png', (tex) => {
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.minFilter = THREE.LinearFilter;
       tex.magFilter = THREE.LinearFilter;
@@ -2522,50 +2589,57 @@ export class SpaceStationScene {
     const railRadius = 0.016;
     const railLength = 0.88;
 
-    const createHandrail = (x, y, z, isVertical = false) => {
-      const group = new THREE.Group();
-      group.position.set(x, y, z);
-
-      const barGeo = new THREE.CylinderGeometry(railRadius, railRadius, railLength, 16);
-      const bar = new THREE.Mesh(barGeo, railMat);
-      if (!isVertical) bar.rotation.x = Math.PI / 2;
-      group.add(bar);
-
-      // Standoff mounting studs at each end
-      const studGeo = new THREE.CylinderGeometry(0.014, 0.014, 0.065, 12);
-      const s1 = new THREE.Mesh(studGeo, standoffMat);
-      const s2 = new THREE.Mesh(studGeo, standoffMat);
-
-      s1.rotation.z = Math.PI / 2;
-      s2.rotation.z = Math.PI / 2;
-
-      if (isVertical) {
-        s1.position.set(-0.035,  railLength * 0.45, 0);
-        s2.position.set(-0.035, -railLength * 0.45, 0);
-      } else {
-        s1.position.set(-0.035, 0,  railLength * 0.45);
-        s2.position.set(-0.035, 0, -railLength * 0.45);
-      }
-      group.add(s1);
-      group.add(s2);
-
-      return group;
-    };
-
-    // Mount handrails directly onto structural ISPR vertical rack posts
+    // Mount handrails directly onto structural ISPR vertical rack posts (Instanced for 60fps)
     const railPositionsZ = [-4.475, -2.375, -0.275, 0.775, 2.875, 4.975];
+    const rails = [];
     railPositionsZ.forEach(z => {
       // Vertical blue handrail on Left Wall post (skip glovebox bay so glovebox is completely clean and unobstructed)
       if (Math.abs(z - (-0.275)) > 0.05 && Math.abs(z - (-1.325)) > 0.05) {
-        const vRailL = createHandrail(-1.57, 0.20, z, true);
-        this.rootGroup.add(vRailL);
+        rails.push({ x: -1.57, y: 0.20, z, rotY: 0 });
       }
 
       // Vertical blue handrail on Right Wall post
-      const vRailR = createHandrail(1.57, 0.20, z, true);
-      vRailR.rotation.y = Math.PI;
-      this.rootGroup.add(vRailR);
+      rails.push({ x: 1.57, y: 0.20, z, rotY: Math.PI });
     });
+
+    const barMatrices = [];
+    const studMatrices = [];
+
+    const parent = new THREE.Object3D();
+    const dBar = new THREE.Object3D();
+    parent.add(dBar);
+
+    const dStud1 = new THREE.Object3D();
+    dStud1.rotation.z = Math.PI / 2;
+    dStud1.position.set(-0.035, railLength * 0.45, 0);
+    parent.add(dStud1);
+
+    const dStud2 = new THREE.Object3D();
+    dStud2.rotation.z = Math.PI / 2;
+    dStud2.position.set(-0.035, -railLength * 0.45, 0);
+    parent.add(dStud2);
+
+    rails.forEach(r => {
+      parent.position.set(r.x, r.y, r.z);
+      parent.rotation.set(0, r.rotY, 0);
+      parent.updateMatrixWorld(true);
+
+      barMatrices.push(dBar.matrixWorld.clone());
+      studMatrices.push(dStud1.matrixWorld.clone());
+      studMatrices.push(dStud2.matrixWorld.clone());
+    });
+
+    const barGeo = new THREE.CylinderGeometry(railRadius, railRadius, railLength, 16);
+    const barInst = new THREE.InstancedMesh(barGeo, railMat, barMatrices.length);
+    barMatrices.forEach((mat, i) => barInst.setMatrixAt(i, mat));
+    barInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(barInst);
+
+    const studGeo = new THREE.CylinderGeometry(0.014, 0.014, 0.065, 12);
+    const studInst = new THREE.InstancedMesh(studGeo, standoffMat, studMatrices.length);
+    studMatrices.forEach((mat, i) => studInst.setMatrixAt(i, mat));
+    studInst.instanceMatrix.needsUpdate = true;
+    this.rootGroup.add(studInst);
   }
 
   // =========================================================================
@@ -2706,7 +2780,7 @@ export class SpaceStationScene {
 
       ctx.fillStyle = '#ef4444';
       ctx.font = 'bold 15px monospace';
-      ctx.fillText('🚨 RED ALERT // EMERGENCY PROTOCOL ACTIVE', 18, 30);
+      ctx.fillText('[EMERGENCY] RED ALERT // EMERGENCY PROTOCOL ACTIVE', 18, 30);
 
       ctx.fillStyle = '#f87171';
       ctx.font = '12px monospace';

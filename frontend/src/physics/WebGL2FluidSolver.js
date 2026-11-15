@@ -4,7 +4,7 @@
  * Provides 100% universal browser compatibility, zero driver leaks, and seamless Three.js integration.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
 
 export class WebGL2FluidSolver {
   constructor(renderer, config) {

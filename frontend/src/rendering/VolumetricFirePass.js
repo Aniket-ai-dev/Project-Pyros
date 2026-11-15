@@ -15,7 +15,7 @@
  * - Dynamic aerodynamic crosswind deflection.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
 
 export class VolumetricFirePass {
   constructor(config, fluidSolver, options = {}) {
@@ -186,7 +186,7 @@ export class VolumetricFirePass {
         float rayLength = tFar - tNear;
         if (rayLength <= 0.0) discard;
 
-        int numSteps = clamp(u_steps, 64, 180);
+        int numSteps = clamp(u_steps, 36, 80);
         float stepSize = rayLength / float(numSteps);
 
         // Ray jitter
@@ -216,8 +216,8 @@ export class VolumetricFirePass {
 
         bool isCandle = (u_burnerShape == 1);
 
-        for (int i = 0; i < 180; i++) {
-          if (i >= numSteps || t >= tFar || transmittance < 0.008) break;
+        for (int i = 0; i < 80; i++) {
+          if (i >= numSteps || t >= tFar || transmittance < 0.015) break;
 
           vec3 pWorld = ro + rd * t;
           vec3 normP = (pWorld - u_worldBoxMin) / boxDim;

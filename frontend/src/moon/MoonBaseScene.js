@@ -23,7 +23,7 @@
  * - 5 Interactive Simulation Modes: Normal, Power, Life Support, Thermal, Emergency
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
 
 // Fast 2D Gradient Noise for Lunar Terrain
 class FastPerlin {
@@ -498,8 +498,8 @@ export class MoonBaseScene {
     this.sunLight = new THREE.DirectionalLight(0xfffaee, 3.4);
     this.sunLight.position.set(-75, 45, 65);
     this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.width = 2048;
-    this.sunLight.shadow.mapSize.height = 2048;
+    this.sunLight.shadow.mapSize.width = 1024;
+    this.sunLight.shadow.mapSize.height = 1024;
     this.sunLight.shadow.camera.near = 1.0;
     this.sunLight.shadow.camera.far = 260;
     this.sunLight.shadow.camera.left = -55;

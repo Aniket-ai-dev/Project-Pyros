@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT PYROS // NASA Microgravity Combustion Laboratory</title>
+  <script>
+    // Seamless routing to Project Pyros Station & Main Menu
+    window.location.replace('./station.html');
+  </script>
+  <link rel="stylesheet" href="./styles.css">
+
+  <!-- Three.js Import Map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D Three.js WebGL/WebGPU Viewport Canvas -->
+  <canvas id="canvas-3d"></canvas>
+
+  <!-- Top Scientific Navigation Bar -->
+  <header class="lab-header">
+    <!-- Institutional Brand -->
+    <div class="lab-brand">
+      <span class="brand-badge">PROJECT PYROS</span>
+      <div class="brand-meta">
+        <span class="brand-title">NASA Microgravity Combustion Laboratory</span>
+        <span class="brand-sub">3D Navier-Stokes & Diffusion Kinetics Simulator</span>
+      </div>
+    </div>
+
+    <!-- Center Apparatus Segmented Pill -->
+    <div class="apparatus-segmented-bar">
+      <button class="apparatus-pill-btn active" data-shape="candle">
+        Candle Diffusion Flame
+      </button>
+      <button class="apparatus-pill-btn" data-shape="circle">
+        Aerospace Burner Jet
+      </button>
+      <button class="apparatus-pill-btn" data-shape="droplet">
+        Droplet Combustion
+      </button>
+    </div>
+
+    <!-- Right Tool Actions Ribbon -->
+    <div class="lab-actions-bar">
+      <!-- Flight Presets Dropdown -->
+      <select id="global-preset-select" class="clean-select" onchange="triggerPreset(this.value)">
+        <option value="candle-earth">Earth Normal (1.00g // 21% O₂)</option>
+        <option value="candle-iss">ISS Microgravity (0.00g // Spherical)</option>
+        <option value="candle-lunar">Lunar Surface (0.165g // Bulbous)</option>
+        <option value="candle-mars">Martian Atmosphere (0.38g // Vortex)</option>
+        <option value="candle-hypoxic">Hypoxic Starvation (11% O₂)</option>
+        <option value="candle-hyper">Hyperoxic Flame (100% O₂)</option>
+        <option value="candle-wind">Crosswind Shear (0.35 m/s)</option>
+        <option value="burner-jet">CIR Propane Burner Jet</option>
+      </select>
+
+      <!-- Link to Space Station Room View -->
+      <a href="./station.html" class="header-action-btn" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #38bdf8;" title="Explore the 3D Space Station Module">
+        🛸 Space Station Room
+      </a>
+
+      <!-- Viewport & Drawer Toggles -->
+      <button id="btn-toggle-telemetry" class="header-action-btn active" title="Toggle Telemetry Diagnostics">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span>Telemetry</span>
+      </button>
+
+      <button id="btn-toggle-controls" class="header-action-btn active" title="Toggle Experiment Parameters">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Parameters</span>
+      </button>
+
+      <button id="btn-open-guide" class="header-action-btn primary" title="Open Scientific Principles & Student Guide">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Physics Guide</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Workspace Floating Panels Container -->
+  <main class="lab-workspace">
+    <!-- Left Dock: Telemetry HUD & 2D Diagnostic Slice -->
+    <div class="left-dock" id="left-dock-container">
+      <!-- Scientific Telemetry HUD -->
+      <section id="telemetry-hud" class="sci-panel"></section>
+
+      <!-- 2D Eulerian Diagnostic Slice Visualizer -->
+      <section id="slice-panel" class="sci-panel slice-card">
+        <div class="slice-meta-row">
+          <span style="font-weight: 700; color: var(--accent-cyan);">2D VOXEL CROSS-SECTION</span>
+          <span style="color: var(--text-tertiary);">HOVER TO PROBE</span>
+        </div>
+        <canvas id="canvas-slice" width="300" height="180"></canvas>
+        <div class="slice-footer">
+          <span>64 × 96 × 64 (393K CELLS)</span>
+          <span>EULERIAN SOLVER</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Dock: Scientific Parameters Inspector -->
+    <div class="right-dock" id="right-dock-container">
+      <aside id="controls-panel" class="sci-panel"></aside>
+    </div>
+  </main>
+
+  <!-- Viewport Navigation Hint Pill -->
+  <div class="viewport-hint-pill">
+    Rotate: Left-Click + Drag &nbsp;|&nbsp; Pan: Right-Click + Drag &nbsp;|&nbsp; Zoom: Scroll
+  </div>
+
+  <!-- Educational Scientific Reference Modal for Students & Researchers -->
+  <div id="physics-guide-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>Microgravity Combustion Physics // Student & Research Guide</span>
+        </div>
+        <button id="btn-close-guide" class="modal-close-btn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Topic 1: Navier-Stokes Buoyancy -->
+        <div class="theory-box">
+          <div class="theory-heading">1. Navier-Stokes Buoyancy & Convection</div>
+          <p>
+            In normal Earth gravity, flames are shaped by buoyant natural convection. Thermal expansion decreases the gas density in the flame zone, creating an upward buoyant force described by the Boussinesq approximation:
+          </p>
+          <div class="formula-block">
+            ρ (∂u/∂t + u · ∇u) = -∇p + μ ∇²u + ρ₀ β (T - T₀) g
+          </div>
+          <p>
+            The buoyant upward acceleration draws surrounding air inward and upward, stretching the flame into its familiar <strong>teardrop shape</strong> and driving convective flickering at 10–14 Hz.
+          </p>
+        </div>
+
+        <!-- Topic 2: Microgravity Diffusion Flame -->
+        <div class="theory-box">
+          <div class="theory-heading">2. The ISS Microgravity Spherical Diffusion Regime (g = 0.0)</div>
+          <p>
+            In orbital freefall aboard the International Space Station (ISS), the effective gravitational acceleration is zero (<strong>g = 0.0 m/s²</strong>). The buoyant term drops out entirely.
+          </p>
+          <div class="formula-block">
+            Gr → 0  ⟹  ∂Y/∂t = D ∇²Y - ω̇
+          </div>
+          <p>
+            Combustion becomes purely governed by <strong>isotropic molecular diffusion</strong>. Oxygen diffuses symmetrically from all radial directions toward the wick, and combustion products diffuse outward. Because there is no buoyant draft to stretch the gas, the flame naturally settles into a calm, ethereal <strong>spherical blue diffusion dome</strong>.
+          </p>
+        </div>
+
+        <!-- Topic 3: Candle Flame Anatomy -->
+        <div class="theory-box">
+          <div class="theory-heading">3. The 4 Anatomical Zones of a Wax Candle Flame</div>
+          <p>
+            A real candle flame consists of four distinct physical zones established by diffusion kinetics:
+          </p>
+          <ul style="padding-left: 18px; margin: 6px 0;">
+            <li><strong>Zone 1: Sapphire-Blue Radical Base Cup:</strong> Hugs the lower 20% of the wick. Rich in excited CH* (431 nm) and C₂* (516 nm) radicals formed where incoming fresh ambient oxygen first meets vaporized wax.</li>
+            <li><strong>Zone 2: Dark Non-Luminous Pyrolysis Core:</strong> Located directly above the black wick. Solid paraffin is vaporized into hydrocarbon gas (C₂₀H₄₂ to C₃₀H₆₂). Oxygen has not penetrated here, and temperature is too low for soot incandescence.</li>
+            <li><strong>Zone 3: Luminous Golden-White Incandescent Core:</strong> Carbon nanoparticles (soot) form and are heated to 1,600 K–1,850 K, glowing brilliantly via Planck blackbody radiation.</li>
+            <li><strong>Zone 4: Warm Amber Mantle & Tip:</strong> The outer envelope where soot particles meet sufficient oxygen and are fully combusted into CO₂ and H₂O.</li>
+          </ul>
+        </div>
+
+        <!-- Topic 4: Dimensionless Hydrodynamics -->
+        <div class="theory-box">
+          <div class="theory-heading">4. Dimensionless Numbers Reference</div>
+          <div class="dim-explainer-list">
+            <div class="dim-explainer-item">
+              <strong>Grashof Number (Gr = g β ΔT L³ / ν²):</strong> Measures the ratio of buoyant forces to viscous friction. On Earth, Gr ≈ 10⁵ (strong convection); on the ISS, Gr = 0 (zero convection).
+            </div>
+            <div class="dim-explainer-item">
+              <strong>Rayleigh Number (Ra = Gr · Pr):</strong> Governs the transition to free natural convection. Below the critical threshold (Ra &lt; 10³), convection is suppressed and diffusion dominates.
+            </div>
+            <div class="dim-explainer-item">
+              <strong>Froude Number (Fr = u / √(gL)):</strong> Compares inertial momentum from injection velocity to gravitational buoyancy forces.
+            </div>
+            <div class="dim-explainer-item">
+              <strong>Péclet Number (Pe = u L / α):</strong> Ratio of advective transport rate to thermal/mass diffusivity.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Preset Trigger Bridge -->
+  <script>
+    function triggerPreset(presetId) {
+      const btn = document.querySelector(`[data-preset="${presetId}"]`);
+      if (btn) btn.click();
+      const select = document.getElementById('global-preset-select');
+      if (select && select.value !== presetId) {
+        select.value = presetId;
+      }
+    }
+  </script>
+
+  <!-- Application Entry Point -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

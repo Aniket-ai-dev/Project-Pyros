@@ -4,12 +4,12 @@
  * Controls WebGL rendering, camera kinematics, viewpoint presets, telemetry HUD, and Main Menu routing.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
-import { MoonBaseScene } from './MoonBaseScene.js?v=v114_ice_home_on_moon';
-import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js?v=v112_syntax_fix';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { MoonBaseScene } from './MoonBaseScene.js';
+import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js';
 
-class MoonBaseApp {
+export class MoonBaseApp {
   constructor() {
     this.canvas = document.getElementById('canvas-moon');
     this.renderer = null;
@@ -17,6 +17,8 @@ class MoonBaseApp {
     this.camera = null;
     this.controls = null;
     this.moonScene = null;
+    this.isDestroyed = false;
+    this.rafId = null;
 
     // Camera animation state
     this.isTransitioning = false;
@@ -51,8 +53,9 @@ class MoonBaseApp {
     this.setupPyrosMenu();
     this.setupCriteriaAudit();
 
-    window.addEventListener('resize', () => this.onWindowResize());
-    requestAnimationFrame((t) => this.renderLoop(t));
+    this._onResize = () => this.onWindowResize();
+    window.addEventListener('resize', this._onResize);
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
   }
 
   setupRenderer() {
@@ -62,9 +65,11 @@ class MoonBaseApp {
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
+    this.renderer.shadowMap.needsUpdate = true;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
   }
@@ -127,6 +132,21 @@ class MoonBaseApp {
     const hudPanel = document.getElementById('hud-moon-panel');
     const btnCollapse = document.getElementById('btn-collapse-hud');
 
+    if (hudPanel) {
+      hudPanel.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
+      hudPanel.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
+
     if (btnToggleHud && hudPanel) {
       btnToggleHud.addEventListener('click', () => {
         hudPanel.classList.toggle('collapsed');
@@ -164,9 +184,11 @@ class MoonBaseApp {
     const menuOverlay = document.getElementById('pyros-main-menu');
     const btnResume = document.getElementById('btn-resume-moon');
 
-    if (btnOpen && menuOverlay) {
-      btnOpen.addEventListener('click', () => {
-        menuOverlay.style.display = 'flex';
+    if (btnOpen) {
+      btnOpen.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = '/';
       });
     }
 
@@ -229,7 +251,8 @@ class MoonBaseApp {
   }
 
   renderLoop(timestamp) {
-    requestAnimationFrame((t) => this.renderLoop(t));
+    if (this.isDestroyed) return;
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
 
     const delta = Math.min((timestamp - this.lastTimestamp) / 1000.0, 0.1);
     this.lastTimestamp = timestamp;
@@ -248,8 +271,20 @@ class MoonBaseApp {
 
     this.renderer.render(this.scene, this.camera);
   }
+
+  destroy() {
+    this.isDestroyed = true;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this.renderer) {
+      try { this.renderer.dispose(); } catch (e) {}
+    }
+    if (this.controls) {
+      try { this.controls.dispose(); } catch (e) {}
+    }
+    if (this.moonScene && typeof this.moonScene.dispose === 'function') {
+      try { this.moonScene.dispose(); } catch (e) {}
+    }
+  }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  new MoonBaseApp();
-});

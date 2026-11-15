@@ -5,18 +5,18 @@
  * lighting regime states, and environment telemetry HUD.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
-import { SpaceStationScene } from './SpaceStationScene.js?v=loading_main_menu_v21';
-import { NASADataService } from '../services/NASADataService.js?v=v112_syntax_fix';
-import { ScenarioSimulationMapper } from '../services/ScenarioSimulationMapper.js?v=v112_syntax_fix';
-import { InvestigationExplorer } from '../ui/InvestigationExplorer.js?v=v112_syntax_fix';
-import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js?v=v112_syntax_fix';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { SpaceStationScene } from './SpaceStationScene.js';
+import { NASADataService } from '../services/NASADataService.js';
+import { ScenarioSimulationMapper } from '../services/ScenarioSimulationMapper.js';
+import { InvestigationExplorer } from '../ui/InvestigationExplorer.js';
+import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js';
 import { SimulationConfig, GAS_PRESETS } from '../physics/CombustionPhysics.js';
 import { WebGL2FluidSolver } from '../physics/WebGL2FluidSolver.js';
 import { VolumetricFirePass } from '../rendering/VolumetricFirePass.js';
 
-class SpaceStationApp {
+export class SpaceStationApp {
   constructor() {
     this.canvas = document.getElementById('canvas-station');
     this.renderer = null;
@@ -33,7 +33,7 @@ class SpaceStationApp {
     this.fluidConfig.ambientOxygen = 0.21;
     this.fluidConfig.ambientTemp = 295.0;
     this.fluidConfig.flameBrightness = 1.35;
-    this.fluidConfig.raymarchSteps = 96;
+    this.fluidConfig.raymarchSteps = 48;
     this.gasConfig = GAS_PRESETS.candleWax;
 
     this.fluidSolver = null;
@@ -95,7 +95,7 @@ class SpaceStationApp {
   init() {
     this.setupRenderer();
     this.setupCamera();
-    this.setupKeyboardControls();
+    // Keyboard translation disabled: camera locked strictly to OrbitControls
     this.setupFluidPhysics();
     this.setupScene();
     this.setupEvents();
@@ -103,17 +103,16 @@ class SpaceStationApp {
     this.setupScenarioIntelligence();
     this.setupPyrosLoadingAndMenu();
 
-    window.addEventListener('resize', () => this.onWindowResize());
-    requestAnimationFrame((t) => this.renderLoop(t));
+    this._onResize = () => this.onWindowResize();
+    window.addEventListener('resize', this._onResize);
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
   }
 
   setupFluidPhysics() {
-    try {
-      this.fluidSolver = new WebGL2FluidSolver(this.renderer, this.fluidConfig);
-      this.triggerSpark();
-    } catch (err) {
-      console.warn('Could not initialize WebGL2FluidSolver in Space Station:', err);
-    }
+    // Space Station uses direct unified shader candle flame simulation;
+    // GPGPU solver offloaded to prevent 35+ redundant FBO passes per frame.
+    this.fluidSolver = null;
+    this.triggerSpark();
   }
 
   triggerSpark() {
@@ -128,7 +127,7 @@ class SpaceStationApp {
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -153,7 +152,7 @@ class SpaceStationApp {
   }
 
   setupKeyboardControls() {
-    window.addEventListener('keydown', (e) => {
+    this._onKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       switch (e.code) {
@@ -185,9 +184,9 @@ class SpaceStationApp {
           this.keys.down = true;
           break;
       }
-    });
+    };
 
-    window.addEventListener('keyup', (e) => {
+    this._onKeyUp = (e) => {
       switch (e.code) {
         case 'KeyW':
         case 'ArrowUp':
@@ -216,7 +215,10 @@ class SpaceStationApp {
           this.keys.down = false;
           break;
       }
-    });
+    };
+
+    window.addEventListener('keydown', this._onKeyDown);
+    window.addEventListener('keyup', this._onKeyUp);
   }
 
   setupScene() {
@@ -292,6 +294,16 @@ class SpaceStationApp {
       });
     });
 
+    document.querySelectorAll('.cd-bar-col').forEach(col => {
+      col.addEventListener('click', () => {
+        const o2Val = parseFloat(col.dataset.o2);
+        if (!isNaN(o2Val)) {
+          if (o2Slider) o2Slider.value = o2Val;
+          this.updateOxygenUI(o2Val);
+        }
+      });
+    });
+
     // 3. Artificial Gravity Manipulation Controls
     const gSlider = document.getElementById('slider-station-gravity');
     if (gSlider) {
@@ -340,12 +352,26 @@ class SpaceStationApp {
       }
     });
 
-    // 5. Lighting Mode Switchers (User manual Day / Sleep selection)
+    // 5. Lighting Mode Switchers (User manual Day / Sleep selection with localStorage persistence)
+    try {
+      const savedLightMode = typeof window !== 'undefined' ? localStorage.getItem('pyros_station_lighting_mode') : null;
+      if (savedLightMode && (savedLightMode === 'nominal' || savedLightMode === 'emergency' || savedLightMode === 'sleep')) {
+        if (this.stationScene) {
+          this.stationScene.baseLightingMode = savedLightMode;
+          this.stationScene.setLightingMode(savedLightMode);
+          document.querySelectorAll('.light-mode-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.mode === savedLightMode);
+          });
+        }
+      }
+    } catch (e) {}
+
     document.querySelectorAll('.light-mode-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const mode = btn.dataset.mode;
         if (this.stationScene) {
           this.stationScene.baseLightingMode = mode;
+          try { localStorage.setItem('pyros_station_lighting_mode', mode); } catch (e) {}
           // Only switch 3D scene immediately if not locked in O2 emergency (O2 <= 10%)
           if (this.stationScene.oxygenLevel > 10.0) {
             this.stationScene.setLightingMode(mode);
@@ -372,6 +398,22 @@ class SpaceStationApp {
     const btnCollapse = document.getElementById('btn-collapse-hud');
     const tabReopen = document.getElementById('tab-reopen-hud');
     const hudToggle = document.getElementById('btn-toggle-hud');
+
+    if (hudPanel) {
+      // Isolate wheel, pointer, and touch gestures inside HUD panel so OrbitControls does not steal scrolling
+      hudPanel.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
+      hudPanel.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
 
     // Tab Switching
     document.querySelectorAll('.cd-tab-btn').forEach(btn => {
@@ -428,15 +470,10 @@ class SpaceStationApp {
   }
 
   // =========================================================================
-  // PROJECT PYROS: CINEMATIC LOADING ANIMATION & SCENE SELECTOR MAIN MENU
+  // PROJECT PYROS: DIRECT INSTANT ENTRY & IN-SCENE MAIN MENU
   // =========================================================================
   setupPyrosLoadingAndMenu() {
     const loadingScreen = document.getElementById('pyros-loading-screen');
-    const barFill = document.getElementById('pyros-loader-bar-fill');
-    const statusText = document.getElementById('pyros-loader-status-text');
-    const percentText = document.getElementById('pyros-loader-percent');
-    const skipBtn = document.getElementById('btn-skip-loading');
-
     const mainMenu = document.getElementById('pyros-main-menu');
     const btnEnterStation = document.getElementById('btn-enter-station');
     const cardStation = document.getElementById('card-scene-station');
@@ -447,82 +484,27 @@ class SpaceStationApp {
     const topDock = document.querySelector('.cd-top-dock');
     const hudPanel = document.getElementById('hud-unified-panel');
 
-    // Initially hide top dock and HUD panel while in loading & main menu
-    if (topDock) topDock.style.opacity = '0';
-    if (hudPanel) hudPanel.style.opacity = '0';
-
-    let hasEnteredStation = false;
-    let loadingDone = false;
-
-    const stages = [
-      { pct: 18, msg: 'INITIALIZING THREE.JS PBR SHADERS...' },
-      { pct: 45, msg: 'LOADING 3D MODULE GEOMETRY & RACKS...' },
-      { pct: 72, msg: 'CALIBRATING ECLSS FLUID DYNAMICS...' },
-      { pct: 90, msg: 'SYNCHRONIZING NASA PSI INVESTIGATIONS...' },
-      { pct: 100, msg: 'SYSTEM READY // ALL CHANNELS NOMINAL' }
-    ];
-
-    const completeLoading = () => {
-      if (loadingDone) return;
-      loadingDone = true;
-
-      if (barFill) barFill.style.width = '100%';
-      if (percentText) percentText.textContent = '100%';
-      if (statusText) statusText.textContent = 'SYSTEM READY // ALL CHANNELS NOMINAL';
-
-      setTimeout(() => {
-        if (loadingScreen) {
-          loadingScreen.classList.add('hidden');
-        }
-        if (mainMenu) {
-          mainMenu.style.display = 'flex';
-          requestAnimationFrame(() => {
-            mainMenu.classList.add('active');
-          });
-        }
-      }, 350);
-    };
-
-    const startTime = performance.now();
-    const duration = 1800; // 1.8 seconds smooth cinematic load
-
-    const updateLoader = (now) => {
-      if (loadingDone) return;
-      const elapsed = now - startTime;
-      const progress = Math.min(1.0, elapsed / duration);
-      const pct = Math.floor(progress * 100);
-
-      if (barFill) barFill.style.width = `${pct}%`;
-      if (percentText) percentText.textContent = `${pct}%`;
-
-      const stageIdx = Math.min(stages.length - 1, Math.floor(progress * stages.length));
-      if (statusText && stages[stageIdx]) {
-        statusText.textContent = stages[stageIdx].msg;
-      }
-
-      if (progress < 1.0) {
-        requestAnimationFrame(updateLoader);
-      } else {
-        completeLoading();
-      }
-    };
-
-    requestAnimationFrame(updateLoader);
-
-    // Skip button click or clicking anywhere on loading screen to skip
-    if (skipBtn) {
-      skipBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        completeLoading();
-      });
-    }
+    // Reveal top dock and HUD panel directly for instant station access
     if (loadingScreen) {
-      loadingScreen.addEventListener('click', () => {
-        completeLoading();
-      });
+      loadingScreen.style.display = 'none';
+      loadingScreen.classList.add('hidden');
+    }
+    if (mainMenu) {
+      mainMenu.style.display = 'none';
+      mainMenu.classList.remove('active');
+    }
+    if (topDock) {
+      topDock.style.opacity = '1';
+      topDock.style.pointerEvents = 'auto';
+    }
+    if (hudPanel) {
+      hudPanel.style.opacity = '1';
+      hudPanel.style.pointerEvents = 'auto';
     }
 
-    // Launch Space Station Handler
+    let hasEnteredStation = true;
+
+    // Launch/Resume Space Station Handler
     const launchStation = () => {
       hasEnteredStation = true;
       if (mainMenu) {
@@ -532,14 +514,15 @@ class SpaceStationApp {
         }, 450);
       }
 
-      // Smoothly reveal station top dock and HUD panel
       if (topDock) {
-        topDock.style.transition = 'opacity 0.6s ease';
+        topDock.style.transition = 'opacity 0.4s ease';
         topDock.style.opacity = '1';
+        topDock.style.pointerEvents = 'auto';
       }
       if (hudPanel) {
-        hudPanel.style.transition = 'opacity 0.6s ease';
+        hudPanel.style.transition = 'opacity 0.4s ease';
         hudPanel.style.opacity = '1';
+        hudPanel.style.pointerEvents = 'auto';
       }
 
       if (btnCloseMenu) {
@@ -565,26 +548,33 @@ class SpaceStationApp {
       });
     }
 
-    // Reopen Main Menu from station
+    // Return to Home screen from station
     if (btnOpenMenu) {
-      btnOpenMenu.addEventListener('click', () => {
-        if (mainMenu) {
-          mainMenu.style.display = 'flex';
-          requestAnimationFrame(() => {
-            mainMenu.classList.add('active');
-          });
-        }
+      btnOpenMenu.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = '/';
       });
     }
 
     // Close Main Menu to return to station
     if (btnCloseMenu) {
-      btnCloseMenu.addEventListener('click', () => {
-        if (hasEnteredStation) {
-          launchStation();
-        }
+      btnCloseMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        launchStation();
       });
     }
+
+    const backdrop = mainMenu ? mainMenu.querySelector('.pyros-menu-backdrop') : null;
+    if (backdrop) {
+      backdrop.addEventListener('click', () => launchStation());
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mainMenu && mainMenu.classList.contains('active')) {
+        launchStation();
+      }
+    });
   }
 
   // =========================================================================
@@ -1029,7 +1019,7 @@ class SpaceStationApp {
       simStatusBanner.className = 'sim-status-banner status-override';
     }
     if (simStatusDot) simStatusDot.className = 'sim-status-dot override';
-    if (simStatusText) simStatusText.textContent = '⚠️ MANUAL OVERRIDE (Scenario modified by user controls)';
+    if (simStatusText) simStatusText.textContent = 'MANUAL OVERRIDE (Scenario modified by user controls)';
 
     if (simulateBtn) {
       simulateBtn.disabled = false;
@@ -1192,7 +1182,7 @@ class SpaceStationApp {
         const errors = (mapperResult && mapperResult.errors) || ['Missing required simulation parameters'];
         warningContainer.innerHTML = errors.map(err => `
           <div class="scenario-sim-warning-box">
-            <span class="warning-icon">🚫</span>
+            <span class="warning-icon">[ALERT]</span>
             <span class="warning-msg"><strong>Simulation Guard:</strong> ${err}</span>
           </div>
         `).join('');
@@ -1403,8 +1393,8 @@ class SpaceStationApp {
         rankedInvs.forEach(inv => {
           const card = document.createElement('div');
           card.className = 'ranked-inv-card';
-          const matchTags = (inv.matching_conditions || []).map(c => `<span class="tag-item matched">✓ ${c}</span>`).join('');
-          const gapTags = (inv.gaps || []).map(g => `<span class="tag-item gap">✕ ${g}</span>`).join('');
+          const matchTags = (inv.matching_conditions || []).map(c => `<span class="tag-item matched">[MATCH] ${c}</span>`).join('');
+          const gapTags = (inv.gaps || []).map(g => `<span class="tag-item gap">[GAP] ${g}</span>`).join('');
           const scorePercent = Math.round((inv.relevance_score || 0) * 100);
 
           card.innerHTML = `
@@ -1539,6 +1529,25 @@ class SpaceStationApp {
       b.classList.toggle('active', Math.abs(bVal - val) < 2.0);
     });
 
+    // Synchronize 5 stepped pedestals (Matching Image 2)
+    let activeStep = 2;
+    let badgeText = '+21% Nom';
+    if (val < 5.5) { activeStep = 0; badgeText = '0% Vac'; }
+    else if (val < 16.0) { activeStep = 1; badgeText = '11% Hyp'; }
+    else if (val < 26.5) { activeStep = 2; badgeText = '+21% Nom'; }
+    else if (val < 66.0) { activeStep = 3; badgeText = '32% EVA'; }
+    else { activeStep = 4; badgeText = '100% Pure'; }
+
+    document.querySelectorAll('.cd-bar-col').forEach(col => {
+      const stepIdx = parseInt(col.dataset.step, 10);
+      const isActive = stepIdx === activeStep;
+      col.classList.toggle('active', isActive);
+      const badge = col.querySelector('.cd-bar-badge');
+      if (badge && isActive) {
+        badge.textContent = badgeText;
+      }
+    });
+
     // Alert status badge & trend pill wrap
     const badgeStatus = document.getElementById('badge-o2-status');
     const badgeWrap = document.getElementById('badge-o2-status-wrap');
@@ -1548,7 +1557,7 @@ class SpaceStationApp {
 
     if (val <= 10.0) {
       // Automatic Red Alert Emergency Mode (O2 <= 10%)
-      if (badgeStatus) badgeStatus.textContent = '🚨 RED ALERT (≤10% O₂)';
+      if (badgeStatus) badgeStatus.textContent = '[EMERGENCY] RED ALERT (≤10% O₂)';
       if (badgeWrap) badgeWrap.className = 'cd-trend-pill danger';
       if (alertBanner) alertBanner.className = 'o2-alert-banner critical';
       if (alertText) alertText.textContent = `EMERGENCY: O₂ critical (${val.toFixed(1)}%). Station Red Alert protocol active.`;
@@ -1767,19 +1776,30 @@ class SpaceStationApp {
   // FREE 6-DOF ASTRONAUT FLIGHT CONTROLS (WASD / Arrows / Space / Shift)
   // =========================================================================
   updateFreeMovement(dt) {
-    const forward = new THREE.Vector3();
+    if (!this._scratchForward) {
+      this._scratchForward = new THREE.Vector3();
+      this._scratchForwardH = new THREE.Vector3();
+      this._scratchRightH = new THREE.Vector3();
+      this._scratchMoveDir = new THREE.Vector3();
+      this._scratchDelta = new THREE.Vector3();
+      this._scratchPrevCam = new THREE.Vector3();
+      this._scratchActualDelta = new THREE.Vector3();
+      this._scratchCurLook = new THREE.Vector3();
+    }
+
+    const forward = this._scratchForward;
     this.camera.getWorldDirection(forward);
 
     // Project forward onto horizontal XZ plane for natural corridor flight
-    const forwardH = new THREE.Vector3(forward.x, 0, forward.z);
+    const forwardH = this._scratchForwardH.set(forward.x, 0, forward.z);
     if (forwardH.lengthSq() > 0.001) {
       forwardH.normalize();
     } else {
       forwardH.set(0, 0, -1);
     }
-    const rightH = new THREE.Vector3(-forwardH.z, 0, forwardH.x).normalize();
+    const rightH = this._scratchRightH.set(-forwardH.z, 0, forwardH.x).normalize();
 
-    const moveDir = new THREE.Vector3(0, 0, 0);
+    const moveDir = this._scratchMoveDir.set(0, 0, 0);
     if (this.keys.forward) moveDir.add(forwardH);
     if (this.keys.backward) moveDir.sub(forwardH);
     if (this.keys.right) moveDir.add(rightH);
@@ -1803,13 +1823,13 @@ class SpaceStationApp {
 
     // Displace camera and OrbitControls target in tandem
     if (this.flightVelocity.lengthSq() > 0.00001) {
-      const delta = this.flightVelocity.clone().multiplyScalar(dt);
+      const delta = this._scratchDelta.copy(this.flightVelocity).multiplyScalar(dt);
 
-      const prevCam = this.camera.position.clone();
+      const prevCam = this._scratchPrevCam.copy(this.camera.position);
       this.camera.position.add(delta);
       this.clampCameraInsideCabin(this.camera.position, false);
 
-      const actualDelta = this.camera.position.clone().sub(prevCam);
+      const actualDelta = this._scratchActualDelta.copy(this.camera.position).sub(prevCam);
       this.controls.target.add(actualDelta);
       this.clampCameraInsideCabin(this.controls.target, true);
     }
@@ -1824,7 +1844,8 @@ class SpaceStationApp {
   }
 
   renderLoop(timestamp) {
-    requestAnimationFrame((t) => this.renderLoop(t));
+    if (this.isDestroyed) return;
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
 
     const time = timestamp * 0.001;
     if (!this.lastTimestamp) this.lastTimestamp = timestamp;
@@ -1848,8 +1869,9 @@ class SpaceStationApp {
 
       this.camera.position.set(curX, curY, curZ);
 
-      // Smooth look-at target interpolation
-      const curLook = new THREE.Vector3().lerpVectors(this.startLookPos, this.cameraLookTarget, ease);
+      // Smooth look-at target interpolation (zero-allocation)
+      if (!this._scratchCurLook) this._scratchCurLook = new THREE.Vector3();
+      const curLook = this._scratchCurLook.lerpVectors(this.startLookPos, this.cameraLookTarget, ease);
       this.camera.lookAt(curLook);
       this.controls.target.copy(curLook);
 
@@ -1862,13 +1884,10 @@ class SpaceStationApp {
         this.controls.update();
       }
     } else {
-      // 1. Process free movement keyboard flight
-      this.updateFreeMovement(dt);
-
-      // 2. Update OrbitControls for mouse interaction
+      // 1. Update OrbitControls for mouse interaction (Camera locked strictly to OrbitControls)
       this.controls.update();
 
-      // 3. Cabin boundaries protection: prevents clipping through walls, ceiling, floor, standoffs
+      // 2. Cabin boundaries protection: prevents clipping through walls, ceiling, floor, standoffs
       this.clampCameraInsideCabin(this.camera.position, false);
 
       // Keep target within safe cabin zone
@@ -1883,31 +1902,36 @@ class SpaceStationApp {
       }
     }
 
-    // 2. Advance 3D Navier-Stokes Fluid Combustion Physics (GPGPU Solver)
-    if (this.fluidSolver && !this.fluidConfig.paused) {
-      this.fluidSolver.step(this.gasConfig, this.sparkActive);
-    }
-
+    // Station candle & environmental dynamics
     if (this.stationScene) {
       this.stationScene.update(time, dt);
     }
 
     this.renderer.render(this.scene, this.camera);
   }
-}
 
-function bootSpaceStation() {
-  try {
-    new SpaceStationApp();
-  } catch (err) {
-    console.error('Failed to initialize SpaceStationApp:', err);
+  destroy() {
+    this.isDestroyed = true;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onKeyDown) window.removeEventListener('keydown', this._onKeyDown);
+    if (this._onKeyUp) window.removeEventListener('keyup', this._onKeyUp);
+    if (this.renderer) {
+      try { this.renderer.dispose(); } catch (e) {}
+    }
+    if (this.controls) {
+      try { this.controls.dispose(); } catch (e) {}
+    }
+    if (this.stationScene && typeof this.stationScene.dispose === 'function') {
+      try { this.stationScene.dispose(); } catch (e) {}
+    }
+    const explorerEl = document.getElementById('nasa-explorer-modal');
+    if (explorerEl) explorerEl.remove();
+    const detailEl = document.getElementById('nasa-detail-modal');
+    if (detailEl) detailEl.remove();
+    const auditEl = document.getElementById('criteria-audit-modal');
+    if (auditEl) auditEl.remove();
   }
 }
 
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', bootSpaceStation);
-} else {
-  // DOM is already parsed (standard for deferred ES modules)
-  bootSpaceStation();
-}
 

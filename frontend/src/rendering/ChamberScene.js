@@ -9,7 +9,7 @@
  * - Dynamic Flame Point Light illuminating the candle top rim and chamber.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
 
 export class ChamberScene {
   constructor(scene, config) {

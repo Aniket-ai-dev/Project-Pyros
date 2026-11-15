@@ -5,8 +5,8 @@
  * chamber environment, and interactive telemetry HUD.
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { SimulationConfig, GAS_PRESETS } from './physics/CombustionPhysics.js';
 import { WebGPUFluidSolver } from './physics/WebGPUFluidSolver.js';
@@ -17,7 +17,7 @@ import { TelemetryHUD } from './ui/TelemetryHUD.js';
 import { SliceInspector } from './ui/SliceInspector.js';
 import { Controls } from './ui/Controls.js';
 
-class AeroFireApp {
+export class AeroFireApp {
   constructor() {
     this.config = new SimulationConfig();
     this.canvas3D = document.getElementById('canvas-3d');
@@ -27,6 +27,8 @@ class AeroFireApp {
     this.scene = null;
     this.camera = null;
     this.controls = null;
+    this.isDestroyed = false;
+    this.rafId = null;
 
     this.solver = null;
     this.engineType = 'WebGL2'; // 'WebGPU' or 'WebGL2'
@@ -51,13 +53,14 @@ class AeroFireApp {
     this.setupUI();
     this.setupSparkEffect();
 
-    window.addEventListener('resize', () => this.onWindowResize());
+    this._onResize = () => this.onWindowResize();
+    window.addEventListener('resize', this._onResize);
 
     // Auto-ignite initial flame with a spark
     this.triggerSpark();
 
     // Start render loop
-    requestAnimationFrame((t) => this.renderLoop(t));
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
   }
 
   setupThreeScene() {
@@ -68,7 +71,7 @@ class AeroFireApp {
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.1;
 
@@ -103,7 +106,7 @@ class AeroFireApp {
             this.solver = gpuSolver;
             this.engineType = 'WebGPU';
             webgpuSupported = true;
-            console.log('✓ WebGPU Compute Shader Navier-Stokes Engine Engaged.');
+            console.log('[ENGAGED] WebGPU Compute Shader Navier-Stokes Engine Engaged.');
           }
         }
       } catch (e) {
@@ -115,7 +118,7 @@ class AeroFireApp {
       // Use WebGL2 Solver (Three.js GPGPU)
       this.solver = new WebGL2FluidSolver(this.renderer, this.config);
       this.engineType = 'WebGL2';
-      console.log('✓ WebGL2 GPGPU Navier-Stokes Engine Engaged.');
+      console.log('[ENGAGED] WebGL2 GPGPU Navier-Stokes Engine Engaged.');
     }
   }
 
@@ -248,7 +251,8 @@ class AeroFireApp {
   }
 
   renderLoop(timestamp) {
-    requestAnimationFrame((t) => this.renderLoop(t));
+    if (this.isDestroyed) return;
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
 
     const time = timestamp * 0.001;
 
@@ -313,10 +317,21 @@ class AeroFireApp {
       this.telemetryHUD.update(gasConfig);
     }
   }
+
+  destroy() {
+    this.isDestroyed = true;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this.renderer) {
+      try { this.renderer.dispose(); } catch (e) {}
+    }
+    if (this.controls) {
+      try { this.controls.dispose(); } catch (e) {}
+    }
+    if (this.solver && typeof this.solver.dispose === 'function') {
+      try { this.solver.dispose(); } catch (e) {}
+    }
+  }
 }
 
-// Bootstrap once DOM is ready
-window.addEventListener('DOMContentLoaded', () => {
-  new AeroFireApp();
-});
 

@@ -10,12 +10,12 @@
  * - Project Pyros Main Menu Navigation
  */
 
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
-import { RoverCircuitScene } from './RoverCircuitScene.js?v=v4_cinematic';
-import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js?v=v112_syntax_fix';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoverCircuitScene } from './RoverCircuitScene.js';
+import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js';
 
-class RoverApp {
+export class RoverApp {
   constructor() {
     this.canvas = document.getElementById('canvas-rover');
     this.renderer = null;
@@ -23,6 +23,8 @@ class RoverApp {
     this.camera = null;
     this.controls = null;
     this.roverScene = null;
+    this.isDestroyed = false;
+    this.rafId = null;
 
     // Raycasting for interactive component inspection
     this.raycaster = new THREE.Raycaster();
@@ -144,8 +146,9 @@ class RoverApp {
     this.setupPyrosMenu();
     this.setupScreenshot();
 
-    window.addEventListener('resize', () => this.onWindowResize());
-    requestAnimationFrame((t) => this.renderLoop(t));
+    this._onResize = () => this.onWindowResize();
+    window.addEventListener('resize', this._onResize);
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
   }
 
   setupRenderer() {
@@ -156,7 +159,7 @@ class RoverApp {
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.25;
   }
@@ -310,8 +313,8 @@ class RoverApp {
         this.playClickSound();
         this.isPlaying = !this.isPlaying;
         btnPlayPause.innerHTML = this.isPlaying
-          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> <span>Pause</span>'
-          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span>Play</span>';
+          ? '<span>[PAUSE]</span>'
+          : '<span>[PLAY]</span>';
       });
     }
 
@@ -398,6 +401,21 @@ class RoverApp {
     const btnCollapseHud = document.getElementById('btn-collapse-hud');
     const hudToggle = document.getElementById('btn-toggle-hud');
     const hudPanel = document.getElementById('hud-unified-panel');
+
+    if (hudPanel) {
+      hudPanel.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
+      hudPanel.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      hudPanel.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
 
     const setHUDCollapsed = (collapsed) => {
       if (hudPanel) hudPanel.classList.toggle('collapsed', collapsed);
@@ -789,7 +807,8 @@ class RoverApp {
     if (btnOpenMenu) {
       btnOpenMenu.addEventListener('click', (e) => {
         e.preventDefault();
-        openMenu();
+        e.stopPropagation();
+        window.location.href = '/';
       });
     }
 
@@ -864,7 +883,8 @@ class RoverApp {
   // RENDER & ANIMATION LOOP
   // =========================================================================
   renderLoop(timestamp) {
-    requestAnimationFrame((t) => this.renderLoop(t));
+    if (this.isDestroyed) return;
+    this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
 
     const dt = this.lastTimestamp ? Math.min(0.1, (timestamp - this.lastTimestamp) / 1000) : 0.016;
     this.lastTimestamp = timestamp;
@@ -877,7 +897,7 @@ class RoverApp {
         this.isPlaying = false;
         const btnPlayPause = document.getElementById('btn-play-pause');
         if (btnPlayPause) {
-          btnPlayPause.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span>Replay</span>';
+          btnPlayPause.innerHTML = '<span>[REPLAY]</span>';
         }
       }
       this.evaluateSimulationState();
@@ -906,11 +926,23 @@ class RoverApp {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
   }
+
+  destroy() {
+    this.isDestroyed = true;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this.audioCtx) {
+      try { this.audioCtx.close(); } catch (e) {}
+    }
+    if (this.renderer) {
+      try { this.renderer.dispose(); } catch (e) {}
+    }
+    if (this.controls) {
+      try { this.controls.dispose(); } catch (e) {}
+    }
+    if (this.roverScene && typeof this.roverScene.dispose === 'function') {
+      try { this.roverScene.dispose(); } catch (e) {}
+    }
+  }
 }
 
-// Bootstrap app once DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => new RoverApp());
-} else {
-  new RoverApp();
-}

@@ -108,7 +108,7 @@ export class SimulationConfig {
     this.thermalDiffusion = 0.0008;
     this.oxygenDiffusion = 0.0015;
     this.vorticityConfinement = 0.28; // Preserves turbulent curls & flame tongues
-    this.pressureIterations = 28;    // Jacobi projection iterations
+    this.pressureIterations = 16;    // Jacobi projection iterations (optimized for smooth 60fps)
     this.coolingRate = 0.012;         // Radiative heat loss (Planck cooling)
 
     // Wind / External Flow
@@ -117,7 +117,7 @@ export class SimulationConfig {
     this.windZ = 0.0;
 
     // Rendering Parameters
-    this.raymarchSteps = 96;
+    this.raymarchSteps = 48;
     this.flameBrightness = 2.4;
     this.smokeDensity = 1.6;
     this.sootColor = [0.12, 0.11, 0.10];
