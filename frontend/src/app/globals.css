@@ -6754,6 +6754,8 @@ html, body {
   pointer-events: none;
   overflow: hidden;
   z-index: 3;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
 .phone-art-img {
@@ -6763,6 +6765,14 @@ html, body {
   object-fit: contain;
   object-position: bottom;
   display: block;
+  border-radius: 18px;
+  transition: transform 0.28s ease, filter 0.28s ease;
+}
+
+.phone-mockup:hover .phone-art-img,
+.phone-mockup.phone-active .phone-art-img {
+  transform: scale(1.03);
+  filter: drop-shadow(0 6px 20px rgba(56, 189, 248, 0.25));
 }
 
 .phone-footer {

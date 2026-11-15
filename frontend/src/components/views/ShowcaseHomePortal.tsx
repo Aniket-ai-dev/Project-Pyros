@@ -19,7 +19,7 @@ interface ShowcasePanel {
 
 export default function ShowcaseHomePortal() {
   const [activeMenu, setActiveMenu] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [activeSlide, setActiveSlide] = useState<number | null>(null);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
 
   const panels: ShowcasePanel[] = [
@@ -27,8 +27,8 @@ export default function ShowcaseHomePortal() {
       id: 'space',
       letters: ['S', 'P', 'A', 'C', 'E'],
       title: 'Space Station Laboratory',
-      artImage: '/assets/showcase/art_astronaut@2x.png',
-      altText: 'Astronaut in Microgravity',
+      artImage: '/assets/showcase/art_iss@2x.png',
+      altText: 'International Space Station (ISS) Airlock',
       description:
         'Explore the Destiny & Columbus pressurized module with interactive ECLSS atmosphere controls, microgravity candle flames, and the Microgravity Science Glovebox (MSG).',
       btnText: 'EXPLORE SPACE',
@@ -84,10 +84,16 @@ export default function ShowcaseHomePortal() {
 
       {/* Top Center Title Header */}
       <header className="pyros-home-header">
-        <div className="pyros-menu-badge">
+        <button
+          className="pyros-menu-badge"
+          onClick={() => setActiveMenu(true)}
+          title="Open Mission Command Menu"
+          style={{ cursor: 'pointer' }}
+        >
           <span className="pyros-badge-dot" />
           <span>NASA PHYSICAL SCIENCES INFORMATICS // MISSION COMMAND</span>
-        </div>
+          <span style={{ marginLeft: 6, opacity: 0.85 }}>[MENU]</span>
+        </button>
         <h1 className="pyros-home-title">PROJECT PYROS</h1>
         <p className="pyros-home-desc">
           Select an operational simulation environment to initiate exploration
@@ -95,11 +101,12 @@ export default function ShowcaseHomePortal() {
       </header>
 
       {/* Main Container Showing the 4 Mockup Panels side-by-side */}
-      <div className="showcase-stage">
+      <div className="showcase-stage" onMouseLeave={() => setActiveSlide(null)}>
         {panels.map((panel, idx) => (
           <div
             key={panel.id}
             className={`phone-mockup ${activeSlide === idx ? 'phone-active' : ''}`}
+            onMouseEnter={() => setActiveSlide(idx)}
             onClick={() => setActiveSlide(idx)}
           >
             {/* Phone Screen Glass */}
@@ -110,16 +117,6 @@ export default function ShowcaseHomePortal() {
                 <div className="status-notch" />
                 <div className="status-icons">
                   <span className="status-bracket-tag">[NET: OK]</span>
-                  <button
-                    className="menu-hamburger-btn text-bracket-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveMenu(true);
-                    }}
-                    title="Open Menu"
-                  >
-                    [MENU]
-                  </button>
                 </div>
               </div>
 
