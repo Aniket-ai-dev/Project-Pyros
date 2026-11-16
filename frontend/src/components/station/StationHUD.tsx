@@ -40,7 +40,8 @@ export default function StationHUD({
     if (!scenarioInput.trim()) return;
     setIsAnalyzing(true);
     try {
-      const res = await fetch('http://localhost:8000/scenario', {
+      const apiUrl = ((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000').replace(/\/+$/, '');
+      const res = await fetch(`${apiUrl}/scenario`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scenario: scenarioInput }),

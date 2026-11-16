@@ -10,7 +10,7 @@
 
 export class NASADataService {
   constructor(baseUrl = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000') {
-    this.baseUrl = baseUrl;
+    this.baseUrl = (baseUrl || 'http://localhost:8000').replace(/\/+$/, '');
     this.isOnline = false;
     this.lastChecked = 0;
     this.cachedInvestigations = null;

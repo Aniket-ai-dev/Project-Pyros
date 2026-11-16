@@ -43,7 +43,7 @@ export class SpaceStationApp {
     this.sparkTimer = 0.0;
 
     // NASA Backend Service & Investigation Explorer
-    this.apiUrl = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000';
+    this.apiUrl = ((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000').replace(/\/+$/, '');
     this.nasaDataService = new NASADataService(this.apiUrl);
     this.explorer = null;
     this.nasaDebounceTimer = null;

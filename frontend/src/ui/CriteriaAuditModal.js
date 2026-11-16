@@ -596,7 +596,7 @@ export class CriteriaAuditModal {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const apiUrl = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000';
+      const apiUrl = ((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000').replace(/\/+$/, '');
       const res = await fetch(`${apiUrl}/health`, { signal: controller.signal });
       clearTimeout(timeoutId);
       const latency = Math.round(performance.now() - startTime);
