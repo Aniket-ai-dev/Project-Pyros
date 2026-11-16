@@ -5,7 +5,9 @@ export const metadata: Metadata = {
   title: 'PROJECT PYROS // NASA Microgravity Combustion Laboratory',
   description: 'Photorealistic 3D Space Station, Planetary Environments & Combustion Physics Intelligence Platform',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 
