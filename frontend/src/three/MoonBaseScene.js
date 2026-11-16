@@ -115,6 +115,18 @@ export class MoonBaseScene {
     this.combustionFlame = null;
     this.combustionLight = null;
 
+    // Lunar Surface Combustion Chamber (0.166g Partial-Gravity Candle Simulator)
+    this.lunarFlameGroup = null;
+    this.lunarFlameMesh = null;
+    this.lunarFlameLight = null;
+    this.isFlameExtinguished = false;
+    this.flameCurrentScale = 1.0;
+    this.smokeParticles = null;
+    this.smokeData = null;
+    this.smokeActive = false;
+    this.chamberStatusLedMat = null;
+    this.candleWickMat = null;
+
     // Animated Active Elements
     this.starMesh = null;
     this.apexBeaconMesh = null;
@@ -151,6 +163,7 @@ export class MoonBaseScene {
     this.textures.moduleGauges = this.createModuleGaugesTexture();
     this.textures.corrugated = this.createCorrugatedHoseTexture();
     this.textures.earth = this.createProceduralEarthTexture();
+    this.textures.combustionPlaque = this.createCombustionPlaqueTexture();
   }
 
   createLunarRegolithPBR() {
@@ -486,6 +499,49 @@ export class MoonBaseScene {
     }
 
     return new THREE.CanvasTexture(canvas);
+  }
+
+  createCombustionPlaqueTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+
+    // Deep slate chassis background
+    ctx.fillStyle = '#090d16';
+    ctx.fillRect(0, 0, 512, 256);
+
+    // Cyan technical boundary
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(8, 8, 496, 240);
+
+    // Header bar
+    ctx.fillStyle = 'rgba(2, 132, 199, 0.15)';
+    ctx.fillRect(10, 10, 492, 46);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText('NASA CIR-L // LUNAR ECLSS RIG', 22, 42);
+
+    // Status line
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 17px monospace';
+    ctx.fillText('STATUS: HERMETICALLY SEALED', 22, 86);
+
+    // Atmosphere data
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '16px monospace';
+    ctx.fillText('ENCL AIR: 21.0% O₂ // 101.3 kPa N₂/O₂', 22, 124);
+    ctx.fillText('GRAVITY : 0.166g LUNAR BUOYANCY', 22, 158);
+
+    // Ambient warning
+    ctx.fillStyle = '#f43f5e';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('WARNING: AMBIENT 0.0% O₂ VACUUM KILL', 22, 202);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    return tex;
   }
 
   // =========================================================================
@@ -1018,46 +1074,265 @@ export class MoonBaseScene {
   }
 
   // =========================================================================
-  // 7. NASA PSI 0.166g COMBUSTION RESEARCH CHAMBER (LUCI / FM2 Testbed)
+  // 7. NASA PSI 0.166g COMBUSTION RESEARCH CHAMBER (CIR-L / LUCI Testbed)
   // =========================================================================
   buildSurfaceCombustionExperiment() {
     const expGroup = new THREE.Group();
     expGroup.position.set(-2.8, 0.0, 6.8);
 
-    const standMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.85 });
+    // 1. Heavy-duty Machined Base Stand (Dark Titanium Pedestal)
+    const standMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.35,
+      metalness: 0.85
+    });
     const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.70, 0.82, 0.95, 32), standMat);
     stand.position.y = 0.475;
     stand.castShadow = true;
     stand.receiveShadow = true;
     expGroup.add(stand);
 
-    // Cylindrical Combustion Chamber with Quartz Window
-    const chamberBody = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.60, 0.60, 0.85, 24),
-      standMat
+    // 2. Front Telemetry & Warning Plaque on Base Stand
+    if (this.textures.combustionPlaque) {
+      const plaqueMat = new THREE.MeshStandardMaterial({
+        map: this.textures.combustionPlaque,
+        roughness: 0.25,
+        metalness: 0.2
+      });
+      const plaqueMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.36), plaqueMat);
+      plaqueMesh.position.set(0, 0.50, 0.78);
+      expGroup.add(plaqueMesh);
+    }
+
+    // 3. Status LED Indicator on Base Stand (Green for nominal sealed, Red when vented)
+    this.chamberStatusLedMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+    const statusLed = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 16), this.chamberStatusLedMat);
+    statusLed.position.set(0.36, 0.84, 0.65);
+    expGroup.add(statusLed);
+
+    // 4. Pressurized Life-Support Umbilical Duct linking to Ice Home
+    const umbilicalMat = new THREE.MeshStandardMaterial({
+      map: this.textures.corrugated,
+      color: 0x0284c7,
+      roughness: 0.45,
+      metalness: 0.3
+    });
+    const ductCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0.25, -0.65),
+      new THREE.Vector3(0.8, 0.15, -1.8),
+      new THREE.Vector3(1.6, 0.14, -3.2),
+      new THREE.Vector3(2.2, 0.22, -4.8)
+    ]);
+    const ductMesh = new THREE.Mesh(new THREE.TubeGeometry(ductCurve, 36, 0.07, 12, false), umbilicalMat);
+    ductMesh.castShadow = true;
+    expGroup.add(ductMesh);
+
+    // 5. Cylindrical Quartz Combustion Test Chamber
+    // High clarity optical quartz glass with depthWrite: false to avoid occluding flame!
+    const chamberGlass = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.50, 0.50, 1.05, 36, 1, true),
+      new THREE.MeshStandardMaterial({
+        color: 0xbae6fd,
+        transparent: true,
+        opacity: 0.26,
+        roughness: 0.08,
+        metalness: 0.15,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      })
     );
-    chamberBody.position.y = 1.35;
-    expGroup.add(chamberBody);
+    chamberGlass.position.y = 1.48;
+    expGroup.add(chamberGlass);
 
-    const windowMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.32, 0.32, 0.1, 20),
-      new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75, transmission: 0.9 })
+    // 6. Machined Aluminum Flanges (Top and Bottom)
+    const flangeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.25, metalness: 0.85 });
+    [0.96, 2.00].forEach(fy => {
+      const flange = new THREE.Mesh(new THREE.TorusGeometry(0.51, 0.035, 16, 36), flangeMat);
+      flange.rotation.x = Math.PI / 2;
+      flange.position.y = fy;
+      expGroup.add(flange);
+    });
+
+    // Top Sealed Pressure Cap & Vent Valve
+    const topCap = new THREE.Mesh(new THREE.CylinderGeometry(0.51, 0.51, 0.045, 36), flangeMat);
+    topCap.position.y = 2.02;
+    expGroup.add(topCap);
+
+    const ventValve = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.10, 16),
+      new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3, metalness: 0.7 })
     );
-    windowMesh.rotation.x = Math.PI / 2;
-    windowMesh.position.set(0, 1.35, 0.58);
-    expGroup.add(windowMesh);
+    ventValve.position.set(0, 2.09, 0);
+    expGroup.add(ventValve);
 
-    // Elongated Lunar Flame (0.166g Roper scaling)
-    const flameGeo = new THREE.ConeGeometry(0.14, 0.52, 16);
-    this.combustionFlame = new THREE.Mesh(flameGeo, new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.9 }));
-    this.combustionFlame.position.set(0, 1.25, 0.2);
-    expGroup.add(this.combustionFlame);
+    // 7. Candle Pillar (Substantial, prominent test candle)
+    const candleMat = new THREE.MeshStandardMaterial({
+      color: 0xfef3c7,
+      roughness: 0.55,
+      metalness: 0.05
+    });
+    const candle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.09, 0.09, 0.28, 32),
+      candleMat
+    );
+    candle.position.y = 1.10; // Top is at y = 1.24
+    candle.castShadow = true;
+    expGroup.add(candle);
 
-    this.combustionLight = new THREE.PointLight(0x38bdf8, 1.6, 4.0);
-    this.combustionLight.position.set(0, 1.35, 0.35);
-    expGroup.add(this.combustionLight);
+    // 8. Candle Wick
+    this.candleWickMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.9 });
+    const wick = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.008, 0.008, 0.035, 12),
+      this.candleWickMat
+    );
+    wick.position.y = 1.255;
+    expGroup.add(wick);
+
+    // 9. 0.166g Lunar Combustion Flame (Dual-layer bulbous dome envelope with blue chemiluminescent base)
+    this.lunarFlameGroup = new THREE.Group();
+    this.lunarFlameGroup.position.set(0, 1.27, 0);
+
+    // Outer warm amber-orange diffusion envelope (0.166g wide hemispherical dome)
+    // Convection is 83.4% lower than 1g Earth, expanding the flame into a wide hemispherical envelope
+    const outerFlameGeo = new THREE.ConeGeometry(0.14, 0.22, 24);
+    outerFlameGeo.translate(0, 0.11, 0);
+    const outerFlameMat = new THREE.MeshBasicMaterial({
+      color: 0xf59e0b,
+      transparent: true,
+      opacity: 0.86,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.outerFlameMesh = new THREE.Mesh(outerFlameGeo, outerFlameMat);
+    this.lunarFlameGroup.add(this.outerFlameMesh);
+
+    // Inner bright reaction core
+    const innerFlameGeo = new THREE.ConeGeometry(0.075, 0.13, 20);
+    innerFlameGeo.translate(0, 0.065, 0);
+    const innerFlameMat = new THREE.MeshBasicMaterial({
+      color: 0xfffbeb,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.innerFlameMesh = new THREE.Mesh(innerFlameGeo, innerFlameMat);
+    this.lunarFlameGroup.add(this.innerFlameMesh);
+
+    // Distinctive 0.166g Blue Chemiluminescent Base Ring
+    const blueRingGeo = new THREE.TorusGeometry(0.07, 0.022, 12, 24);
+    blueRingGeo.rotateX(Math.PI / 2);
+    const blueRingMat = new THREE.MeshBasicMaterial({
+      color: 0x0284c7,
+      transparent: true,
+      opacity: 0.88,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const blueRingMesh = new THREE.Mesh(blueRingGeo, blueRingMat);
+    blueRingMesh.position.y = 0.02;
+    this.lunarFlameGroup.add(blueRingMesh);
+
+    // Soft outer atmospheric glow sphere
+    const glowGeo = new THREE.SphereGeometry(0.20, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0xfb923c,
+      transparent: true,
+      opacity: 0.28,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    glowMesh.position.y = 0.11;
+    this.lunarFlameGroup.add(glowMesh);
+
+    expGroup.add(this.lunarFlameGroup);
+    this.lunarFlameMesh = this.lunarFlameGroup;
+    this.combustionFlame = this.lunarFlameGroup; // Backwards compatible reference
+
+    // Dynamic point light for flame illumination
+    this.lunarFlameLight = new THREE.PointLight(0xfb923c, 3.4, 7.5, 1.2);
+    this.lunarFlameLight.position.set(0, 1.38, 0);
+    expGroup.add(this.lunarFlameLight);
+    this.combustionLight = this.lunarFlameLight; // Backwards compatible reference
+
+    // 10. Smoke Particle System for Hard Vacuum Extinction Outgassing
+    const numSmoke = 60;
+    const smokeGeo = new THREE.BufferGeometry();
+    const smokePos = new Float32Array(numSmoke * 3);
+    this.smokeData = [];
+
+    for (let s = 0; s < numSmoke; s++) {
+      const idx = s * 3;
+      smokePos[idx] = 0;
+      smokePos[idx + 1] = 1.28;
+      smokePos[idx + 2] = 0;
+      this.smokeData.push({
+        x: 0,
+        y: 1.28,
+        z: 0,
+        vx: 0,
+        vz: 0,
+        life: 0.0
+      });
+    }
+
+    smokeGeo.setAttribute('position', new THREE.BufferAttribute(smokePos, 3));
+    const smokeMat = new THREE.PointsMaterial({
+      color: 0xcbd5e1,
+      size: 0.055,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.NormalBlending,
+      depthWrite: false
+    });
+    this.smokeParticles = new THREE.Points(smokeGeo, smokeMat);
+    this.smokeParticles.visible = false;
+    expGroup.add(this.smokeParticles);
 
     this.rootGroup.add(expGroup);
+  }
+
+  extinguishFlame() {
+    this.isFlameExtinguished = true;
+    if (this.chamberStatusLedMat) {
+      this.chamberStatusLedMat.color.setHex(0xef4444); // Red indicator (vented to lunar vacuum)
+    }
+    if (this.candleWickMat) {
+      this.candleWickMat.color.setHex(0xb91c1c); // Red ember on wick
+    }
+    if (this.smokeParticles && this.smokeData) {
+      this.smokeActive = true;
+      this.smokeParticles.visible = true;
+      const pos = this.smokeParticles.geometry.attributes.position.array;
+      for (let s = 0; s < this.smokeData.length; s++) {
+        this.smokeData[s].x = (Math.random() - 0.5) * 0.03;
+        this.smokeData[s].y = 1.28 + Math.random() * 0.1;
+        this.smokeData[s].z = (Math.random() - 0.5) * 0.03;
+        this.smokeData[s].vx = (Math.random() - 0.5) * 0.02;
+        this.smokeData[s].vz = (Math.random() - 0.5) * 0.02;
+        this.smokeData[s].life = Math.random();
+        pos[s * 3] = this.smokeData[s].x;
+        pos[s * 3 + 1] = this.smokeData[s].y;
+        pos[s * 3 + 2] = this.smokeData[s].z;
+      }
+      this.smokeParticles.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
+  reigniteFlame() {
+    this.isFlameExtinguished = false;
+    this.flameCurrentScale = 0.15;
+    if (this.chamberStatusLedMat) {
+      this.chamberStatusLedMat.color.setHex(0x10b981); // Green indicator (sealed habitat air)
+    }
+    if (this.candleWickMat) {
+      this.candleWickMat.color.setHex(0x1f2937); // Carbon wick
+    }
+    if (this.smokeParticles) {
+      this.smokeActive = false;
+      this.smokeParticles.visible = false;
+    }
   }
 
   // =========================================================================
@@ -1143,14 +1418,51 @@ export class MoonBaseScene {
       this.redStatusLight.intensity = 3.6 + Math.sin(elapsed * 1.8) * 0.7;
     }
 
-    // 7. 0.166g Lunar Combustion Flame Organic Flicker & Quartz Window Glow
-    if (this.combustionFlame) {
-      const flickY = 1.0 + Math.sin(elapsed * 14.0) * 0.09 + Math.cos(elapsed * 22.0) * 0.06;
-      const flickX = 1.0 + Math.sin(elapsed * 9.0) * 0.04;
-      this.combustionFlame.scale.set(flickX, flickY, flickX);
+    // 7. Lunar 0.166g Combustion Flame Dynamics & Hard Vacuum Extinction
+    if (this.lunarFlameMesh && this.lunarFlameLight) {
+      const targetScale = this.isFlameExtinguished ? 0.0 : 1.0;
+      const currentScale = this.flameCurrentScale !== undefined ? this.flameCurrentScale : 1.0;
+      this.flameCurrentScale = THREE.MathUtils.lerp(currentScale, targetScale, Math.min(1.0, delta * 8.5));
+
+      if (this.flameCurrentScale < 0.02) {
+        this.lunarFlameMesh.visible = false;
+        this.lunarFlameLight.intensity = 0;
+      } else {
+        this.lunarFlameMesh.visible = true;
+        // In 0.166g partial gravity, buoyant convection is 83.4% lower than 1g
+        // Gentle organic hemispherical breathing flutter
+        const flameFlutter = (0.96 + Math.sin(elapsed * 10.0) * 0.04) * this.flameCurrentScale;
+        const flameHeight = (1.0 + Math.sin(elapsed * 5.0) * 0.05) * this.flameCurrentScale;
+        this.lunarFlameMesh.scale.set(flameFlutter, flameHeight, flameFlutter);
+        this.lunarFlameLight.intensity = 3.4 * flameFlutter;
+      }
     }
-    if (this.combustionLight) {
-      this.combustionLight.intensity = 1.6 + Math.sin(elapsed * 16.0) * 0.4;
+
+    // 8. Vacuum Outgassing Smoke Plume Simulation (Rising from extinguished wick inside quartz chamber)
+    if (this.smokeActive && this.smokeParticles && this.smokeData) {
+      const pos = this.smokeParticles.geometry.attributes.position.array;
+      const numSmoke = this.smokeData.length;
+      for (let s = 0; s < numSmoke; s++) {
+        const p = this.smokeData[s];
+        p.life += delta * 0.55;
+        if (p.life > 1.0) {
+          p.x = (Math.random() - 0.5) * 0.025;
+          p.y = 1.28;
+          p.z = (Math.random() - 0.5) * 0.025;
+          p.vx = (Math.random() - 0.5) * 0.015;
+          p.vz = (Math.random() - 0.5) * 0.015;
+          p.life = 0.0;
+        } else {
+          p.y += delta * 0.22;
+          p.x += p.vx * delta;
+          p.z += p.vz * delta;
+        }
+        pos[s * 3] = p.x;
+        pos[s * 3 + 1] = p.y;
+        pos[s * 3 + 2] = p.z;
+      }
+      this.smokeParticles.geometry.attributes.position.needsUpdate = true;
+      this.smokeParticles.material.opacity = 0.65 * (1.0 - Math.min(1.0, (elapsed % 10.0) / 10.0));
     }
 
     if (this.emergencyActive) {

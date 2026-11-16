@@ -265,41 +265,39 @@ const HTML_CONTENT = `<!-- =====================================================
         <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
         <span class="capsule-item-label">Full</span>
       </button>
-
-      <a href="/" id="btn-open-main-menu" class="capsule-item" title="Return to Home Screen">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
-        <span class="capsule-item-label">Menu</span>
-      </a>
     </div>
   </header>
 
   <!-- =========================================================================
        UNIFIED AVIONICS HUD PANEL (Left side)
        ========================================================================= -->
-  <aside id="hud-unified-panel" class="cd-unified-panel" style="width: 440px;">
+  <aside id="hud-unified-panel" class="cd-unified-panel">
     
     <!-- Panel Header: Title + Collapse Button -->
     <div class="cd-panel-head-bar">
       <div class="cd-panel-title-wrap">
-        <span class="cd-panel-chip" style="background: #fee2e2; color: #991b1b; border-color: #fecaca;">MARTIAN ROVER // WEB</span>
+        <span class="cd-panel-chip" style="background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.28);">MARTIAN ROVER // WEB</span>
         <h2 class="cd-panel-heading">Avionics Failure Simulation</h2>
       </div>
-      <button id="btn-collapse-hud" class="cd-panel-close-btn" title="Minimize Panel"><span>[MIN]</span></button>
+      <button id="btn-collapse-hud" class="cd-panel-close-btn" title="Minimize Panel">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </div>
 
     <!-- Scrollable Panel Content -->
-    <div class="cd-tab-scroll-wrap" style="padding: 0 16px 20px 16px;">
+    <div class="cd-tab-scroll-wrap">
 
       <!-- CARD 1: 7-STAGE CHRONOLOGICAL TIMELINE & CONTROLS -->
-      <section class="rover-timeline-card">
-        <div class="timeline-header">
-          <span class="timeline-title">Simulation Sequence</span>
-          <span id="sim-time-display" class="timeline-time-display">T+0.0s // 35s</span>
-        </div>
-
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-          <h3 id="hud-stage-title" style="font-size: 13.5px; font-weight: 800; color: #0f172a; margin: 0;">Stage 1: Normal Operations</h3>
-          <span id="hud-stage-badge" class="cd-trend-pill success">NOMINAL</span>
+      <section class="cd-card rover-timeline-card" style="border-top: 3px solid #3b82f6;">
+        <div class="cd-card-head">
+          <div class="cd-card-title-wrap">
+            <h3 class="cd-card-title">Avionics Sequence Timeline</h3>
+            <span id="hud-stage-title" class="cd-card-caption">Stage 1: Normal Operations</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span id="sim-time-display" class="timeline-time-display">T+0.0s // 35s</span>
+            <span id="hud-stage-badge" class="cd-trend-pill success">NOMINAL</span>
+          </div>
         </div>
 
         <p id="hud-stage-desc" class="timeline-desc">
@@ -325,10 +323,13 @@ const HTML_CONTENT = `<!-- =====================================================
         <!-- Controls Row -->
         <div class="timeline-controls-row">
           <div class="timeline-btn-group">
-            <button id="btn-step-prev" class="timeline-ctrl-btn" title="Previous Stage">[PREV]</button>
-            <button id="btn-play-pause" class="timeline-ctrl-btn primary" title="Play / Pause"><span>[PAUSE]</span></button>
-            <button id="btn-step-next" class="timeline-ctrl-btn" title="Next Stage">[NEXT]</button>
-            <button id="btn-reset-sim" class="timeline-ctrl-btn" title="Reset Simulation">[RESET]</button>
+            <button id="btn-step-prev" class="timeline-ctrl-btn" title="Previous Stage">◀ Step</button>
+            <button id="btn-play-pause" class="timeline-ctrl-btn primary" title="Play / Pause">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              <span>Pause</span>
+            </button>
+            <button id="btn-step-next" class="timeline-ctrl-btn" title="Next Stage">Step ▶</button>
+            <button id="btn-reset-sim" class="timeline-ctrl-btn" title="Reset Simulation">↺</button>
           </div>
 
           <div class="speed-btn-group">
@@ -340,7 +341,7 @@ const HTML_CONTENT = `<!-- =====================================================
       </section>
 
       <!-- CARD 2: 28V PRIMARY BUS ELECTRICAL TELEMETRY -->
-      <section class="cd-card" style="margin-bottom: 14px;">
+      <section class="cd-card" style="border-top: 3px solid #10b981;">
         <div class="cd-card-head">
           <div class="cd-card-title-wrap">
             <h3 class="cd-card-title">28V Primary Power Bus</h3>
@@ -349,28 +350,28 @@ const HTML_CONTENT = `<!-- =====================================================
           <span id="badge-contactor-status" class="status-tag tag-green">CLOSED (ENERGIZED)</span>
         </div>
 
-        <div class="comp-metrics-grid" style="margin-top: 10px;">
+        <div class="comp-metrics-grid">
           <div class="comp-metric-cell">
             <div class="comp-metric-label">Bus Voltage</div>
-            <div class="comp-metric-value"><span id="val-bus-voltage">28.1</span> <span style="font-size: 11px; font-weight: 600; color: #64748b;">V</span></div>
+            <div class="comp-metric-value"><span id="val-bus-voltage">28.1</span> <span class="comp-metric-unit">V</span></div>
           </div>
           <div class="comp-metric-cell">
             <div class="comp-metric-label">Bus Current Draw</div>
-            <div class="comp-metric-value"><span id="val-bus-current">14.2</span> <span style="font-size: 11px; font-weight: 600; color: #64748b;">A</span></div>
+            <div class="comp-metric-value"><span id="val-bus-current">14.2</span> <span class="comp-metric-unit">A</span></div>
           </div>
           <div class="comp-metric-cell">
             <div class="comp-metric-label">PCU Epicenter Temp</div>
-            <div class="comp-metric-value"><span id="val-pcu-temp" style="color: #ef4444;">24.5</span> <span style="font-size: 11px; font-weight: 600; color: #64748b;">°C</span></div>
+            <div class="comp-metric-value"><span id="val-pcu-temp" style="color: #ef4444;">24.5</span> <span class="comp-metric-unit">°C</span></div>
           </div>
           <div class="comp-metric-cell">
             <div class="comp-metric-label">Mars Gravity</div>
-            <div class="comp-metric-value">0.38 <span style="font-size: 11px; font-weight: 600; color: #64748b;">g</span></div>
+            <div class="comp-metric-value">0.38 <span class="comp-metric-unit">g</span></div>
           </div>
         </div>
       </section>
 
       <!-- CARD 3: INTERACTIVE COMPONENT INSPECTOR -->
-      <section class="cd-card">
+      <section class="cd-card" style="border-top: 3px solid #818cf8;">
         <div class="cd-card-head">
           <div class="cd-card-title-wrap">
             <h3 class="cd-card-title">Component Inspector</h3>

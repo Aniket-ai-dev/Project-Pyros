@@ -348,14 +348,6 @@ const HTML_CONTENT = `<!-- =====================================================
         </div>
         <span class="capsule-item-label">Full</span>
       </button>
-
-      <!-- 12. Main Menu Link -->
-      <a href="/" id="btn-open-main-menu" class="capsule-item" title="Return to Home Screen">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </div>
-        <span class="capsule-item-label">Menu</span>
-      </a>
     </div>
   </header>
 
@@ -397,12 +389,12 @@ const HTML_CONTENT = `<!-- =====================================================
            =================================================================== -->
       <div id="tab-atmosphere" class="cd-tab-pane active">
         
-        <!-- CARD 1: Cabin Atmosphere & O2 -->
+        <!-- CARD 1: Cabin Atmosphere & Flammability Spectrum -->
         <section class="cd-card cd-card-revenue">
           <div class="cd-card-head">
             <div class="cd-card-title-wrap">
               <h3 class="cd-card-title">Cabin Atmosphere</h3>
-              <span class="cd-card-caption">ECLSS Active Life Support</span>
+              <span class="cd-card-caption">ECLSS Active Life Support // Destiny Module</span>
             </div>
             <button class="cd-opt-btn" title="Options">···</button>
           </div>
@@ -419,42 +411,107 @@ const HTML_CONTENT = `<!-- =====================================================
             </div>
           </div>
 
-          <!-- Clean Bar + Curved Line Graph (5 Stepped Pedestals Matching Image 2) -->
+          <!-- Scientific Telemetry Micro-Pills -->
+          <div class="cd-flame-telemetry-row">
+            <div class="flame-tel-chip">
+              <span class="tel-lbl">Partial Pressure</span>
+              <span class="tel-val" id="val-oxygen-po2">21.3 kPa</span>
+            </div>
+            <div class="flame-tel-chip">
+              <span class="tel-lbl">Flammability Index</span>
+              <span class="tel-val" id="val-flammability-index">Φ = 0.21</span>
+            </div>
+            <div class="flame-tel-chip">
+              <span class="tel-lbl">LOI Safety Margin</span>
+              <span class="tel-val success">+6.9% Safe</span>
+            </div>
+          </div>
+
+          <!-- Clean Bar + Scientifically Calibrated Flammability Curve -->
           <div class="cd-barline-chart-wrap">
             <div class="cd-bars-container">
-              <div class="cd-bar-col" data-step="0" data-o2="0"><div class="cd-bar-fill"></div></div>
-              <div class="cd-bar-col" data-step="1" data-o2="11"><div class="cd-bar-fill"></div></div>
-              <div class="cd-bar-col active" data-step="2" data-o2="21">
+              <div class="cd-bar-col" data-step="0" data-o2="0" title="Space Vacuum (0% O2)">
+                <div class="cd-bar-fill">
+                  <div class="cd-bar-badge" id="o2-bar-badge-0">0% Vac</div>
+                </div>
+              </div>
+              <div class="cd-bar-col" data-step="1" data-o2="11" title="Hypoxia Regimes (11% O2)">
+                <div class="cd-bar-fill">
+                  <div class="cd-bar-badge" id="o2-bar-badge-1">11% Hyp</div>
+                </div>
+              </div>
+              <div class="cd-bar-col active" data-step="2" data-o2="21" title="Nominal Sea Level Equiv (21% O2)">
                 <div class="cd-bar-fill">
                   <div class="cd-bar-badge" id="o2-bar-badge">+21% Nom</div>
                 </div>
               </div>
-              <div class="cd-bar-col" data-step="3" data-o2="32"><div class="cd-bar-fill"></div></div>
-              <div class="cd-bar-col" data-step="4" data-o2="100"><div class="cd-bar-fill"></div></div>
+              <div class="cd-bar-col" data-step="3" data-o2="32" title="Exploration Atmosphere / EVA (32% O2)">
+                <div class="cd-bar-fill">
+                  <div class="cd-bar-badge" id="o2-bar-badge-3">32% EVA</div>
+                </div>
+              </div>
+              <div class="cd-bar-col" data-step="4" data-o2="100" title="Pure Oxygen Combustion Hazard (100% O2)">
+                <div class="cd-bar-fill">
+                  <div class="cd-bar-badge" id="o2-bar-badge-4">100% Pure</div>
+                </div>
+              </div>
             </div>
 
-            <!-- Curved connecting dashed red line -->
+            <!-- Scientifically Calibrated Flammability Curve & Area Gradient -->
             <svg class="cd-line-svg" viewBox="0 0 320 80" preserveAspectRatio="none">
-              <path d="M 22 52 Q 65 30, 110 42 T 170 16 T 240 50 T 298 34" fill="none" stroke="#ef4444" stroke-width="3.2" stroke-dasharray="6 5" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="o2CurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.6"/>
+                  <stop offset="25%" stop-color="#ef4444" stop-opacity="0.8"/>
+                  <stop offset="50%" stop-color="#3b82f6" stop-opacity="1"/>
+                  <stop offset="75%" stop-color="#06b6d4" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="1"/>
+                </linearGradient>
+                <linearGradient id="o2AreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18"/>
+                  <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
+                </linearGradient>
+              </defs>
+              <!-- Filled subtle area under curve -->
+              <path d="M 24 64 C 70 60, 110 52, 160 38 C 210 24, 260 20, 296 16 L 296 74 L 24 74 Z" fill="url(#o2AreaGrad)" />
+              <!-- LOI Extinction Guide line -->
+              <line x1="100" y1="12" x2="100" y2="74" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.6"/>
+              <!-- Smooth Roper Buoyant Flammability Curve -->
+              <path d="M 24 64 C 70 60, 110 52, 160 38 C 210 24, 260 20, 296 16" fill="none" stroke="url(#o2CurveGrad)" stroke-width="2.6" stroke-linecap="round"/>
             </svg>
           </div>
 
           <!-- Scale Presets Row -->
           <div class="cd-scale-presets">
-            <button class="o2-preset-btn cd-scale-btn" data-o2="0">0% Vac</button>
-            <button class="o2-preset-btn cd-scale-btn" data-o2="11">11% Hyp</button>
-            <button class="o2-preset-btn cd-scale-btn active" data-o2="21">21% Nom</button>
-            <button class="o2-preset-btn cd-scale-btn" data-o2="32">32% EVA</button>
-            <button class="o2-preset-btn cd-scale-btn" data-o2="100">100% Pure</button>
+            <button class="o2-preset-btn cd-scale-btn" data-o2="0">
+              <span class="preset-name">0% Vac</span>
+              <span class="preset-sub">0.0 kPa</span>
+            </button>
+            <button class="o2-preset-btn cd-scale-btn" data-o2="11">
+              <span class="preset-name">11% Hyp</span>
+              <span class="preset-sub">11.1 kPa</span>
+            </button>
+            <button class="o2-preset-btn cd-scale-btn active" data-o2="21">
+              <span class="preset-name">21% Nom</span>
+              <span class="preset-sub">21.3 kPa</span>
+            </button>
+            <button class="o2-preset-btn cd-scale-btn" data-o2="32">
+              <span class="preset-name">32% EVA</span>
+              <span class="preset-sub">32.4 kPa</span>
+            </button>
+            <button class="o2-preset-btn cd-scale-btn" data-o2="100">
+              <span class="preset-name">100% Pure</span>
+              <span class="preset-sub">101.3 kPa</span>
+            </button>
           </div>
         </section>
 
-        <!-- CARD 3: Atmospheric Ratio Donut Gauge -->
+        <!-- CARD 2: Atmospheric Ratio Donut Gauge -->
         <section class="cd-card cd-card-occupancy">
           <div class="cd-card-head">
             <div class="cd-card-title-wrap">
               <h3 class="cd-card-title">Atmospheric Ratio</h3>
-              <span class="cd-card-caption">Partial Pressure Composition</span>
+              <span class="cd-card-caption">Partial Pressure Composition & Dalton's Law</span>
             </div>
             <button class="cd-opt-btn" title="Options">···</button>
           </div>
@@ -467,17 +524,18 @@ const HTML_CONTENT = `<!-- =====================================================
                     <line x1="0" y1="0" x2="0" y2="6" stroke="#94a3b8" stroke-width="2" />
                   </pattern>
                 </defs>
-                <circle cx="80" cy="80" r="58" fill="none" stroke="#f1f5f9" stroke-width="22"/>
-                <circle id="donut-segment-n2" cx="80" cy="80" r="58" fill="none" stroke="#f43f5e" stroke-width="22"
+                <circle cx="80" cy="80" r="58" fill="none" stroke="#f1f5f9" stroke-width="20"/>
+                <circle id="donut-segment-n2" cx="80" cy="80" r="58" fill="none" stroke="#f43f5e" stroke-width="20"
                         stroke-dasharray="235 365" stroke-dashoffset="0" stroke-linecap="round"/>
-                <circle id="donut-segment-o2" cx="80" cy="80" r="58" fill="none" stroke="#10b981" stroke-width="22"
+                <circle id="donut-segment-o2" cx="80" cy="80" r="58" fill="none" stroke="#10b981" stroke-width="20"
                         stroke-dasharray="88 365" stroke-dashoffset="-242" stroke-linecap="round"/>
-                <circle id="donut-segment-trace" cx="80" cy="80" r="58" fill="none" stroke="url(#donutHatchPattern)" stroke-width="22"
+                <circle id="donut-segment-trace" cx="80" cy="80" r="58" fill="none" stroke="url(#donutHatchPattern)" stroke-width="20"
                         stroke-dasharray="35 365" stroke-dashoffset="-335" stroke-linecap="round"/>
               </svg>
               <div class="cd-donut-center">
                 <span class="donut-big-num">101.3</span>
                 <span class="donut-sub-lbl">kPa</span>
+                <span class="donut-micro-lbl">1.00 atm</span>
               </div>
             </div>
 
@@ -485,29 +543,58 @@ const HTML_CONTENT = `<!-- =====================================================
               <div class="cd-leg-item">
                 <div class="cd-leg-left">
                   <span class="cd-leg-dot dot-pink"></span>
-                  <span class="cd-leg-name">Nitrogen (N₂)</span>
+                  <div class="cd-leg-info">
+                    <span class="cd-leg-name">Nitrogen (N₂)</span>
+                    <span class="cd-leg-dalton">pN₂: 79.0 kPa · 592.8 mmHg</span>
+                  </div>
                 </div>
                 <div class="cd-leg-val">78%</div>
               </div>
               <div class="cd-leg-item">
                 <div class="cd-leg-left">
                   <span class="cd-leg-dot dot-green"></span>
-                  <span class="cd-leg-name">Oxygen (O₂)</span>
+                  <div class="cd-leg-info">
+                    <span class="cd-leg-name">Oxygen (O₂)</span>
+                    <span class="cd-leg-dalton">pO₂: <span id="val-oxygen-po2-legend">21.3</span> kPa · 159.6 mmHg</span>
+                  </div>
                 </div>
                 <div class="cd-leg-val" id="val-oxygen-percent-2">21%</div>
               </div>
               <div class="cd-leg-item">
                 <div class="cd-leg-left">
                   <span class="cd-leg-dot dot-grey"></span>
-                  <span class="cd-leg-name">Trace / Argon</span>
+                  <div class="cd-leg-info">
+                    <span class="cd-leg-name">Trace / Argon</span>
+                    <span class="cd-leg-dalton">pAr: 1.0 kPa · 7.6 mmHg</span>
+                  </div>
                 </div>
                 <div class="cd-leg-val">1%</div>
               </div>
             </div>
           </div>
+
+          <!-- ECLSS Environmental Micro-Telemetry Footer -->
+          <div class="cd-env-telemetry-grid">
+            <div class="env-tel-col">
+              <span class="env-k">Cabin Temp</span>
+              <span class="env-v">21.5°C</span>
+            </div>
+            <div class="env-tel-col">
+              <span class="env-k">Rel. Humidity</span>
+              <span class="env-v">42.0%</span>
+            </div>
+            <div class="env-tel-col">
+              <span class="env-k">CO₂ Scrubbed</span>
+              <span class="env-v">2.8 mmHg</span>
+            </div>
+            <div class="env-tel-col">
+              <span class="env-k">Dew Point</span>
+              <span class="env-v">8.4°C</span>
+            </div>
+          </div>
         </section>
 
-        <!-- CARD 5: Active Environmental Controls -->
+        <!-- CARD 3: Active Environmental Controls -->
         <section class="cd-card cd-card-controls">
           <div class="cd-card-head">
             <div class="cd-card-title-wrap">
@@ -525,7 +612,7 @@ const HTML_CONTENT = `<!-- =====================================================
                   <div class="cd-avatar-badge green">O₂</div>
                   <div class="cd-user-info">
                     <span class="cd-user-name">Oxygen Flow Regulator</span>
-                    <span class="cd-role-tag">Active ECLSS</span>
+                    <span class="cd-role-tag">Active ECLSS Life Support</span>
                   </div>
                 </div>
                 <div class="cd-regime-val"><span id="hud-cell-o2-val">21.0%</span></div>
@@ -557,6 +644,7 @@ const HTML_CONTENT = `<!-- =====================================================
                   <div class="cd-avatar-badge blue">G</div>
                   <div class="cd-user-info">
                     <span class="cd-user-name">Artificial Gravity Field</span>
+                    <span class="cd-role-tag">Centrifugal Body Force Acceleration</span>
                   </div>
                 </div>
                 <div class="cd-regime-val"><span id="val-gravity-g">0.00</span> g</div>
@@ -574,6 +662,14 @@ const HTML_CONTENT = `<!-- =====================================================
 
               <input type="range" id="slider-station-gravity" class="cd-clean-slider" min="0" max="2.0" step="0.01" value="0.00">
 
+              <!-- Gravity Quick Preset Pills -->
+              <div class="cd-gravity-presets">
+                <button class="gravity-preset-btn cd-g-pill active" data-g="0">0.00g ISS</button>
+                <button class="gravity-preset-btn cd-g-pill" data-g="0.166">0.166g Moon</button>
+                <button class="gravity-preset-btn cd-g-pill" data-g="0.38">0.38g Mars</button>
+                <button class="gravity-preset-btn cd-g-pill" data-g="1.0">1.00g Earth</button>
+              </div>
+
               <div class="cd-regime-meta">
                 <span class="meta-item">● Mode: <strong id="badge-gravity-status">0.00 g // ZERO-G</strong></span>
                 <span class="meta-item">State: <strong id="hud-cell-gravity-sub">Weightless</strong></span>
@@ -583,13 +679,13 @@ const HTML_CONTENT = `<!-- =====================================================
             <!-- Row 3: Quick Action Pills & Lighting Regimes -->
             <div class="cd-actions-cluster">
               <div class="cd-btn-group">
-                <button id="btn-nudge-objects" class="cd-action-capsule">Toss Objects</button>
-                <button id="btn-reset-objects" class="cd-action-capsule">Reset</button>
+                <button id="btn-nudge-objects" class="cd-action-capsule" title="Impart impulse to floating zero-g tools">Toss Objects</button>
+                <button id="btn-reset-objects" class="cd-action-capsule" title="Reset physics objects to Destiny racks">Reset</button>
               </div>
               <div class="cd-light-pills">
                 <button class="light-mode-btn cd-mode-pill active" data-mode="nominal" title="Nominal Daylight Operations">[NOMINAL]</button>
                 <button class="light-mode-btn cd-mode-pill" data-mode="sleep" title="Crew Sleep Night Mode">[SLEEP]</button>
-                <span id="pill-emergency-indicator" class="cd-emerg-badge" style="display: none;" title="Auto Red Alert: Cabin O₂ ≤ 10%">[EMERGENCY] (O₂ ≤ 10%)</span>
+                <span id="pill-emergency-indicator" class="cd-emerg-badge" style="display: none;" title="Auto Red Alert: Cabin O₂ ≤ 10%">[EMERGENCY]</span>
               </div>
             </div>
           </div>
@@ -807,18 +903,24 @@ const HTML_CONTENT = `<!-- =====================================================
             <div class="scenario-examples-bar">
               <span class="examples-tag">Quick Examples:</span>
               <div class="examples-chips">
-                <button type="button" class="scenario-chip-btn" data-scenario="A lunar habitat with 32% oxygen at 10 psi, low ventilation, and a burning polymer material.">Lunar 32% O₂ Polymer</button>
-                <button type="button" class="scenario-chip-btn" data-scenario="Simulate a Martian habitat at 0.38g with 25% oxygen at 12 psi and PMMA plastic.">Mars 0.38g PMMA</button>
-                <button type="button" class="scenario-chip-btn" data-scenario="A fire experiment on the ISS in microgravity with solid fabrics in low ventilation.">ISS 0g Fabric</button>
+                <button type="button" class="scenario-chip-btn" data-scenario="A lunar habitat with 32% oxygen at 10 psi, low ventilation, and a burning polymer material.">🌙 Lunar 32% O₂ Polymer</button>
+                <button type="button" class="scenario-chip-btn" data-scenario="Simulate a Martian habitat at 0.38g with 25% oxygen at 12 psi and PMMA plastic.">🔴 Mars 0.38g PMMA</button>
+                <button type="button" class="scenario-chip-btn" data-scenario="A fire experiment on the ISS in microgravity with solid fabrics in low ventilation.">🛰️ ISS 0g Fabric</button>
               </div>
             </div>
           </div>
 
           <div class="scenario-actions-row">
             <button id="btn-analyze-scenario" class="cd-analyze-btn">
+              <span class="btn-icon">⚡</span>
               <span id="btn-analyze-text">Analyze Scenario</span>
             </button>
-            <button id="btn-clear-scenario" class="cd-clear-btn" title="Clear scenario text">[CLEAR]</button>
+            <button id="btn-clear-scenario" class="cd-clear-btn" title="Clear scenario text" aria-label="Clear scenario text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+            </button>
           </div>
 
           <!-- Loading & Scientific Processing State -->
@@ -841,7 +943,7 @@ const HTML_CONTENT = `<!-- =====================================================
 
           <!-- Error Banner Display -->
           <div id="scenario-error-state" class="scenario-status-box error" style="display: none;">
-            <div class="error-icon">[ALERT]</div>
+            <div class="error-icon">⚠️</div>
             <div class="error-content">
               <div class="error-title" id="scenario-error-title">Backend Connection Error</div>
               <p class="error-desc" id="scenario-error-desc">

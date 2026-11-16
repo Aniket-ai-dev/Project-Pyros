@@ -22,6 +22,7 @@ export class MoonBaseApp {
 
     // Camera animation state
     this.isTransitioning = false;
+    this.currentView = 'panorama';
     this.camStartPos = new THREE.Vector3();
     this.camEndPos = new THREE.Vector3();
     this.targetStart = new THREE.Vector3();
@@ -117,15 +118,19 @@ export class MoonBaseApp {
     });
 
     // 2. Camera Reset
-    const btnReset = document.getElementById('btn-reset-cam');
-    if (btnReset) {
+    const resetButtons = document.querySelectorAll('#btn-reset-cam, [data-action="reset-view"]');
+    resetButtons.forEach(btnReset => {
       btnReset.addEventListener('click', () => {
         this.transitionToView('panorama');
+        btnReset.classList.add('active');
+        setTimeout(() => {
+          btnReset.classList.remove('active');
+        }, 500);
         document.querySelectorAll('.viewpoint-btn').forEach(b => {
           b.classList.toggle('active', b.dataset.view === 'panorama');
         });
       });
-    }
+    });
 
     // 3. HUD Collapse / Toggle
     const btnToggleHud = document.getElementById('btn-toggle-hud');
@@ -169,6 +174,56 @@ export class MoonBaseApp {
           document.documentElement.requestFullscreen().catch(() => {});
         } else {
           document.exitFullscreen().catch(() => {});
+        }
+      });
+    }
+
+    // 5. Chamber Venting / Hard Vacuum Extinction Interactive Simulation
+    const btnVent = document.getElementById('btn-vent-chamber');
+    const chamberBadge = document.getElementById('chamber-status-badge');
+    const btnVentLabel = document.getElementById('btn-vent-label');
+
+    let isChamberVented = false;
+
+    if (btnVent) {
+      btnVent.addEventListener('click', () => {
+        isChamberVented = !isChamberVented;
+
+        // Smoothly glide camera to frame the combustion testbed so the user clearly sees the action!
+        this.currentView = 'combustion';
+        this.startCinematicTransition(
+          new THREE.Vector3(-2.8, 1.65, 9.6),
+          new THREE.Vector3(-2.8, 1.35, 6.8)
+        );
+
+        if (isChamberVented) {
+          // Vent chamber to ambient Lunar hard vacuum (10^-10 Pa, 0.0% O2) -> Instant flame extinction
+          if (this.moonScene) {
+            this.moonScene.extinguishFlame();
+          }
+
+          if (chamberBadge) {
+            chamberBadge.className = 'chamber-status-badge vented';
+            chamberBadge.innerHTML = '<span class="pulse-dot-red"></span><span id="chamber-status-text">VENTED // HARD VACUUM EXTINCTION (0.0% O₂)</span>';
+          }
+          btnVent.classList.add('reignite');
+          if (btnVentLabel) {
+            btnVentLabel.innerHTML = 'Re-pressurize & Reignite (21% O₂ // 0.166g Flame)';
+          }
+        } else {
+          // Re-seal & re-pressurize with habitat air (21% O2, 101.3 kPa) -> Reignite flame
+          if (this.moonScene) {
+            this.moonScene.reigniteFlame();
+          }
+
+          if (chamberBadge) {
+            chamberBadge.className = 'chamber-status-badge sealed';
+            chamberBadge.innerHTML = '<span class="pulse-dot-green"></span><span id="chamber-status-text">SEALED (21% O₂ // 101.3 kPa)</span>';
+          }
+          btnVent.classList.remove('reignite');
+          if (btnVentLabel) {
+            btnVentLabel.innerHTML = '⚡ Vent Chamber to Lunar Vacuum (Simulate Extinction)';
+          }
         }
       });
     }
@@ -223,23 +278,59 @@ export class MoonBaseApp {
     }
   }
 
-  transitionToView(viewType = 'panorama') {
-    // Fixed panorama viewpoint
-    this.camera.position.set(-6.2, 6.8, 29.0);
-    this.camera.lookAt(0.0, 2.4, 0.0);
+  startCinematicTransition(targetPos, targetLookAt) {
+    this.isTransitioning = true;
+    this.camStartPos.copy(this.camera.position);
+    this.camEndPos.copy(targetPos);
+    this.targetStart.copy(this.controls ? this.controls.target : new THREE.Vector3(0.0, 2.4, 0.0));
+    this.targetEnd.copy(targetLookAt);
+    this.transitionStart = performance.now();
+  }
+
+  updateCinematicTransition(now) {
+    if (!this.isTransitioning) return;
+
+    const elapsed = now - this.transitionStart;
+    const progress = Math.min(1.0, elapsed / this.transitionDuration);
+    const ease = progress < 0.5
+      ? 2 * progress * progress
+      : -1 + (4 - 2 * progress) * progress;
+
+    this.camera.position.lerpVectors(this.camStartPos, this.camEndPos, ease);
     if (this.controls) {
-      this.controls.target.set(0.0, 2.4, 0.0);
-      this.controls.enabled = false;
+      this.controls.target.lerpVectors(this.targetStart, this.targetEnd, ease);
       this.controls.update();
+    } else {
+      const currentTarget = new THREE.Vector3().lerpVectors(this.targetStart, this.targetEnd, ease);
+      this.camera.lookAt(currentTarget);
+    }
+
+    if (progress >= 1.0) {
+      this.isTransitioning = false;
+    }
+  }
+
+  transitionToView(viewType = 'panorama') {
+    this.currentView = viewType;
+    if (viewType === 'combustion') {
+      this.startCinematicTransition(
+        new THREE.Vector3(-2.8, 1.65, 9.6),
+        new THREE.Vector3(-2.8, 1.35, 6.8)
+      );
+    } else {
+      this.startCinematicTransition(
+        new THREE.Vector3(-6.2, 6.8, 29.0),
+        new THREE.Vector3(0.0, 2.4, 0.0)
+      );
     }
   }
 
   updateCameraTransition(now) {
-    // Camera is fixed
+    this.updateCinematicTransition(now);
   }
 
   updateFreeFlight(delta) {
-    // Camera is fixed
+    // Flight controls disabled per user specification
   }
 
   onWindowResize() {
@@ -247,7 +338,9 @@ export class MoonBaseApp {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.camera.lookAt(0.0, 2.4, 0.0);
+    if (this.currentView === 'panorama' && !this.isTransitioning) {
+      this.camera.lookAt(0.0, 2.4, 0.0);
+    }
   }
 
   renderLoop(timestamp) {
@@ -259,11 +352,16 @@ export class MoonBaseApp {
 
     const t = timestamp * 0.001;
 
-    // Subtle, gentle cinematic panorama breathing (keeps camera fixed on base, but removes the frozen static feel)
-    const driftX = Math.sin(t * 0.22) * 0.45;
-    const driftY = Math.cos(t * 0.18) * 0.22;
-    this.camera.position.set(-6.2 + driftX, 6.8 + driftY, 29.0);
-    this.camera.lookAt(0.0, 2.4, 0.0);
+    // Update cinematic glide
+    this.updateCinematicTransition(timestamp);
+
+    // Subtle, gentle cinematic panorama breathing when in fixed panorama view
+    if (!this.isTransitioning && this.currentView === 'panorama') {
+      const driftX = Math.sin(t * 0.22) * 0.45;
+      const driftY = Math.cos(t * 0.18) * 0.22;
+      this.camera.position.set(-6.2 + driftX, 6.8 + driftY, 29.0);
+      this.camera.lookAt(0.0, 2.4, 0.0);
+    }
 
     if (this.moonScene) {
       this.moonScene.update(delta, t);

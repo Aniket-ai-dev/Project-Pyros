@@ -1,19 +1,21 @@
 /**
  * CapsuleSlideController.js
- * Enables smooth mouse click-and-drag horizontal sliding on the capsule navigation track,
+ * Enables smooth mouse click-and-drag vertical and horizontal sliding on the capsule navigation track,
  * with momentum preservation and touch compatibility.
  */
 export function initCapsuleSlide() {
   if (typeof window === 'undefined') return;
 
-  const tracks = document.querySelectorAll('.capsule-slide-track');
+  const tracks = document.querySelectorAll('.capsule-slide-track, .cd-dock-scroll-track');
   tracks.forEach((track) => {
     if (track._capsuleSlideInitialized) return;
     track._capsuleSlideInitialized = true;
 
     let isDown = false;
     let startX = 0;
+    let startY = 0;
     let scrollLeft = 0;
+    let scrollTop = 0;
     let hasDragged = false;
 
     track.addEventListener('mousedown', (e) => {
@@ -21,7 +23,9 @@ export function initCapsuleSlide() {
       hasDragged = false;
       track.classList.add('grabbing');
       startX = e.pageX - track.offsetLeft;
+      startY = e.pageY - track.offsetTop;
       scrollLeft = track.scrollLeft;
+      scrollTop = track.scrollTop;
     });
 
     track.addEventListener('mouseleave', () => {
@@ -38,11 +42,15 @@ export function initCapsuleSlide() {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - track.offsetLeft;
-      const walk = (x - startX) * 1.6;
-      if (Math.abs(walk) > 4) {
+      const y = e.pageY - track.offsetTop;
+      const walkX = (x - startX) * 1.6;
+      const walkY = (y - startY) * 1.6;
+
+      if (Math.abs(walkX) > 4 || Math.abs(walkY) > 4) {
         hasDragged = true;
       }
-      track.scrollLeft = scrollLeft - walk;
+      track.scrollLeft = scrollLeft - walkX;
+      track.scrollTop = scrollTop - walkY;
     });
 
     // Prevent accidental click when dragging

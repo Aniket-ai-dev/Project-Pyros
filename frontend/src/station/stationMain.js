@@ -1183,7 +1183,7 @@ export class SpaceStationApp {
         const errors = (mapperResult && mapperResult.errors) || ['Missing required simulation parameters'];
         warningContainer.innerHTML = errors.map(err => `
           <div class="scenario-sim-warning-box">
-            <span class="warning-icon">[ALERT]</span>
+            <span class="warning-icon">⚠️</span>
             <span class="warning-msg"><strong>Simulation Guard:</strong> ${err}</span>
           </div>
         `).join('');
@@ -1523,6 +1523,15 @@ export class SpaceStationApp {
     if (po2El) {
       po2El.textContent = `${po2Val.toFixed(1)} kPa`;
     }
+    const po2LegEl = document.getElementById('val-oxygen-po2-legend');
+    if (po2LegEl) {
+      po2LegEl.textContent = po2Val.toFixed(1);
+    }
+    const flamIndexEl = document.getElementById('val-flammability-index');
+    if (flamIndexEl) {
+      const phi = (val / 100.0).toFixed(2);
+      flamIndexEl.textContent = `Φ = ${phi}`;
+    }
 
     // Preset button active state
     document.querySelectorAll('.o2-preset-btn').forEach(b => {
@@ -1643,6 +1652,12 @@ export class SpaceStationApp {
       const activeGCount = Math.round((val / 2.0) * gPills.length);
       gPills.forEach((p, idx) => p.classList.toggle('active', idx < activeGCount));
     }
+
+    // Synchronize gravity preset buttons
+    document.querySelectorAll('.gravity-preset-btn').forEach(b => {
+      const bG = parseFloat(b.dataset.g);
+      b.classList.toggle('active', Math.abs(bG - val) < 0.05);
+    });
 
     // Top HUD metric cell
     const hudValEl = document.getElementById('hud-cell-gravity-val');

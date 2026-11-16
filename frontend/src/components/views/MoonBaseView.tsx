@@ -233,34 +233,14 @@ const HTML_CONTENT = `<!-- =====================================================
         <span class="capsule-item-label">Home</span>
       </a>
 
-      <button class="capsule-item viewpoint-btn active" data-view="panorama" title="Shackleton Crater Panorama">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
-        <span class="capsule-item-label">Panorama</span>
-      </button>
-
-      <button class="capsule-item viewpoint-btn" data-view="icehome" title="NASA Inflatable Ice Home">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 18 0v7H3v-7z"/></svg></div>
-        <span class="capsule-item-label">Ice Home</span>
-      </button>
-
-      <button class="capsule-item viewpoint-btn" data-view="interior" title="Two-Story Pressurized Habitat">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <span class="capsule-item-label">Interior</span>
-      </button>
-
-      <button class="capsule-item viewpoint-btn" data-view="solar" title="Solar Array & Cryogenic Tanks">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
-        <span class="capsule-item-label">Power</span>
-      </button>
-
       <button id="btn-criteria-audit" class="capsule-item" title="Criteria Audit">
         <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
         <span class="capsule-item-label">Audit</span>
       </button>
 
-      <button id="btn-reset-cam" class="capsule-item" title="Reset Camera View">
+      <button id="btn-reset-cam" class="capsule-item" title="Reset View">
         <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
-        <span class="capsule-item-label">Reset Cam</span>
+        <span class="capsule-item-label">Reset View</span>
       </button>
 
       <button id="btn-toggle-hud" class="capsule-item active" title="Toggle HUD Controls Panel">
@@ -272,11 +252,6 @@ const HTML_CONTENT = `<!-- =====================================================
         <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
         <span class="capsule-item-label">Full</span>
       </button>
-
-      <a href="/" id="btn-open-main-menu" class="capsule-item" title="Return to Home Screen">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
-        <span class="capsule-item-label">Menu</span>
-      </a>
     </div>
   </header>
 
@@ -288,238 +263,451 @@ const HTML_CONTENT = `<!-- =====================================================
     <!-- Panel Header -->
     <div class="cd-panel-head-bar">
       <div class="cd-panel-title-wrap">
-        <span class="cd-panel-chip" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8;">SHACKLETON RIM</span>
+        <span class="cd-panel-chip" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25);">SHACKLETON RIM // 89.9°S</span>
         <h2 class="cd-panel-heading">Moon Base Telemetry</h2>
       </div>
-      <button id="btn-collapse-hud" class="cd-panel-close-btn" title="Minimize Panel">◀</button>
+      <button id="btn-collapse-hud" class="cd-panel-close-btn" title="Minimize Panel">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </div>
 
     <!-- Base Status Ribbon -->
-    <div style="background: rgba(15, 23, 42, 0.85); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 8px 18px; display: flex; justify-content: space-between; align-items: center;">
-      <span style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; color: #38bdf8; letter-spacing: 0.5px;">NOMINAL OPERATIONS // BASE CAMP</span>
-      <span style="font-size: 9.5px; color: #94a3b8; font-family: var(--font-mono);">0.166g GRAVITY</span>
+    <div class="cd-moon-status-ribbon">
+      <div class="ribbon-left">
+        <span class="ribbon-dot"></span>
+        <span>NOMINAL // ARTEMIS BASE CAMP</span>
+      </div>
+      <div class="ribbon-right">0.166g (1.62 m/s²)</div>
     </div>
 
     <div class="cd-tab-scroll-wrap">
 
       <!-- CARD 1: Power & Energy Grid -->
-      <section class="cd-card cd-card-revenue" style="border-top: 2px solid #38bdf8;">
+      <section class="cd-card" style="border-top: 3px solid #38bdf8;">
         <div class="cd-card-head">
           <div class="cd-card-title-wrap">
             <h3 class="cd-card-title">Habitat Power & ECLSS Grid</h3>
-            <span class="cd-card-caption">Solar Arrays & Regenerative Fuel Cells</span>
+            <span class="cd-card-caption">Photovoltaic Arrays & Regenerative Fuel Cells</span>
           </div>
-          <span class="cd-badge-live" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">GRID NOMINAL</span>
+          <span class="cd-badge-live cyan">● GRID NOMINAL</span>
         </div>
 
-        <!-- Hero Metric -->
+        <!-- Hero Metric & Trend Pill -->
         <div class="cd-hero-block">
           <div class="cd-hero-metric">
             <span id="metric-power-gen">88.5</span><span class="cd-hero-unit">kW</span>
           </div>
-          <div class="cd-trend-pill positive">
+          <div class="cd-trend-pill success">
             <span class="trend-arrow">▲</span>
             <span>Solar & Buffer Online</span>
           </div>
         </div>
 
-        <div class="cd-property-stack" style="margin-top: 14px;">
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Solar Array Generation</span>
-              <span class="cd-prop-meta">Tracking Surface Photovoltaics</span>
-            </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #38bdf8;">88.5 kW</span></div>
+        <!-- Power Flow Generation Progress Bar -->
+        <div style="margin: -2px 0 4px 0;">
+          <div style="display: flex; justify-content: space-between; font-size: 9.5px; font-weight: 600; color: #64748b; font-family: var(--font-mono); margin-bottom: 5px;">
+            <span>Array Output (88.5 kW / 100 kW)</span>
+            <span style="color: #0284c7; font-weight: 700;">+36.1 kW Net Surplus</span>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Habitat Power Draw</span>
-              <span class="cd-prop-meta">Primary Habitation & Life Support</span>
-            </div>
-            <div class="cd-prop-price"><span class="price-val" id="metric-power-con" style="color: #10b981;">52.4 kW</span></div>
+          <div class="cd-meter-bar">
+            <div class="cd-meter-fill cyan" style="width: 88.5%;"></div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Cryogenic Fuel Cell Buffer</span>
-              <span class="cd-prop-meta">Regenerative Cryo H₂/O₂ Reserve</span>
+        </div>
+
+        <!-- Structured Telemetry Stack -->
+        <div class="cd-telemetry-stack">
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Solar Array Generation</span>
+              <span class="cd-tel-desc">Tracking Surface Photovoltaics (2 Arrays)</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" id="metric-battery-soc" style="color: #10b981;">95.8%</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val cyan">88.5 kW</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Ice Shield Radiation Attenuation</span>
-              <span class="cd-prop-meta">Translucent Water-Ice Composite</span>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Habitat Base Load Draw</span>
+              <span class="cd-tel-desc">Primary Habitation, ECLSS & Avionics</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #38bdf8;">-94.6% GCR</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val emerald" id="metric-power-con">52.4 kW</span>
+            </div>
+          </div>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Cryogenic Fuel Cell Buffer</span>
+              <span class="cd-tel-desc">Regenerative Cryo H₂/O₂ Reserve (184 kWh)</span>
+            </div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val emerald" id="metric-battery-soc">95.8%</span>
+            </div>
+          </div>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Ice Shield Radiation Attenuation</span>
+              <span class="cd-tel-desc">Translucent Water-Ice Composite (5.0m H₂O Eq)</span>
+            </div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val cyan">-94.6% GCR</span>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- CARD 2: Habitat ECLSS & Artemis Exploration Atmosphere -->
-      <section class="cd-card" style="border-top: 2px solid #10b981;">
+      <section class="cd-card" style="border-top: 3px solid #10b981;">
         <div class="cd-card-head">
           <div class="cd-card-title-wrap">
             <h3 class="cd-card-title">Habitat ECLSS Atmosphere</h3>
             <span class="cd-card-caption">NASA Artemis Exploration Standard</span>
           </div>
-          <span class="cd-badge-live" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">OPTIMAL</span>
+          <span class="cd-badge-live emerald">● OPTIMAL 10.2 PSI</span>
         </div>
 
         <div class="cd-hero-block">
           <div class="cd-hero-metric">
             <span>10.2</span><span class="cd-hero-unit">psi</span>
           </div>
-          <div class="cd-trend-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+          <div class="cd-trend-pill success">
             <span class="trend-arrow">●</span>
-            <span>34.0% O₂ (P_O2 = 3.47 psi)</span>
+            <span>34.0% O₂ (pO₂ = 23.9 kPa)</span>
           </div>
         </div>
 
-        <div class="cd-property-stack" style="margin-top: 14px;">
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Cabin Oxygen Concentration</span>
-              <span class="cd-prop-meta">Reduces EVA Pre-Breathe to 15 min</span>
-            </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #10b981;">34.0% O₂</span></div>
+        <!-- Dalton Law Gas Composition Chips -->
+        <div class="cd-flame-telemetry-row">
+          <div class="flame-tel-chip">
+            <span class="tel-lbl">Total Pressure</span>
+            <span class="tel-val">70.3 kPa</span>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Regulated Cabin Temperature</span>
-              <span class="cd-prop-meta">Thermal Active Loops</span>
-            </div>
-            <div class="cd-prop-price"><span class="price-val">21.5°C</span></div>
+          <div class="flame-tel-chip">
+            <span class="tel-lbl">O₂ Partial (pO₂)</span>
+            <span class="tel-val success">23.9 kPa</span>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Carbon Dioxide Partial Press.</span>
-              <span class="cd-prop-meta">CDRA Amine Scrubber Bed</span>
-            </div>
-            <div class="cd-prop-price"><span class="price-val">1.8 mmHg</span></div>
+          <div class="flame-tel-chip">
+            <span class="tel-lbl">Pre-Breathe</span>
+            <span class="tel-val cyan">15 min Fast</span>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Water Recycling Recovery</span>
-              <span class="cd-prop-meta">Vapor Compression Distillation</span>
+        </div>
+
+        <div class="cd-telemetry-stack">
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Cabin Oxygen Concentration</span>
+              <span class="cd-tel-desc">Reduces EVA Air-Lock Pre-Breathe to 15 min</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #38bdf8;">98.2%</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val emerald">34.0% O₂</span>
+            </div>
+          </div>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Regulated Cabin Temperature</span>
+              <span class="cd-tel-desc">Thermal Active External Radiator Loops</span>
+            </div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val">21.5°C</span>
+            </div>
+          </div>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Carbon Dioxide Partial Pressure</span>
+              <span class="cd-tel-desc">CDRA Regenerative Amine Scrubber Bed</span>
+            </div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val emerald">1.8 mmHg</span>
+            </div>
+          </div>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Water Recycling Recovery Rate</span>
+              <span class="cd-tel-desc">Vapor Compression Distillation Assembly</span>
+            </div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val cyan">98.2%</span>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- CARD 3: Lunar Surface Planetary Physics -->
-      <section class="cd-card cd-card-occupancy">
+      <section class="cd-card" style="border-top: 3px solid #f59e0b;">
         <div class="cd-card-head">
           <div class="cd-card-title-wrap">
             <h3 class="cd-card-title">Lunar Surface Environment</h3>
-            <span class="cd-card-caption">Vacuum & Thermal Extreme Conditions</span>
+            <span class="cd-card-caption">Vacuum & Thermal Regimes // Shackleton Crater</span>
           </div>
+          <span class="cd-badge-live amber">0.166g ENVIRONMENT</span>
         </div>
 
-        <div class="cd-property-stack">
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Surface Gravity (g)</span>
-              <span class="cd-prop-meta">1.62 m/s² Acceleration</span>
+        <!-- Thermal Split Visualizer -->
+        <div class="cd-split-temp-meter">
+          <div class="split-temp-labels">
+            <div class="split-temp-item">
+              <span class="split-temp-k">Sunlit Surface</span>
+              <span class="split-temp-v hot">+118.0°C</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #38bdf8;">0.166 g</span></div>
+            <div class="split-temp-item right">
+              <span class="split-temp-k">Permanent Shadow (PSR)</span>
+              <span class="split-temp-v cold">−130.0°C</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Direct Sunlight Surface Temp</span>
-              <span class="cd-prop-meta">Unfiltered Solar Radiation</span>
+          <div class="split-bar-track"></div>
+        </div>
+
+        <div class="cd-telemetry-stack">
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Surface Gravity Acceleration (g)</span>
+              <span class="cd-tel-desc">g = 1.62 m/s² Acceleration (1/6th Earth)</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #f59e0b;">+118.0°C</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val cyan">0.166 g</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Permanent Shadow Temp</span>
-              <span class="cd-prop-meta">Deep Space Radiative Sink</span>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Atmospheric Density / Vacuum</span>
+              <span class="cd-tel-desc">Zero Rayleigh Scattering // Hard Vacuum</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #60a5fa;">−130.0°C</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val">10⁻¹² torr</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Atmospheric Density / Vacuum</span>
-              <span class="cd-prop-meta">Zero Rayleigh Scattering</span>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Unattenuated Solar Irradiance</span>
+              <span class="cd-tel-desc">Vacuum Total Solar Irradiance (TSI)</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val">10⁻¹² torr</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val amber">1,361 W/m²</span>
+            </div>
+          </div>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Volatiles & Water Ice Regolith</span>
+              <span class="cd-tel-desc">LCROSS & VIPER South Pole Cold Traps</span>
+            </div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val cyan">5.6% wt</span>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- CARD 4: Earth Telemetry & DSN Comm Link -->
-      <section class="cd-card" style="border-top: 2px solid #818cf8;">
+      <section class="cd-card" style="border-top: 3px solid #818cf8;">
         <div class="cd-card-head">
           <div class="cd-card-title-wrap">
             <h3 class="cd-card-title">Earth Deep Space Network (DSN)</h3>
-            <span class="cd-card-caption">High-Gain Parabolic Relay</span>
+            <span class="cd-card-caption">High-Gain Ka-Band Parabolic Uplink</span>
           </div>
-          <span class="cd-badge-live" style="background: rgba(129, 140, 248, 0.15); color: #818cf8;">CARRIER LOCK</span>
+          <span class="cd-badge-live violet">● CARRIER LOCK</span>
         </div>
 
-        <div class="cd-property-stack">
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Active Tracking Ground Station</span>
-              <span class="cd-prop-meta">Madrid 70m Dish (DSS-63)</span>
+        <div class="cd-telemetry-stack">
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Active Tracking Ground Station</span>
+              <span class="cd-tel-desc">Madrid Deep Space Complex (DSS-63 70m Dish)</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #818cf8;">DSN-63</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val violet">DSN-63</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Earth-Moon Line-of-Sight Distance</span>
-              <span class="cd-prop-meta">Perigee Orbit Vector</span>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Earth-Moon Line-of-Sight Distance</span>
+              <span class="cd-tel-desc">Perigee Orbit Range Vector</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val">384,400 km</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val">384,400 km</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Light-Time Comm Round-Trip (RTT)</span>
-              <span class="cd-prop-meta">Speed of Light Latency (2 x d / c)</span>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Light-Time Comm Round-Trip (RTT)</span>
+              <span class="cd-tel-desc">Speed of Light Latency (2 × d / c)</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val">2.56 sec</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val">2.56 sec</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">RF Signal Link Margin</span>
-              <span class="cd-prop-meta">Ka-Band 26 GHz Uplink</span>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">RF Signal Uplink Margin</span>
+              <span class="cd-tel-desc">Ka-Band 26.5 GHz High-Throughput Link</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #10b981;">+18.4 dB</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val emerald">+18.4 dB</span>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- CARD 5: NASA PSI Lunar Combustion Science (LUCI & FM2) -->
-      <section class="cd-card" style="border-top: 2px solid #f43f5e;">
+      <section class="cd-card" style="border-top: 3px solid #f43f5e;">
         <div class="cd-card-head">
           <div class="cd-card-title-wrap">
             <h3 class="cd-card-title">NASA PSI Partial-g Science</h3>
             <span class="cd-card-caption">LUCI & FM2 Lunar Combustion Experiments</span>
           </div>
-          <span class="cd-badge-live" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e;">0.166g BENCHMARK</span>
+          <span class="cd-badge-live crimson">0.166g BENCHMARK</span>
         </div>
 
-        <div style="font-size: 11.5px; line-height: 1.45; color: #cbd5e1; background: rgba(15, 23, 42, 0.6); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 10px;">
-          <strong>Lunar Gateway & Surface Precedents:</strong> NASA PSI's upcoming <strong>LUCI</strong> (Lunar Combustion Investigation) and <strong>FM2</strong> (Flammability on the Moon) will establish the first empirical partial-gravity fire spread limits.
+        <div class="cd-science-callout">
+          <strong>NASA Physical Sciences Informatics:</strong> Upcoming <strong>LUCI</strong> (Lunar Combustion Investigation) and <strong>FM2</strong> (Flammability on the Moon) validate partial-gravity Roper fire spread and buoyancy transitions at 0.166g.
         </div>
 
-        <div class="cd-property-stack">
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Roper Flame Height Scaling L_f</span>
-              <span class="cd-prop-meta">L_f(0.166g) = L_f(1g) · (0.166)⁻⁰·²⁵</span>
+        <div class="cd-telemetry-stack">
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Roper Flame Height Scaling L_f</span>
+              <span class="cd-tel-desc">L_f(0.166g) = L_f(1g) · (0.166)⁻⁰·²⁵</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val" style="color: #f43f5e;">+57% Elongated</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val crimson">+57% Elongated</span>
+            </div>
           </div>
-          <div class="cd-prop-card" style="padding: 10px 14px; margin-bottom: 6px;">
-            <div class="cd-prop-info">
-              <span class="cd-prop-name" style="font-size: 13px;">Buoyant Convection Velocity</span>
-              <span class="cd-prop-meta">u_conv ∝ √(g) (~0.226 m/s vs 0.554 m/s)</span>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Buoyant Convection Velocity</span>
+              <span class="cd-tel-desc">u_conv ∝ √(g) (~0.226 m/s vs 0.554 m/s at 1g)</span>
             </div>
-            <div class="cd-prop-price"><span class="price-val">-59% Slower</span></div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val blue">-59% Slower</span>
+            </div>
+          </div>
+
+          <div class="cd-tel-row">
+            <div class="cd-tel-left">
+              <span class="cd-tel-name">Rayleigh Number Plume Factor</span>
+              <span class="cd-tel-desc">Ra(0.166g) = 0.166 · Ra(1g) (Suppressed Plume)</span>
+            </div>
+            <div class="cd-tel-right">
+              <span class="cd-tel-val">Ra = 1.4 × 10⁴</span>
+            </div>
           </div>
         </div>
+      </section>
+
+      <!-- CARD 6: Lunar Combustion Physics & Chamber Telemetry -->
+      <section class="cd-card cd-combustion-physics-card" style="border-top: 3px solid #ef4444;">
+        <div class="cd-card-head">
+          <div class="cd-card-title-wrap">
+            <h3 class="cd-card-title">Lunar Combustion Physics</h3>
+            <span class="cd-card-caption">Can a Candle Burn in Open Lunar Vacuum?</span>
+          </div>
+          <span class="cd-badge-live" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); font-size: 9px; padding: 2px 7px;">
+            🚫 IMPOSSIBLE IN AMBIENT VACUUM
+          </span>
+        </div>
+
+        <!-- Alert Callout Banner -->
+        <div class="mars-alert-box">
+          <div class="alert-icon">⚠️</div>
+          <div class="alert-content">
+            <div class="alert-title">Natural Open Flame is Physically Impossible</div>
+            <div class="alert-text">
+              A candle cannot ignite or burn in the open lunar environment. If exposed to the Moon's exterior, any flame is immediately and completely extinguished by three fundamental physical vacuum mechanisms:
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Fundamental Extinction Mechanisms -->
+        <div class="cd-property-stack" style="margin-top: 10px;">
+          
+          <div class="cd-prop-card mars-extinction-prop">
+            <div class="mars-extinction-header">
+              <div class="cd-prop-info">
+                <span class="cd-prop-name" style="font-size: 12.5px;">1. Absolute Hard Vacuum (0.0% O₂ // 10⁻¹⁰ Pa)</span>
+                <span class="cd-prop-meta">Total Oxidizer Starvation (Exosphere Regime)</span>
+              </div>
+              <div class="cd-prop-price"><span class="price-val" style="color: #ef4444;">0.0% O₂</span></div>
+            </div>
+            <p class="extinction-desc">
+              The Moon possesses no breathable atmosphere (ambient pressure ~10⁻¹⁰ Pa / 10⁻¹⁵ atm). Without oxygen molecules, exothermic radical chain branching (H + O₂ → OH + O) cannot initiate or propagate.
+            </p>
+          </div>
+
+          <div class="cd-prop-card mars-extinction-prop">
+            <div class="mars-extinction-header">
+              <div class="cd-prop-info">
+                <span class="cd-prop-name" style="font-size: 12.5px;">2. Flash Evaporation & Fuel Outgassing</span>
+                <span class="cd-prop-meta">Zero Vapor Pressure Boundary Barrier</span>
+              </div>
+              <div class="cd-prop-price"><span class="price-val" style="color: #ea580c;">10⁻¹⁵ atm</span></div>
+            </div>
+            <p class="extinction-desc">
+              In hard lunar vacuum, liquid paraffin wax (C₂₅H₅₂) flash-boils instantly and disperses into space at molecular thermal velocity before a combustible fuel-air diffusion zone can ever establish around the wick.
+            </p>
+          </div>
+
+          <div class="cd-prop-card mars-extinction-prop">
+            <div class="mars-extinction-header">
+              <div class="cd-prop-info">
+                <span class="cd-prop-name" style="font-size: 12.5px;">3. Deep Space Radiative Siphon (3K Heat Sink)</span>
+                <span class="cd-prop-meta">Unbounded Stefan-Boltzmann Thermal Drain</span>
+              </div>
+              <div class="cd-prop-price"><span class="price-val" style="color: #f59e0b;">-130°C Shade</span></div>
+            </div>
+            <p class="extinction-desc">
+              Without an insulating atmosphere, thermal radiation drains directly into the 3 Kelvin cosmic background. Wick heat siphons off exponentially (q = εσT⁴), cooling the flame base far below the 245°C wax autoignition threshold.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- How the candle is burning in this simulation -->
+        <div class="mars-simulation-explainer">
+          <div class="explainer-head">
+            <span class="explainer-icon">🔬</span>
+            <span class="explainer-heading">Why Is This Candle Burning In The Scene?</span>
+          </div>
+          <p class="explainer-text">
+            The candle is housed inside a <strong>hermetically sealed quartz test chamber (NASA CIR-L Rig)</strong> supplied with artificial habitat atmosphere (<strong>21% O₂, 101.3 kPa</strong>) piped through the umbilical from the Artemis Ice Home.
+          </p>
+          <p class="explainer-text" style="margin-top: 6px;">
+            This isolates and demonstrates <strong>Lunar 0.166g partial gravity</strong>: natural buoyant convection drops by <strong>83.4%</strong> (Grashof Number Gr ≈ 16.6% of Earth), causing the flame to expand into a wide, low-soot, hemispherical dome with a prominent blue chemiluminescence base ring.
+          </p>
+        </div>
+
+        <!-- Interactive Chamber Venting Demo -->
+        <div class="mars-chamber-controls">
+          <div class="chamber-status-header">
+            <span class="chamber-status-title">QUARTZ CHAMBER TELEMETRY</span>
+            <span id="chamber-status-badge" class="chamber-status-badge sealed">
+              <span class="pulse-dot-green"></span>
+              <span id="chamber-status-text">SEALED (21% O₂ // 101.3 kPa)</span>
+            </span>
+          </div>
+
+          <button id="btn-vent-chamber" class="btn-vent-toggle" title="Vent quartz chamber to ambient lunar vacuum">
+            <svg class="vent-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            <span id="btn-vent-label">⚡ Vent Chamber to Lunar Vacuum (Simulate Extinction)</span>
+          </button>
+          
+          <div class="vent-hint-text">
+            Breach quartz seals to vent habitat air into lunar vacuum (10⁻¹⁰ Pa, 0% O₂), instantly suffocating the flame.
+          </div>
+        </div>
+
       </section>
 
     </div>

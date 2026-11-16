@@ -244,11 +244,6 @@ const HTML_CONTENT = `<!-- =====================================================
         <span class="capsule-item-label">Lander</span>
       </button>
 
-      <button class="capsule-item viewpoint-btn" data-view="chamber" title="0.38g Flame Chamber">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
-        <span class="capsule-item-label">Chamber</span>
-      </button>
-
       <button class="capsule-item viewpoint-btn" data-view="habitat" title="Geodesic Hab Dome">
         <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 18 0v7H3v-7z"/></svg></div>
         <span class="capsule-item-label">Habitat</span>
@@ -278,11 +273,6 @@ const HTML_CONTENT = `<!-- =====================================================
         <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></div>
         <span class="capsule-item-label">Full</span>
       </button>
-
-      <a href="/" id="btn-open-main-menu" class="capsule-item" title="Return to Home Screen">
-        <div class="capsule-item-icon"><svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
-        <span class="capsule-item-label">Menu</span>
-      </a>
     </div>
   </header>
 
