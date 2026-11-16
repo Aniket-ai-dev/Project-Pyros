@@ -152,6 +152,55 @@ html, body {
   background: rgba(30, 41, 59, 0.95);
   border: 1px solid rgba(56, 189, 248, 0.35);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 12px rgba(56, 189, 248, 0.2);
+  overflow: hidden;
+  padding: 3px;
+  box-sizing: border-box;
+}
+
+.cd-brand-icon img,
+.cd-brand-icon .capsule-brand-logo {
+  width: 100%;
+  height: 100%;
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.capsule-brand-circle {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 12px rgba(56, 189, 248, 0.2);
+  cursor: pointer;
+  text-decoration: none;
+  margin-bottom: 4px;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
+
+.capsule-brand-circle:hover {
+  transform: scale(1.08);
+  border-color: #38bdf8;
+  box-shadow: 0 4px 18px rgba(56, 189, 248, 0.45);
+}
+
+.capsule-brand-circle img,
+.capsule-brand-logo {
+  width: 100%;
+  height: 100%;
+  max-width: 30px;
+  max-height: 30px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  pointer-events: none;
 }
 
 .cd-brand-text {

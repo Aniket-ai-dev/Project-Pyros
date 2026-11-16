@@ -94,7 +94,7 @@ export default function CinematicNavigatorModal({ isOpen, onClose }: Props) {
 
         <div className="showcase-stage">
           {panels.map((panel) => (
-            <div key={panel.id} className="phone-mockup">
+            <div key={panel.id} className={`phone-mockup phone-mockup-${panel.id}`}>
               <div className="phone-screen">
                 <div className="phone-status-bar">
                   <span className="status-time">9:41</span>

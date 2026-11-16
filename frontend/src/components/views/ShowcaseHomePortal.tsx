@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import CriteriaAuditModal from '@/components/station/CriteriaAuditModal';
+import StarsBackground from '@/components/ui/StarsBackground';
 
 interface ShowcasePanel {
   id: string;
@@ -79,21 +80,20 @@ export default function ShowcaseHomePortal() {
 
   return (
     <div className="showcase-viewport">
-      {/* Starry Background Particles */}
-      <div className="stars-overlay" />
+      {/* 3D Interactive Three.js Stars Particle Background (Framer Stars-2) */}
+      <StarsBackground count={3500} size={1.8} color="#e0f2fe" shape="circle" speedX={1.8} speedY={1.8} />
+
+      {/* Top Left NASA Brand Logo */}
+      <Link href="/" className="home-top-left-brand" title="NASA Physical Sciences Informatics // Project Pyros">
+        <img
+          src="/nasa.png"
+          alt="NASA Logo"
+          className="home-nasa-logo"
+        />
+      </Link>
 
       {/* Top Center Title Header */}
       <header className="pyros-home-header">
-        <button
-          className="pyros-menu-badge"
-          onClick={() => setActiveMenu(true)}
-          title="Open Mission Command Menu"
-          style={{ cursor: 'pointer' }}
-        >
-          <span className="pyros-badge-dot" />
-          <span>NASA PHYSICAL SCIENCES INFORMATICS // MISSION COMMAND</span>
-          <span style={{ marginLeft: 6, opacity: 0.85 }}>[MENU]</span>
-        </button>
         <h1 className="pyros-home-title">PROJECT PYROS</h1>
         <p className="pyros-home-desc">
           Select an operational simulation environment to initiate exploration
@@ -105,7 +105,7 @@ export default function ShowcaseHomePortal() {
         {panels.map((panel, idx) => (
           <div
             key={panel.id}
-            className={`phone-mockup ${activeSlide === idx ? 'phone-active' : ''}`}
+            className={`phone-mockup phone-mockup-${panel.id} ${activeSlide === idx ? 'phone-active' : ''}`}
             onMouseEnter={() => setActiveSlide(idx)}
             onClick={() => setActiveSlide(idx)}
           >

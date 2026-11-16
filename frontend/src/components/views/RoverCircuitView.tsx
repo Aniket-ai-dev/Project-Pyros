@@ -212,7 +212,7 @@ const HTML_CONTENT = `<!-- =====================================================
     <!-- FLOATING SWIPEABLE CAPSULE NAVBAR (Reference Match) -->
   <header class="pyros-capsule-navbar">
     <a href="/" class="capsule-brand-circle" title="Project Pyros Home">
-      <svg viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2 0 1.2-.8 2.1-1.8 2.6C16.4 8.2 19 11.8 19 16c0 3.9-3.1 7-7 7s-7-3.1-7-7c0-4.2 2.6-7.8 6.8-9.4C10.8 6.1 10 5.2 10 4c0-1.1.9-2 2-2z"/></svg>
+      <img src="/logo.png" alt="Project Pyros Logo" class="capsule-brand-logo" />
     </a>
 
     <div class="capsule-slide-track">
