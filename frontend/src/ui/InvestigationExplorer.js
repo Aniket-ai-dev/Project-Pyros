@@ -9,9 +9,11 @@
  */
 
 export class InvestigationExplorer {
-  constructor(dataService, onApplyAtmosphere) {
+  constructor(dataService, onApplyAtmosphere, onFrameCandle = null, onResetCamera = null) {
     this.dataService = dataService;
     this.onApplyAtmosphere = onApplyAtmosphere;
+    this.onFrameCandle = onFrameCandle;
+    this.onResetCamera = onResetCamera;
 
     this.isOpen = false;
     this.currentFilters = {
@@ -56,7 +58,12 @@ export class InvestigationExplorer {
               <span class="status-dot"></span>
               <span class="status-label">Checking Backend...</span>
             </span>
-            <button id="btn-close-explorer" class="nasa-modal-close-btn" aria-label="Close Explorer">[CLOSE]</button>
+            <button id="btn-close-explorer" class="nasa-modal-close-btn" aria-label="Close Explorer" title="Close Archives">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -194,12 +201,29 @@ export class InvestigationExplorer {
 
   close() {
     this.dom.classList.add('hidden');
+    this.detailModal.classList.add('hidden');
+    this.detailModal.classList.remove('split-view-active');
     this.isOpen = false;
+    this.activeInvestigation = null;
+    if (this.onResetCamera) {
+      this.onResetCamera();
+    }
   }
 
   closeDetail() {
     this.detailModal.classList.add('hidden');
+    this.detailModal.classList.remove('split-view-active');
     this.activeInvestigation = null;
+    if (this.dom) {
+      this.dom.classList.remove('hidden');
+    }
+    if (this.onResetCamera) {
+      this.onResetCamera();
+    }
+  }
+
+  closeAll() {
+    this.close();
   }
 
   async updateBackendStatusBadge() {
@@ -209,7 +233,7 @@ export class InvestigationExplorer {
     const isOnline = await this.dataService.checkHealth();
     if (isOnline) {
       badge.className = 'backend-pill online';
-      badge.innerHTML = `<span class="status-dot"></span><span>BACKEND ONLINE</span>`;
+      badge.innerHTML = `<span class="status-dot"></span><span>LIVE ENGINE ONLINE</span>`;
     } else {
       badge.className = 'backend-pill standalone';
       badge.innerHTML = `<span class="status-dot"></span><span>STANDALONE ARCHIVE</span>`;
@@ -314,7 +338,20 @@ export class InvestigationExplorer {
     const content = document.getElementById('detail-card-content');
     if (!content) return;
 
+    // 1. Hide the 22-missions grid modal so the 3D room is visible behind
+    if (this.dom) {
+      this.dom.classList.add('hidden');
+    }
+
+    // 2. Activate split view on detail modal (docked left, flame on right)
     this.detailModal.classList.remove('hidden');
+    this.detailModal.classList.add('split-view-active');
+
+    // 3. Smoothly frame candle flame on the right side
+    if (this.onFrameCandle) {
+      this.onFrameCandle();
+    }
+
     content.innerHTML = `<div class="loading-state"><span>Accessing NASA Flight Mission Dossier #${id}...</span></div>`;
 
     try {
@@ -324,7 +361,9 @@ export class InvestigationExplorer {
           <div class="empty-state">
             <h3 style="color:#f43f5e;margin-bottom:8px;">Dossier Unavailable</h3>
             <p>Could not retrieve NASA flight investigation dossier for #${id}.</p>
-            <button id="btn-close-detail" class="nasa-modal-close-btn">[CLOSE]</button>
+            <button id="btn-close-detail" class="nasa-modal-close-btn" aria-label="Close" title="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </div>
         `;
         const closeBtn = document.getElementById('btn-close-detail');
@@ -352,8 +391,9 @@ export class InvestigationExplorer {
             <td>${velVal}</td>
             <td><span class="gas-tag">${diluentVal}</span></td>
             <td>
-              <button class="btn-apply-atmos" data-idx="${idx}" title="Set Room Candle to these exact atmospheric values">
-                [TEST IN CANDLE]
+              <button class="btn-apply-atmos" data-idx="${idx}" title="Test this atmosphere in the 3D candle flame">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                <span>Test in Candle</span>
               </button>
             </td>
           </tr>
@@ -468,92 +508,111 @@ export class InvestigationExplorer {
       content.innerHTML = `
         <!-- Dossier Header -->
         <div class="detail-header">
-          <div class="detail-title-wrap">
+          <div class="detail-top-meta-row">
             <div class="acronym-title-row">
               <span class="dossier-acronym">${acronym}</span>
               <span class="dossier-id">MISSION ARCHIVE // #${dossierId}</span>
             </div>
-            <h2 class="dossier-name">${dossierName}</h2>
-            <div class="dossier-tags-row">
-              <span class="dossier-tag hardware">${hardware}</span>
-              <span class="dossier-tag pillar">${pillar}</span>
-              <span class="dossier-tag gravity">${gravity}</span>
-              <span class="dossier-tag relevance">RELEVANCE: ${relevanceDisplay}%</span>
+            <div class="detail-actions-wrap">
+              <button id="btn-back-to-grid" class="dossier-nav-btn" title="Back to All 22 Missions">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>All Missions</span>
+              </button>
+              <button id="btn-close-detail" class="nasa-modal-close-btn" aria-label="Close Dossier" title="Close to 3D Room">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           </div>
-          <button id="btn-close-detail" class="nasa-modal-close-btn">[CLOSE]</button>
+          <h2 class="dossier-name">${dossierName}</h2>
+          <div class="dossier-tags-row">
+            <span class="dossier-tag hardware">${hardware}</span>
+            <span class="dossier-tag pillar">${pillar}</span>
+            <span class="dossier-tag gravity">${gravity}</span>
+            <span class="dossier-tag relevance">RELEVANCE: ${relevanceDisplay}%</span>
+          </div>
         </div>
 
         <!-- Dossier Body Scroll -->
-        <div class="detail-body-scroll">
+        <div class="detail-body-scroll dossier-body-scroll">
           <!-- 1. Scientific Objectives -->
           <section class="dossier-section">
-            <h3 class="section-title">1. Experimental Rationale & Objectives</h3>
+            <h3 class="section-title"><span class="sec-num">01</span> Experimental Rationale & Objectives</h3>
             <p class="dossier-paragraph">${objectives}</p>
           </section>
 
           <!-- 2. Tested Fuels Matrix -->
           <section class="dossier-section">
-            <h3 class="section-title">2. Tested Materials & Fuel Specimens</h3>
-            <table class="dossier-table">
-              <thead>
-                <tr>
-                  <th>Material</th>
-                  <th>Phase</th>
-                  <th>Sample Geometry</th>
-                  <th>Dimensions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${fuelsRows || '<tr><td colspan="4">Standard research specimens tested.</td></tr>'}
-              </tbody>
-            </table>
+            <h3 class="section-title"><span class="sec-num">02</span> Tested Materials & Fuel Specimens</h3>
+            <div class="dossier-table-wrap">
+              <table class="dossier-table">
+                <thead>
+                  <tr>
+                    <th>Material</th>
+                    <th>Phase</th>
+                    <th>Sample Geometry</th>
+                    <th>Dimensions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${fuelsRows || '<tr><td colspan="4">Standard research specimens tested.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <!-- 3. Atmospheric Environments & Live Simulation Bridge -->
           <section class="dossier-section">
             <div class="section-title-wrap">
-              <h3 class="section-title">3. Spaceflight Atmospheric Test Matrix</h3>
+              <h3 class="section-title"><span class="sec-num">03</span> Spaceflight Atmospheric Test Matrix</h3>
               <span class="sub-hint">Click 'Test in Candle' to dynamically inject condition into space station room</span>
             </div>
-            <table class="dossier-table atmos-table">
-              <thead>
-                <tr>
-                  <th>Oxygen (% O₂)</th>
-                  <th>Pressure (psi)</th>
-                  <th>Vent Velocity</th>
-                  <th>Diluent Gas</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${atmosRows || '<tr><td colspan="5">Microgravity chamber atmosphere data available.</td></tr>'}
-              </tbody>
-            </table>
+            <div class="dossier-table-wrap">
+              <table class="dossier-table atmos-table">
+                <thead>
+                  <tr>
+                    <th>Oxygen (% O₂)</th>
+                    <th>Pressure (psi)</th>
+                    <th>Vent Velocity</th>
+                    <th>Diluent Gas</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${atmosRows || '<tr><td colspan="5">Microgravity chamber atmosphere data available.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <!-- 4. Diagnostic Sensors & Instrumentation -->
           <section class="dossier-section">
-            <h3 class="section-title">4. Diagnostic Sensors & Measurement Instrumentation</h3>
-            <table class="dossier-table">
-              <thead>
-                <tr>
-                  <th>Sensor Technology</th>
-                  <th>Physical Parameter Measured</th>
-                  <th>Units</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${sensorsRows || '<tr><td colspan="3">Standard calibrated spaceflight optical & thermocouple diagnostics.</td></tr>'}
-              </tbody>
-            </table>
+            <h3 class="section-title"><span class="sec-num">04</span> Diagnostic Sensors & Measurement Instrumentation</h3>
+            <div class="dossier-table-wrap">
+              <table class="dossier-table">
+                <thead>
+                  <tr>
+                    <th>Sensor Technology</th>
+                    <th>Physical Parameter Measured</th>
+                    <th>Units</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sensorsRows || '<tr><td colspan="3">Standard calibrated spaceflight optical & thermocouple diagnostics.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <!-- 5. Within-Investigation Variables -->
           <section class="dossier-section">
-            <h3 class="section-title">5. Within-Investigation Variables Analysis</h3>
+            <h3 class="section-title"><span class="sec-num">05</span> Within-Investigation Variables Analysis</h3>
             <p class="sub-hint" style="margin-bottom: 8px;">Parameters varied across experimental test points vs. conditions held constant:</p>
-            <div class="variables-box" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
+            <div class="variables-box">
               ${differedHtml}
               ${constantHtml}
             </div>
@@ -561,7 +620,7 @@ export class InvestigationExplorer {
 
           <!-- 6. Key Scientific Discoveries -->
           <section class="dossier-section">
-            <h3 class="section-title">6. Key Scientific Discoveries</h3>
+            <h3 class="section-title"><span class="sec-num">06</span> Key Scientific Discoveries</h3>
             <ul class="dossier-list findings-list">
               ${findingsHtml}
             </ul>
@@ -569,7 +628,7 @@ export class InvestigationExplorer {
 
           <!-- 7. Earth Safety Applications -->
           <section class="dossier-section">
-            <h3 class="section-title">7. Terrestrial Applications & Technology Transfer</h3>
+            <h3 class="section-title"><span class="sec-num">07</span> Terrestrial Applications & Technology Transfer</h3>
             <ul class="dossier-list earth-list">
               ${earthHtml}
             </ul>
@@ -577,7 +636,7 @@ export class InvestigationExplorer {
 
           <!-- 8. Interactive Cross-Investigation Comparison Bridge -->
           <section class="dossier-section">
-            <h3 class="section-title">8. Cross-Investigation Comparison & Hardware Evolution</h3>
+            <h3 class="section-title"><span class="sec-num">08</span> Cross-Investigation Comparison & Hardware Evolution</h3>
             <p class="sub-hint">Compare ${acronym} side-by-side with another NASA flight investigation from the Physical Science Informatics database:</p>
             <div class="compare-control-bar">
               <select id="compare-select-target" class="compare-select">
@@ -590,10 +649,15 @@ export class InvestigationExplorer {
         </div>
       `;
 
-      // Close Button
+      // Close / Back Buttons
+      const btnBack = document.getElementById('btn-back-to-grid');
+      if (btnBack) {
+        btnBack.addEventListener('click', () => this.closeDetail());
+      }
+
       const detailClose = document.getElementById('btn-close-detail');
       if (detailClose) {
-        detailClose.addEventListener('click', () => this.closeDetail());
+        detailClose.addEventListener('click', () => this.closeAll());
       }
 
       // Bind Cross-Investigation Compare Button
@@ -714,10 +778,16 @@ export class InvestigationExplorer {
             });
 
             // Flash button feedback
-            btn.textContent = '[ACTIVE IN ROOM]';
+            btn.innerHTML = `
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Active in Flame</span>
+            `;
             btn.classList.add('applied');
             setTimeout(() => {
-              btn.textContent = '[TEST IN CANDLE]';
+              btn.innerHTML = `
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                <span>Test in Candle</span>
+              `;
               btn.classList.remove('applied');
             }, 2000);
           }
@@ -729,7 +799,9 @@ export class InvestigationExplorer {
         <div class="empty-state">
           <h3 style="color:#f43f5e;margin-bottom:8px;">Error Loading Dossier</h3>
           <p>${err.message || 'An unexpected runtime error occurred.'}</p>
-          <button id="btn-close-detail" class="nasa-modal-close-btn">[CLOSE]</button>
+          <button id="btn-close-detail" class="nasa-modal-close-btn" aria-label="Close" title="Close">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
       `;
       const detailClose = document.getElementById('btn-close-detail');

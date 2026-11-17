@@ -2952,117 +2952,546 @@ html, body {
   border-radius: 24px;
 }
 
+/* Split View Mode for Detail Layer (Dossier docked on Left, 3D candle flame on Right) */
+.nasa-modal-overlay.detail-layer.split-view-active {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: none !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  padding: 68px 24px 20px 24px !important;
+  z-index: 99990 !important;
+}
+
+.nasa-modal-overlay.detail-layer.split-view-active .detail-card,
+.nasa-modal-card.detail-card,
+.detail-card {
+  pointer-events: auto !important;
+  width: min(580px, 46vw) !important;
+  max-width: 580px !important;
+  height: calc(100vh - 88px) !important;
+  max-height: calc(100vh - 88px) !important;
+  margin: 0 !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55) !important;
+  animation: slideInFromLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Dossier Header with Pinned Actions */
 .detail-header {
-  padding: 18px 24px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-shrink: 0 !important;
+  padding: 16px 20px 14px 20px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
 }
 
-.detail-title-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+.detail-top-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 12px !important;
 }
 
-.detail-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.3px;
+.acronym-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
-.detail-subtitle {
-  font-size: 11.5px;
-  color: #64748b;
+.dossier-acronym {
+  font-size: 24px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.5px !important;
+  color: #1d4ed8 !important;
+  line-height: 1 !important;
 }
 
-.detail-close-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #64748b;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.dossier-id {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #64748b !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
 }
 
-.detail-scroll {
-  padding: 20px 24px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.detail-actions-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
 }
 
+.dossier-nav-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #0284c7 !important;
+  background: #f0f9ff !important;
+  border: 1px solid #bae6fd !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+.dossier-nav-btn:hover {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #7dd3fc !important;
+  transform: translateY(-1px) !important;
+}
+
+.nasa-modal-close-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.nasa-modal-close-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  transform: scale(1.05) !important;
+}
+
+.dossier-name {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.3px !important;
+}
+
+.dossier-tags-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+.dossier-tag {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  padding: 3px 9px !important;
+  border-radius: 6px !important;
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
+}
+
+.dossier-tag.hardware {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.dossier-tag.pillar {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+.dossier-tag.gravity {
+  background: #fdf4ff !important;
+  color: #a21caf !important;
+  border-color: #f5d0fe !important;
+}
+
+.dossier-tag.relevance {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #bbf7d0 !important;
+}
+
+/* Dossier Scroll Area: Unrestricted Smooth Scrolling */
+.detail-body-scroll,
+.dossier-body-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  pointer-events: auto !important;
+  touch-action: pan-y !important;
+  padding: 20px 22px 40px 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+/* Dossier Sections */
 .dossier-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  padding-bottom: 20px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.dossier-section:last-child {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
 }
 
 .section-title {
-  font-size: 13.5px;
-  font-weight: 800;
-  color: #0f172a;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  letter-spacing: -0.2px !important;
+}
+
+.sec-num {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 6px !important;
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border: 1px solid #dbeafe !important;
+  flex-shrink: 0 !important;
+}
+
+.section-title-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.dossier-paragraph {
+  font-size: 12.5px !important;
+  line-height: 1.65 !important;
+  color: #334155 !important;
+  margin: 0 !important;
+  background: #f8fafc !important;
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
 .sub-hint {
-  font-size: 11px;
-  color: #64748b;
+  font-size: 11px !important;
+  color: #64748b !important;
+}
+
+/* High-Tech Rounded Table Containers */
+.dossier-table-wrap {
+  width: 100% !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
 }
 
 .dossier-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11.5px;
-  background: #ffffff;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 12px !important;
+  text-align: left !important;
 }
 
 .dossier-table th {
-  background: #f8fafc;
-  padding: 8px 12px;
-  text-align: left;
-  font-weight: 700;
-  color: #475569;
-  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc !important;
+  color: #475569 !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
 .dossier-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #0f172a;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #1e293b !important;
+  vertical-align: middle !important;
+  font-size: 12px !important;
 }
 
+.dossier-table tr:last-child td {
+  border-bottom: none !important;
+}
+
+.dossier-table tr:hover td {
+  background: #f8fafc !important;
+}
+
+.gas-tag {
+  display: inline-block !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #0369a1 !important;
+}
+
+/* Modern Pill Badges for Fuel Types */
+.fuel-chip {
+  display: inline-block !important;
+  padding: 2px 8px !important;
+  border-radius: 50px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  text-transform: capitalize !important;
+}
+
+.fuel-chip.solid {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+}
+
+.fuel-chip.liquid {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.fuel-chip.gas {
+  background: #f0f9ff !important;
+  color: #0369a1 !important;
+  border: 1px solid #bae6fd !important;
+}
+
+/* Glowing Dynamic Candle Test Button */
 .btn-apply-atmos {
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-  padding: 5px 12px;
-  border-radius: 50px;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 7px 14px !important;
+  border-radius: 50px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
+  transition: all 0.18s ease !important;
+  white-space: nowrap !important;
 }
 
 .btn-apply-atmos:hover {
-  background: #1d4ed8;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45) !important;
+}
+
+.btn-apply-atmos:active {
+  transform: translateY(0) !important;
 }
 
 .btn-apply-atmos.applied {
-  background: #059669;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  box-shadow: 0 2px 10px rgba(5, 150, 105, 0.4) !important;
+}
+
+/* Variables Box */
+.variables-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.var-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  color: #334155 !important;
+  line-height: 1.5 !important;
+}
+
+.var-badge {
+  flex-shrink: 0 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  letter-spacing: 0.3px !important;
+}
+
+.var-badge.differed {
+  background: #fff7ed !important;
+  color: #c2410c !important;
+  border: 1px solid #ffedd5 !important;
+}
+
+.var-badge.constant {
+  background: #f0f9ff !important;
+  color: #0369a1 !important;
+  border: 1px solid #e0f2fe !important;
+}
+
+/* Scientific Discoveries & Earth Applications Lists */
+.findings-list,
+.earth-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.finding-item,
+.earth-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+  color: #334155 !important;
+  background: #f8fafc !important;
+  padding: 9px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.finding-bullet {
+  color: #2563eb !important;
+  font-weight: 800 !important;
+}
+
+.earth-bullet {
+  color: #059669 !important;
+  font-weight: 800 !important;
+  font-size: 10.5px !important;
+}
+
+/* Cross-Investigation Compare Tool */
+.compare-control-bar {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin-top: 4px !important;
+}
+
+.compare-select {
+  flex: 1 !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+.btn-trigger-compare {
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+.btn-trigger-compare:hover {
+  background: #0369a1 !important;
+}
+
+/* Universal Custom Scrollbars for All Modal Elements */
+.detail-body-scroll::-webkit-scrollbar,
+.dossier-body-scroll::-webkit-scrollbar,
+.investigations-grid-scroll::-webkit-scrollbar,
+.audit-body-container::-webkit-scrollbar,
+.nasa-modal-card::-webkit-scrollbar,
+.cd-panel-container::-webkit-scrollbar {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.detail-body-scroll::-webkit-scrollbar-track,
+.dossier-body-scroll::-webkit-scrollbar-track,
+.investigations-grid-scroll::-webkit-scrollbar-track,
+.audit-body-container::-webkit-scrollbar-track,
+.nasa-modal-card::-webkit-scrollbar-track,
+.cd-panel-container::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 4px !important;
+}
+
+.detail-body-scroll::-webkit-scrollbar-thumb,
+.dossier-body-scroll::-webkit-scrollbar-thumb,
+.investigations-grid-scroll::-webkit-scrollbar-thumb,
+.audit-body-container::-webkit-scrollbar-thumb,
+.nasa-modal-card::-webkit-scrollbar-thumb,
+.cd-panel-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 4px !important;
+  transition: background 0.15s ease !important;
+}
+
+.detail-body-scroll::-webkit-scrollbar-thumb:hover,
+.dossier-body-scroll::-webkit-scrollbar-thumb:hover,
+.investigations-grid-scroll::-webkit-scrollbar-thumb:hover,
+.audit-body-container::-webkit-scrollbar-thumb:hover,
+.nasa-modal-card::-webkit-scrollbar-thumb:hover,
+.cd-panel-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
 }
 
 .dossier-list {

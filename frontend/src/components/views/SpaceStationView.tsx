@@ -243,7 +243,12 @@ const HTML_CONTENT = `<!-- =====================================================
       </footer>
 
       <!-- Floating Close Menu Button (Visible when reopened from station) -->
-      <button id="btn-close-main-menu" class="pyros-menu-close-btn" title="Back to Simulation" style="display: none;">[CLOSE]</button>
+      <button id="btn-close-main-menu" class="pyros-menu-close-btn" title="Back to Simulation" aria-label="Close Menu" style="display: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
 
     </div>
   </div>

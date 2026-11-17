@@ -70,8 +70,28 @@ export default function InvestigationExplorerModal({ isOpen, onClose, onSelectIn
               22 Flight Combustion Investigations Database
             </h2>
           </div>
-          <button onClick={onClose} className="modal-close-btn" style={{ background: 'none', border: 'none', fontSize: '13px', fontFamily: 'monospace', fontWeight: 'bold', cursor: 'pointer', color: '#64748b' }}>
-            [CLOSE]
+          <button 
+            onClick={onClose} 
+            className="modal-close-btn" 
+            aria-label="Close Modal"
+            style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '50%', 
+              border: '1px solid #e2e8f0', 
+              background: '#ffffff', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              color: '#64748b',
+              transition: 'all 0.15s ease' 
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
@@ -184,8 +204,26 @@ export default function InvestigationExplorerModal({ isOpen, onClose, onSelectIn
                   <span style={{ fontSize: '11px', fontWeight: 700, color: '#0284c7' }}>
                     {selectedInv.apparatus || 'NASA ISS Facility'}
                   </span>
-                  <button onClick={() => setSelectedInv(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontFamily: 'monospace', fontWeight: 'bold', color: '#94a3b8' }}>
-                    [CLOSE]
+                  <button 
+                    onClick={() => setSelectedInv(null)} 
+                    aria-label="Close Dossier"
+                    style={{ 
+                      width: '28px', 
+                      height: '28px', 
+                      borderRadius: '50%', 
+                      border: '1px solid #e2e8f0', 
+                      background: '#ffffff', 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      color: '#64748b' 
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                   </button>
                 </div>
                 <h3 style={{ fontSize: '15px', fontWeight: 800, margin: '8px 0', color: '#0f172a' }}>

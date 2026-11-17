@@ -243,6 +243,10 @@ export class SpaceStationApp {
         pos: new THREE.Vector3(0.10, -0.05, -3.10),
         target: new THREE.Vector3(0.38, -0.22, -2.20)
       },
+      splitCandle: {
+        pos: new THREE.Vector3(-0.35, -0.05, -3.15),
+        target: new THREE.Vector3(0.38, -0.22, -2.20)
+      },
       glovebox: {
         pos: new THREE.Vector3(-1.05, 0.48, -0.80),
         target: new THREE.Vector3(-1.80, 0.48, -0.80)
@@ -264,6 +268,7 @@ export class SpaceStationApp {
         target: new THREE.Vector3(0, 0.0, 9.50)
       }
     };
+    this.viewpoints = viewpoints;
 
     document.querySelectorAll('.viewpoint-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -582,10 +587,20 @@ export class SpaceStationApp {
   // NASA PARTIAL-GRAVITY INTEGRATION & INVESTIGATION EXPLORER
   // =========================================================================
   setupNASAIntegration() {
-    // 1. Initialize 22-Investigation Explorer Modal
+    // 1. Initialize 22-Investigation Explorer Modal with split-screen candle camera framing
     this.explorer = new InvestigationExplorer(
       this.nasaDataService,
-      (atmosphere) => this.applyAtmosphereFromInvestigation(atmosphere)
+      (atmosphere) => this.applyAtmosphereFromInvestigation(atmosphere),
+      () => {
+        // Frame candle on the right side of the screen when viewing investigation card
+        const vp = this.viewpoints?.splitCandle || this.viewpoints?.candle;
+        if (vp) this.startCinematicTransition(vp.pos, vp.target);
+      },
+      () => {
+        // Return to corridor view when closing explorer / dossier
+        const vp = this.viewpoints?.corridor;
+        if (vp) this.startCinematicTransition(vp.pos, vp.target);
+      }
     );
 
     // 1b. Initialize NASA Criteria Compliance Audit Modal
