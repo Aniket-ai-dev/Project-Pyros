@@ -181,19 +181,36 @@ export class AeroFireApp {
     // Header Toolbar Event Listeners
     const btnToggleTelemetry = document.getElementById('btn-toggle-telemetry');
     const leftDock = document.getElementById('left-dock-container');
+    const btnToggleControls = document.getElementById('btn-toggle-controls');
+    const rightDock = document.getElementById('right-dock-container');
+
+    // On mobile screens (< 840px), keep left telemetry collapsed by default for full 3D flame viewport visibility
+    if (window.innerWidth < 840) {
+      if (leftDock) leftDock.classList.add('collapsed');
+      if (btnToggleTelemetry) btnToggleTelemetry.classList.remove('active');
+    }
+
     if (btnToggleTelemetry && leftDock) {
       btnToggleTelemetry.addEventListener('click', () => {
         const isCollapsed = leftDock.classList.toggle('collapsed');
         btnToggleTelemetry.classList.toggle('active', !isCollapsed);
+        // On mobile, collapse controls dock if opening telemetry dock
+        if (!isCollapsed && window.innerWidth < 840 && rightDock) {
+          rightDock.classList.add('collapsed');
+          if (btnToggleControls) btnToggleControls.classList.remove('active');
+        }
       });
     }
 
-    const btnToggleControls = document.getElementById('btn-toggle-controls');
-    const rightDock = document.getElementById('right-dock-container');
     if (btnToggleControls && rightDock) {
       btnToggleControls.addEventListener('click', () => {
         const isCollapsed = rightDock.classList.toggle('collapsed');
         btnToggleControls.classList.toggle('active', !isCollapsed);
+        // On mobile, collapse telemetry dock if opening controls dock
+        if (!isCollapsed && window.innerWidth < 840 && leftDock) {
+          leftDock.classList.add('collapsed');
+          if (btnToggleTelemetry) btnToggleTelemetry.classList.remove('active');
+        }
       });
     }
 

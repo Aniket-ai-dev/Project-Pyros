@@ -3258,15 +3258,325 @@ html, body {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   GLOBAL MOBILE RESPONSIVENESS & TOUCH OPTIMIZATION SUITE
    ========================================================================== */
-@media (max-width: 900px) {
-  .cd-unified-panel {
-    width: calc(100vw - 32px);
-    left: 16px;
+
+/* 1. Safe Area Insets & Root Control */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+html, body {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  position: relative !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 2. Desktop-only / Mobile-only Switchers */
+.mobile-peek-flame-btn {
+  display: none !important;
+}
+
+/* 3. Mobile (< 768px) Responsive Adjustments */
+@media (max-width: 768px) {
+  /* Detail Dossier Card in Split View Mode */
+  .nasa-modal-overlay.detail-layer.split-view-active {
+    padding: max(8px, var(--sat)) 8px max(12px, var(--sab)) 8px !important;
+    justify-content: center !important;
+    align-items: flex-end !important;
+    background: rgba(15, 23, 42, 0.72) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    pointer-events: auto !important;
   }
-  .cd-top-dock .cd-pill-nav {
-    display: none;
+
+  .nasa-modal-overlay.detail-layer.split-view-active .detail-card,
+  .nasa-modal-card.detail-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: calc(100vh - max(20px, calc(var(--sat) + var(--sab)))) !important;
+    max-height: calc(100vh - max(20px, calc(var(--sat) + var(--sab)))) !important;
+    margin: 0 !important;
+    border-radius: 18px 18px 0 0 !important;
+    border: 1px solid rgba(226, 232, 240, 0.95) !important;
+    border-bottom: none !important;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease !important;
+  }
+
+  /* Mobile Peek Flame Mode: Collapses card to bottom dock */
+  .detail-card.mobile-peek-collapsed {
+    transform: translateY(calc(100% - 66px)) !important;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5) !important;
+    cursor: pointer !important;
+  }
+
+  .detail-card:not(.mobile-peek-collapsed) {
+    transform: translateY(0) !important;
+  }
+
+  /* Overlay becomes transparent when peeking so 3D room is interactive */
+  .nasa-modal-overlay.detail-layer.split-view-active:has(.mobile-peek-collapsed) {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    pointer-events: none !important;
+  }
+
+  .nasa-modal-overlay.detail-layer.split-view-active:has(.mobile-peek-collapsed) .detail-card {
+    pointer-events: auto !important;
+  }
+
+  /* Mobile Peek Button */
+  .mobile-peek-flame-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #f97316 !important;
+    background: #fff7ed !important;
+    border: 1px solid #fed7aa !important;
+    border-radius: 20px !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+  }
+
+  .mobile-peek-flame-btn:hover {
+    background: #ffedd5 !important;
+    color: #ea580c !important;
+  }
+
+  /* Header adjustments on mobile */
+  .detail-header {
+    padding: 12px 14px 10px 14px !important;
+    gap: 6px !important;
+  }
+
+  .dossier-acronym {
+    font-size: 20px !important;
+  }
+
+  .dossier-id {
+    font-size: 10px !important;
+  }
+
+  .dossier-name {
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+  }
+
+  .dossier-nav-btn {
+    padding: 5px 9px !important;
+    font-size: 10.5px !important;
+  }
+
+  .nasa-modal-close-btn {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Dossier scroll area on mobile */
+  .detail-body-scroll,
+  .dossier-body-scroll {
+    padding: 14px 12px 50px 12px !important;
+    gap: 16px !important;
+  }
+
+  .dossier-table th,
+  .dossier-table td {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .btn-apply-atmos {
+    padding: 6px 11px !important;
+    font-size: 10.5px !important;
+  }
+
+  /* 4. 22-Missions Grid Modal on Mobile */
+  .nasa-modal-overlay {
+    padding: max(8px, var(--sat)) 8px max(12px, var(--sab)) 8px !important;
+  }
+
+  .nasa-modal-card {
+    max-height: calc(100vh - max(20px, calc(var(--sat) + var(--sab)))) !important;
+    border-radius: 16px !important;
+  }
+
+  .nasa-modal-header {
+    padding: 12px 14px !important;
+  }
+
+  .nasa-meatball-badge {
+    font-size: 9.5px !important;
+    padding: 2px 6px !important;
+  }
+
+  .nasa-title-text h2 {
+    font-size: 14.5px !important;
+  }
+
+  .nasa-sub-title {
+    font-size: 10px !important;
+    display: none !important;
+  }
+
+  .nasa-filter-toolbar {
+    padding: 10px 12px !important;
+    gap: 10px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .filter-group {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .pillar-btn-row {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 2px !important;
+  }
+
+  .pillar-btn-row .filter-tab-btn {
+    padding: 6px 2px !important;
+    font-size: 9.5px !important;
+    text-align: center !important;
+    min-width: 0 !important;
+  }
+
+  .nasa-select {
+    flex: 1 !important;
+    min-width: 0 !important;
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+
+  .relevance-filter-group {
+    width: 100% !important;
+  }
+
+  .relevance-filter-group .filter-range-slider {
+    flex: 1 !important;
+  }
+
+  .results-meta-bar {
+    padding: 8px 12px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+
+  .results-hint {
+    display: none !important;
+  }
+
+  .investigations-grid-scroll {
+    padding: 10px !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .investigation-card {
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+
+  .card-top-row .inv-acronym {
+    font-size: 14px !important;
+  }
+
+  .inv-name-title {
+    font-size: 12.5px !important;
+  }
+
+  /* 5. Criteria Compliance Audit Modal on Mobile */
+  .audit-card {
+    width: 100% !important;
+    max-height: calc(100vh - max(20px, calc(var(--sat) + var(--sab)))) !important;
+    border-radius: 16px !important;
+  }
+
+  .audit-header {
+    padding: 14px 16px 12px 16px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .audit-main-title {
+    font-size: 15px !important;
+  }
+
+  .audit-subtitle {
+    font-size: 11px !important;
+  }
+
+  .audit-header-right {
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  .audit-live-pill {
+    font-size: 9.5px !important;
+    padding: 4px 8px !important;
+    max-width: 75vw !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .audit-step-tab {
+    min-width: 130px !important;
+    padding: 10px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .audit-body-container {
+    padding: 16px 14px !important;
+  }
+
+  /* 6. ECLSS Suite HUD on Mobile */
+  .cd-unified-panel,
+  .cd-panel-container {
+    width: calc(100vw - 20px) !important;
+    left: 10px !important;
+    right: 10px !important;
+    max-height: 82vh !important;
+    border-radius: 18px !important;
+  }
+
+  .cd-panel-header {
+    padding: 12px 14px !important;
+  }
+
+  .cd-panel-heading {
+    font-size: 15px !important;
+  }
+
+  .cd-tabs-nav {
+    padding: 6px 10px !important;
+    gap: 4px !important;
+  }
+
+  .cd-tab-btn {
+    padding: 6px 8px !important;
+    font-size: 10.5px !important;
+  }
+
+  /* 7. Hide desktop keyboard shortcuts menu on touch screens */
+  .pyros-vertical-controls {
+    display: none !important;
+  }
+
+  .controls-reopen-tab {
+    display: none !important;
   }
 }
 
@@ -7895,7 +8205,14 @@ html, body {
   .showcase-stage {
     justify-content: flex-start;
     overflow-x: auto;
-    padding: 20px 10px;
+    padding: 20px 16px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
+  }
+  .phone-mockup {
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
   }
 }
 

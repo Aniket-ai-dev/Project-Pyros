@@ -464,6 +464,9 @@ export class CriteriaAuditModal {
       if (e.target === this.dom) this.close();
     });
 
+    // Touch event isolation to prevent OrbitControls interference on mobile
+    this.dom.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+
     // Step Tabs
     this.dom.querySelectorAll('.audit-step-tab').forEach(tab => {
       tab.addEventListener('click', () => {

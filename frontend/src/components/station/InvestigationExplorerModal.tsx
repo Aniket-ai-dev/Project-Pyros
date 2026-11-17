@@ -135,7 +135,17 @@ export default function InvestigationExplorerModal({ isOpen, onClose, onSelectIn
         </div>
 
         {/* Investigations Grid & Details Modal Body */}
-        <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: selectedInv ? '1fr 1fr' : 'repeat(auto-fill, minmax(270px, 1fr))', gap: '14px' }}>
+        <div 
+          className="investigations-modal-grid-body"
+          style={{ 
+            padding: '16px', 
+            overflowY: 'auto', 
+            flex: 1, 
+            display: 'grid', 
+            gridTemplateColumns: selectedInv ? 'repeat(auto-fit, minmax(280px, 1fr))' : 'repeat(auto-fill, minmax(260px, 1fr))', 
+            gap: '12px' 
+          }}
+        >
           {loading ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#64748b' }}>
               Loading NASA PSI Flight Investigations...

@@ -54,9 +54,9 @@ export class InvestigationExplorer {
             </div>
           </div>
           <div class="header-right-meta">
-            <span id="explorer-backend-status" class="backend-pill">
+            <span id="explorer-backend-status" class="backend-pill online">
               <span class="status-dot"></span>
-              <span class="status-label">Checking Backend...</span>
+              <span class="status-label">Live NASA Archives</span>
             </span>
             <button id="btn-close-explorer" class="nasa-modal-close-btn" aria-label="Close Explorer" title="Close Archives">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -151,6 +151,10 @@ export class InvestigationExplorer {
       if (e.target === this.detailModal) this.closeDetail();
     });
 
+    // Touch event isolation to prevent OrbitControls interference on mobile
+    this.dom.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+    this.detailModal.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+
     // Pillar Filter Buttons
     this.dom.querySelectorAll('.filter-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -203,6 +207,8 @@ export class InvestigationExplorer {
     this.dom.classList.add('hidden');
     this.detailModal.classList.add('hidden');
     this.detailModal.classList.remove('split-view-active');
+    const card = document.getElementById('detail-card-content');
+    if (card) card.classList.remove('mobile-peek-collapsed');
     this.isOpen = false;
     this.activeInvestigation = null;
     if (this.onResetCamera) {
@@ -213,6 +219,8 @@ export class InvestigationExplorer {
   closeDetail() {
     this.detailModal.classList.add('hidden');
     this.detailModal.classList.remove('split-view-active');
+    const card = document.getElementById('detail-card-content');
+    if (card) card.classList.remove('mobile-peek-collapsed');
     this.activeInvestigation = null;
     if (this.dom) {
       this.dom.classList.remove('hidden');
@@ -514,6 +522,10 @@ export class InvestigationExplorer {
               <span class="dossier-id">MISSION ARCHIVE // #${dossierId}</span>
             </div>
             <div class="detail-actions-wrap">
+              <button id="btn-mobile-peek-flame" class="mobile-peek-flame-btn" title="Peek at 3D Candle Flame">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                <span class="peek-label">View Flame</span>
+              </button>
               <button id="btn-back-to-grid" class="dossier-nav-btn" title="Back to All 22 Missions">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="15 18 9 12 15 6"></polyline>
@@ -658,6 +670,36 @@ export class InvestigationExplorer {
       const detailClose = document.getElementById('btn-close-detail');
       if (detailClose) {
         detailClose.addEventListener('click', () => this.closeAll());
+      }
+
+      // Mobile Peek 3D Flame Button
+      const btnPeek = document.getElementById('btn-mobile-peek-flame');
+      if (btnPeek) {
+        btnPeek.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const card = document.getElementById('detail-card-content');
+          if (card) {
+            const isCollapsed = card.classList.toggle('mobile-peek-collapsed');
+            const label = btnPeek.querySelector('.peek-label');
+            if (label) {
+              label.textContent = isCollapsed ? 'View Dossier' : 'View Flame';
+            }
+          }
+        });
+      }
+
+      // Header tap restores collapsed card on mobile
+      const headerEl = content.querySelector('.detail-header');
+      if (headerEl) {
+        headerEl.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return; // ignore clicks on buttons
+          const card = document.getElementById('detail-card-content');
+          if (card && card.classList.contains('mobile-peek-collapsed')) {
+            card.classList.remove('mobile-peek-collapsed');
+            const label = document.querySelector('#btn-mobile-peek-flame .peek-label');
+            if (label) label.textContent = 'View Flame';
+          }
+        });
       }
 
       // Bind Cross-Investigation Compare Button
