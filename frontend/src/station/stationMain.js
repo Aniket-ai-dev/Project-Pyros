@@ -929,6 +929,19 @@ export class SpaceStationApp {
 
     // Analyze Scenario Handler
     if (analyzeBtn && inputEl) {
+      let activeAbortController = null;
+
+      // Bind Fast Fallback Button
+      const btnForceOffline = document.getElementById('btn-force-offline-analysis');
+      if (btnForceOffline) {
+        btnForceOffline.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (activeAbortController) {
+            activeAbortController.abort();
+          }
+        });
+      }
+
       analyzeBtn.addEventListener('click', async () => {
         const scenarioText = inputEl.value.trim();
         if (!scenarioText) {
@@ -944,6 +957,15 @@ export class SpaceStationApp {
         const simStatusBanner = document.getElementById('scenario-sim-status-banner');
         if (simStatusBanner) simStatusBanner.style.display = 'none';
 
+        // Elements for dynamic progress
+        const loadingTitle = document.getElementById('scenario-loading-title');
+        const loadingStep = document.getElementById('scenario-loading-step');
+        const fastFallbackWrap = document.getElementById('scenario-fast-fallback-wrap');
+
+        if (loadingTitle) loadingTitle.textContent = 'PROCESSING SCIENTIFIC SCENARIO...';
+        if (loadingStep) loadingStep.textContent = 'Querying NASA PSI knowledge base, retrieving flight data, and solving deterministic physics bounds...';
+        if (fastFallbackWrap) fastFallbackWrap.style.display = 'none';
+
         // Update UI for loading state (non-blocking)
         analyzeBtn.disabled = true;
         if (analyzeText) analyzeText.textContent = 'Analyzing...';
@@ -951,26 +973,31 @@ export class SpaceStationApp {
         if (errorState) errorState.style.display = 'none';
         if (resultsContainer) resultsContainer.style.display = 'none';
 
+        activeAbortController = new AbortController();
+
+        const onProgress = ({ status, elapsed, isColdStart }) => {
+          if (isColdStart) {
+            if (loadingTitle) loadingTitle.textContent = 'CONNECTING TO LIVE PYROS ENGINE...';
+            if (loadingStep) {
+              loadingStep.innerHTML = `Render server container is spinning up (free-tier cold start: <strong>${elapsed}s</strong> / 25s max). Deterministic fallback ready:`;
+            }
+            if (fastFallbackWrap) fastFallbackWrap.style.display = 'block';
+          } else {
+            if (loadingTitle) loadingTitle.textContent = 'PROCESSING SCIENTIFIC SCENARIO...';
+            if (loadingStep) {
+              loadingStep.textContent = 'Querying NASA PSI knowledge base, retrieving flight data, and solving deterministic physics bounds...';
+            }
+            if (fastFallbackWrap) fastFallbackWrap.style.display = 'none';
+          }
+        };
+
         try {
-          // Call dedicated service method with direct fallback if browser cache delayed module reload
           let res;
           if (this.nasaDataService && typeof this.nasaDataService.analyzeScenario === 'function') {
-            res = await this.nasaDataService.analyzeScenario(scenarioText);
+            res = await this.nasaDataService.analyzeScenario(scenarioText, onProgress, activeAbortController.signal);
           } else {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 90000);
-            const fetchRes = await fetch(`${this.apiUrl || getApiBaseUrl()}/scenario`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ scenario: scenarioText.trim() }),
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            if (!fetchRes.ok) {
-              const errJson = await fetchRes.json().catch(() => ({}));
-              throw new Error(errJson.detail || `Server returned HTTP ${fetchRes.status}`);
-            }
-            res = { success: true, data: await fetchRes.json() };
+            const fallbackService = new NASADataService();
+            res = await fallbackService.analyzeScenario(scenarioText, onProgress, activeAbortController.signal);
           }
           const data = res.data;
 
@@ -996,10 +1023,11 @@ export class SpaceStationApp {
             if (errorDesc) {
               errorDesc.textContent = (err && err.message)
                 ? err.message
-                : 'Unable to connect to PYROS Engine. Ensure the backend server is running.';
+                : 'Unable to connect to PYROS Engine. Manual simulation controls remain operational.';
             }
           }
         } finally {
+          activeAbortController = null;
           analyzeBtn.disabled = false;
           if (analyzeText) analyzeText.textContent = 'Analyze Scenario';
         }
@@ -1213,6 +1241,19 @@ export class SpaceStationApp {
 
     if (mapperResult && mapperResult.canSimulate) {
       if (targetCard) targetCard.style.display = 'block';
+
+      const extractBadge = document.getElementById('res-extraction-badge');
+      if (extractBadge) {
+        if (data.isOfflineSynthesis) {
+          extractBadge.className = 'tag-pill-sm tag-cyan';
+          extractBadge.textContent = '⚡ NASA PSI EMBEDDED SYNTHESIS';
+          extractBadge.title = 'Instant high-fidelity synthesis using 22 NASA flight investigations (Render cold-start fallback)';
+        } else {
+          extractBadge.className = 'tag-pill-sm tag-green';
+          extractBadge.textContent = '● LIVE ENGINE SYNTHESIS';
+          extractBadge.title = 'Live inference from Project Pyros Engine on Render';
+        }
+      }
 
       // Fill Target Conditions from normalized environment
       const env = mapperResult.environment;

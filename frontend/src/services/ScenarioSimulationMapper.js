@@ -317,9 +317,14 @@ export class ScenarioSimulationMapper {
   static extractOxygen(lower) {
     if (!lower) return null;
 
-    // Explicit percentage with or without % sign
-    const o2Match = lower.match(/(?:o2|oxygen)\s*(?:at|of|level|concentration|:|=)?\s*([0-9]+(?:\.[0-9]+)?)\s*%?/i) ||
-                    lower.match(/([0-9]+(?:\.[0-9]+)?)\s*%\s*(?:o2|oxygen)?/i);
+    // Explicit percentage with % sign prioritized over ambiguous numbers
+    const pctMatch = lower.match(/([0-9]+(?:\.[0-9]+)?)\s*%\s*(?:o2|oxygen)?/i);
+    if (pctMatch) {
+      const val = parseFloat(pctMatch[1]);
+      if (!isNaN(val) && val >= 0 && val <= 100) return val;
+    }
+
+    const o2Match = lower.match(/(?:o2|oxygen)\s*(?:at|of|level|concentration|:|=)\s*([0-9]+(?:\.[0-9]+)?)\s*%?/i);
     if (o2Match) {
       const val = parseFloat(o2Match[1]);
       if (!isNaN(val) && val >= 0 && val <= 100) return val;

@@ -934,14 +934,20 @@ const HTML_CONTENT = `<!-- =====================================================
               <div class="scenario-spinner"></div>
             </div>
             <div class="scenario-status-content">
-              <div class="scenario-status-title">PROCESSING SCIENTIFIC SCENARIO...</div>
+              <div class="scenario-status-title" id="scenario-loading-title">PROCESSING SCIENTIFIC SCENARIO...</div>
               <p class="scenario-status-desc" id="scenario-loading-step">
                 Querying NASA PSI knowledge base, retrieving flight data, and solving deterministic physics bounds...
               </p>
-              <div class="scenario-mini-steps">
+              <div class="scenario-mini-steps" id="scenario-loading-steps-row">
                 <span class="step-dot active"></span><span>Semantic Search</span>
                 <span class="step-dot active"></span><span>Evidence Ranking</span>
                 <span class="step-dot active"></span><span>Combustion Physics Bounds</span>
+              </div>
+              <div id="scenario-fast-fallback-wrap" style="display: none; margin-top: 10px;">
+                <button type="button" id="btn-force-offline-analysis" class="btn-fast-fallback" title="Render backend container is spinning up. Click to instantly synthesize results using all 22 embedded NASA flight missions.">
+                  <span class="btn-icon">⚡</span>
+                  <span>Switch to Instant Offline Analysis</span>
+                </button>
               </div>
             </div>
           </div>
@@ -968,7 +974,7 @@ const HTML_CONTENT = `<!-- =====================================================
                 <h3 class="cd-card-title">Detected Target Conditions</h3>
                 <span class="cd-card-caption">Extracted from Scenario Context</span>
               </div>
-              <span class="tag-pill-sm tag-green">EXTRACTED</span>
+              <span class="tag-pill-sm tag-green" id="res-extraction-badge">EXTRACTED</span>
             </div>
 
             <div class="target-grid-4">
