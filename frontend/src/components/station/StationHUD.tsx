@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getApiBaseUrl } from '@/services/NASADataService';
 
 interface Props {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export default function StationHUD({
     if (!scenarioInput.trim()) return;
     setIsAnalyzing(true);
     try {
-      const apiUrl = ((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000').replace(/\/+$/, '');
+      const apiUrl = getApiBaseUrl();
       const res = await fetch(`${apiUrl}/scenario`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

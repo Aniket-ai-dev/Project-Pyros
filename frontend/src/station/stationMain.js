@@ -8,7 +8,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SpaceStationScene } from './SpaceStationScene.js';
-import { NASADataService } from '../services/NASADataService.js';
+import { NASADataService, getApiBaseUrl } from '../services/NASADataService.js';
 import { ScenarioSimulationMapper } from '../services/ScenarioSimulationMapper.js';
 import { InvestigationExplorer } from '../ui/InvestigationExplorer.js';
 import { CriteriaAuditModal } from '../ui/CriteriaAuditModal.js';
@@ -43,7 +43,7 @@ export class SpaceStationApp {
     this.sparkTimer = 0.0;
 
     // NASA Backend Service & Investigation Explorer
-    this.apiUrl = ((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000').replace(/\/+$/, '');
+    this.apiUrl = getApiBaseUrl();
     this.nasaDataService = new NASADataService(this.apiUrl);
     this.explorer = null;
     this.nasaDebounceTimer = null;
@@ -768,7 +768,7 @@ export class SpaceStationApp {
       const pill = document.getElementById('nasa-backend-status-pill');
       if (pill) {
         if (res.source === 'live_backend') {
-          pill.textContent = 'ONLINE (PORT 8000)';
+          pill.textContent = 'ONLINE (LIVE ENGINE)';
           pill.className = 'hud-pill online';
         } else {
           pill.textContent = 'STANDALONE (NASA MODEL)';
@@ -944,7 +944,7 @@ export class SpaceStationApp {
           } else {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 90000);
-            const fetchRes = await fetch(`${this.apiUrl || 'http://localhost:8000'}/scenario`, {
+            const fetchRes = await fetch(`${this.apiUrl || getApiBaseUrl()}/scenario`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ scenario: scenarioText.trim() }),
@@ -981,7 +981,7 @@ export class SpaceStationApp {
             if (errorDesc) {
               errorDesc.textContent = (err && err.message)
                 ? err.message
-                : 'Unable to connect to PYROS Engine on port 8000. Ensure the backend server is running.';
+                : 'Unable to connect to PYROS Engine. Ensure the backend server is running.';
             }
           }
         } finally {

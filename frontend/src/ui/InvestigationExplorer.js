@@ -209,7 +209,7 @@ export class InvestigationExplorer {
     const isOnline = await this.dataService.checkHealth();
     if (isOnline) {
       badge.className = 'backend-pill online';
-      badge.innerHTML = `<span class="status-dot"></span><span>BACKEND ONLINE (:8000)</span>`;
+      badge.innerHTML = `<span class="status-dot"></span><span>BACKEND ONLINE</span>`;
     } else {
       badge.className = 'backend-pill standalone';
       badge.innerHTML = `<span class="status-dot"></span><span>STANDALONE ARCHIVE</span>`;

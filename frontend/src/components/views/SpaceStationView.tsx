@@ -947,7 +947,7 @@ const HTML_CONTENT = `<!-- =====================================================
             <div class="error-content">
               <div class="error-title" id="scenario-error-title">Backend Connection Error</div>
               <p class="error-desc" id="scenario-error-desc">
-                Unable to connect to PYROS Engine on port 8000. Manual simulation controls remain operational.
+                Unable to connect to PYROS Engine. Manual simulation controls remain operational.
               </p>
             </div>
           </div>

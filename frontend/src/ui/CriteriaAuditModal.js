@@ -12,6 +12,8 @@
  * Includes automatic background backend verification (:8000) proving zero mockup / zero static data.
  */
 
+import { getApiBaseUrl } from '../services/NASADataService.js';
+
 export class CriteriaAuditModal {
   constructor(dataService = null) {
     this.dataService = dataService;
@@ -50,7 +52,7 @@ export class CriteriaAuditModal {
           <div class="audit-header-right">
             <div id="audit-live-status-pill" class="audit-live-pill checking">
               <span class="status-pulse-dot"></span>
-              <span id="audit-status-text">Verifying Live Backend (:8000)...</span>
+              <span id="audit-status-text">Verifying Live Backend...</span>
             </div>
             <button id="btn-close-audit" class="nasa-modal-close-btn" aria-label="Close Audit">[CLOSE]</button>
           </div>
@@ -590,13 +592,13 @@ export class CriteriaAuditModal {
     if (!pill || !txt) return;
 
     pill.className = 'audit-live-pill checking';
-    txt.textContent = 'Pinging Live Engine (:8000)...';
+    txt.textContent = 'Pinging Live Engine...';
 
     const startTime = performance.now();
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const apiUrl = ((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000').replace(/\/+$/, '');
+      const apiUrl = (this.dataService && this.dataService.baseUrl) || getApiBaseUrl();
       const res = await fetch(`${apiUrl}/health`, { signal: controller.signal });
       clearTimeout(timeoutId);
       const latency = Math.round(performance.now() - startTime);

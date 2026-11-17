@@ -8,9 +8,26 @@
  * - NASA empirical physics calculation fallbacks matching exact schema
  */
 
+export function getApiBaseUrl(customUrl = null) {
+  if (customUrl && typeof customUrl === 'string' && customUrl.trim()) {
+    return customUrl.trim().replace(/\/+$/, '');
+  }
+  if (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location) {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') {
+      return 'http://localhost:8000';
+    }
+    return 'https://project-pyros.onrender.com';
+  }
+  return 'https://project-pyros.onrender.com';
+}
+
 export class NASADataService {
-  constructor(baseUrl = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000') {
-    this.baseUrl = (baseUrl || 'http://localhost:8000').replace(/\/+$/, '');
+  constructor(baseUrl = null) {
+    this.baseUrl = getApiBaseUrl(baseUrl);
     this.isOnline = false;
     this.lastChecked = 0;
     this.cachedInvestigations = null;
@@ -80,7 +97,7 @@ export class NASADataService {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
-        throw new Error('Scenario analysis request timed out. Please check if the backend service is running on port 8000.');
+        throw new Error('Scenario analysis request timed out. Please check if the PYROS Engine backend service is running.');
       }
       this.isOnline = false;
       throw err;
