@@ -9059,3 +9059,199 @@ html, body {
   color: #06b6d4 !important;
   border: 1px solid rgba(6, 182, 212, 0.35) !important;
 }
+
+/* ==========================================================================
+   THE 6-INCH FLAMMABILITY PARADOX & EMPIRICAL VALIDATION CALLOUTS
+   ========================================================================== */
+
+/* 1. Paradox Card */
+.cd-card-paradox {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.45) 0%, rgba(255, 251, 235, 0.7) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  border-left: 4px solid #f59e0b !important;
+  border-radius: 14px !important;
+  padding: 14px 16px !important;
+  margin-bottom: 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.06) !important;
+}
+
+.paradox-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.paradox-sub-tag {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  color: #b45309 !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  padding: 2px 8px !important;
+  border-radius: 9999px !important;
+}
+
+.paradox-title {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: #78350f !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.paradox-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.paradox-lead {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+  color: #451a03 !important;
+  margin: 0 !important;
+}
+
+.paradox-lead strong {
+  color: #92400e !important;
+  font-weight: 800 !important;
+}
+
+.paradox-comparison-pills {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  margin-top: 2px !important;
+}
+
+@media (max-width: 640px) {
+  .paradox-comparison-pills {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.comp-pill {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.comp-pill.earth-comp {
+  background: rgba(239, 246, 255, 0.8) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+.comp-pill.moon-comp {
+  background: rgba(254, 242, 242, 0.85) !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.comp-icon {
+  font-size: 16px !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  margin-top: 2px !important;
+}
+
+.comp-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.comp-label {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.comp-val {
+  font-size: 10px !important;
+  color: #64748b !important;
+  line-height: 1.35 !important;
+}
+
+/* 2. Combustion Scale Validation Pill & Telemetry Banner */
+.cd-validation-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: rgba(14, 165, 233, 0.08) !important;
+  border: 1px solid rgba(14, 165, 233, 0.25) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  margin-top: 6px !important;
+  max-width: 100% !important;
+}
+
+.validation-pulse-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #0284c7 !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 0 6px #0284c7 !important;
+  animation: pulse-dot 2s infinite ease-in-out !important;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.validation-text {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  color: #0369a1 !important;
+  line-height: 1.35 !important;
+}
+
+.trends-empirical-banner {
+  margin-top: 10px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+
+.trends-empirical-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.empirical-badge-sub {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  letter-spacing: 0.02em !important;
+}
+
+.trends-empirical-note {
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  color: #334155 !important;
+  margin: 0 !important;
+}
+
+.trends-empirical-note strong {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
