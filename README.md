@@ -14,18 +14,25 @@
 
 ---
 
+## 🎬 Launch Video
+
+https://github.com/user-attachments/assets/452d9fab-efc8-4b23-9f88-4906381c9cfd
+
+---
+
 ## 📋 Table of Contents
-1. [Executive Summary & Challenge Alignment](#-executive-summary--challenge-alignment)
-2. [Quickstart: How to Run Backend & Frontend](#-quickstart-how-to-run-backend--frontend)
-3. [The 4 Interactive 3D WebGL Scientific Scenes](#-the-4-interactive-3d-webgl-scientific-scenes)
-4. [The 22 NASA PSI Flight Investigations](#-the-22-nasa-psi-flight-investigations)
-5. [Hardware Lineages & Instrument Evolution](#-hardware-lineages--instrument-evolution)
-6. [Atmospheric Regimes: Spacesuits vs. Moon Base vs. CFI-G](#-atmospheric-regimes-spacesuits-vs-moon-base-vs-cfi-g)
-7. [Partial-Gravity Bounding Physics & Roper Scaling](#-partial-gravity-bounding-physics--roper-scaling)
-8. [Terrestrial Applications & Earth Spinoffs](#-terrestrial-applications--earth-spinoffs)
-9. [Architecture: SI Autonomous Engine (Zero Mockups)](#-architecture-si-autonomous-engine-zero-mockups)
-10. [Automated Verification & Compliance Matrix](#-automated-verification--compliance-matrix)
-11. [NASA Policy Notice & Disclaimer](#-nasa-policy-notice--disclaimer)
+1. [Launch Video](#-launch-video)
+2. [Executive Summary & Challenge Alignment](#-executive-summary--challenge-alignment)
+3. [Quickstart: How to Run Backend & Frontend](#-quickstart-how-to-run-backend--frontend)
+4. [The 4 Interactive 3D WebGL Scientific Scenes](#-the-4-interactive-3d-webgl-scientific-scenes)
+5. [The 22 NASA PSI Flight Investigations](#-the-22-nasa-psi-flight-investigations)
+6. [Hardware Lineages & Instrument Evolution](#-hardware-lineages--instrument-evolution)
+7. [Atmospheric Regimes: Spacesuits vs. Moon Base vs. CFI-G](#-atmospheric-regimes-spacesuits-vs-moon-base-vs-cfi-g)
+8. [Partial-Gravity Bounding Physics & Roper Scaling](#-partial-gravity-bounding-physics--roper-scaling)
+9. [Terrestrial Applications & Earth Spinoffs](#-terrestrial-applications--earth-spinoffs)
+10. [Architecture: SI Autonomous Engine (Zero Mockups)](#-architecture-si-autonomous-engine-zero-mockups)
+11. [Automated Verification & Compliance Matrix](#-automated-verification--compliance-matrix)
+12. [NASA Policy Notice & Disclaimer](#-nasa-policy-notice--disclaimer)
 
 ---
 

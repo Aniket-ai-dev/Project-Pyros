@@ -1,3 +1,7 @@
+# Local launch video exports (hosted via GitHub release/attachment assets)
+projectpyros.mp4
+projectpyros_github.mp4
+
 # macOS
 .DS_Store
 .AppleDouble
