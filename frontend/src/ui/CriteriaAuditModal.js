@@ -230,7 +230,7 @@ export class CriteriaAuditModal {
                     <td>4.3 psi (29.6 kPa)</td>
                     <td>100.0% O₂</td>
                     <td><strong>4.30 psi</strong></td>
-                    <td><span class="flam-pill high">1.58× (Hyperoxic)</span></td>
+                    <td><span class="flam-pill high">1.59× (Hyperoxic)</span></td>
                     <td>Enables joint flexibility; requires astronaut pre-breathe to purge nitrogen and avoid the bends.</td>
                   </tr>
                   <tr class="row-moon">
@@ -246,7 +246,7 @@ export class CriteriaAuditModal {
                     <td>14.7 psi (101.3 kPa)</td>
                     <td>Up to 85.0% O₂</td>
                     <td><strong>12.50 psi</strong></td>
-                    <td><span class="flam-pill extreme">4.05× (Extreme Limit)</span></td>
+                    <td><span class="flam-pill extreme">7.08× (Extreme Limit)</span></td>
                     <td>Highest O₂ concentration tested in PSI microgravity; reveals cool-flame radical kinetics.</td>
                   </tr>
                 </tbody>
@@ -304,7 +304,7 @@ export class CriteriaAuditModal {
               <div class="eq-card">
                 <h4>1. Roper Laminar Flame Height Scaling</h4>
                 <div class="eq-latex">$$L_f(g) = L_f(1\\text{g}) \\cdot \\min\\left(3.0, \\max\\left(1.0, g^{-0.25}\\right)\\right)$$</div>
-                <p>On Earth (1g), buoyant updraft pulls flames into elongated teardrops. In microgravity (0g), buoyant acceleration is zero, creating calm spherical diffusion shells. On the Moon (0.166g), flames expand to <strong>47.4 mm (+58%)</strong> due to reduced soot venting.</p>
+                <p>On Earth (1g), buoyant updraft pulls flames into elongated teardrops. In microgravity (0g), buoyant acceleration is zero, creating calm spherical diffusion shells. On the Moon (0.166g), flames expand to <strong>47.0 mm (+57%)</strong> due to reduced soot venting.</p>
               </div>
 
               <div class="eq-card">
@@ -349,7 +349,7 @@ export class CriteriaAuditModal {
                 </div>
                 <div class="calc-result-stat">
                   <span class="stat-lbl">Flame Height Elongation:</span>
-                  <span class="stat-num" id="audit-flame-h-val">47.4 mm (+58%)</span>
+                  <span class="stat-num" id="audit-flame-h-val">47.0 mm (+57%)</span>
                 </div>
                 <div class="calc-result-stat">
                   <span class="stat-lbl">Convective Draft:</span>
@@ -669,7 +669,7 @@ export class CriteriaAuditModal {
     const baseH = 30.0;
     let heightMm;
     if (g < 0.005) {
-      heightMm = 24.0; // Spherical microgravity dome
+      heightMm = baseH * 2.5; // Spherical/diffusion regime (75.0 mm = 2.5x baseline, matches backend)
     } else {
       const scale = Math.min(3.0, Math.max(1.0, Math.pow(g, -0.25)));
       heightMm = (baseH * scale);
@@ -764,12 +764,12 @@ export class CriteriaAuditModal {
       {
         id: 'cfig',
         acronym: 'CFI-G',
-        name: 'Confined Flame Extinction with Gases',
+        name: 'Cool Flames Investigation with Gases',
         env: 'station',
         envLabel: 'Space Station (ISS)',
         hardware: 'CIR (ACME)',
         relevance: 98,
-        fuels: 'Methane & Propane (inside-out)',
+        fuels: 'Propane, DME, n-butane (inside-out)',
         relevanceNote: 'Extreme hyperoxic limits tested up to 85% oxygen.'
       },
       {

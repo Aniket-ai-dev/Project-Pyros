@@ -294,8 +294,8 @@ class CombustionPhysics:
         - Sea-level Earth: 21% at 14.7 psi -> P_O2 = 3.09 psi -> 1.00x (Normoxic)
         - Lunar Base: 30% at 10.2 psi -> P_O2 = 3.06 psi -> ~0.99x (Normoxic baseline)
         - Lunar Base (Elevated): 34% at 10.2 psi -> P_O2 = 3.47 psi -> 1.18x
-        - Spacesuit EVA: 100% at 4.3 psi -> P_O2 = 4.30 psi -> 1.58x (Hyperoxic risk)
-        - CFI-G extreme: 85% at 14.7 psi -> P_O2 = 12.50 psi -> 6.94x
+        - Spacesuit EVA: 100% at 4.3 psi -> P_O2 = 4.30 psi -> 1.59x (Hyperoxic risk)
+        - CFI-G extreme: 85% at 14.7 psi -> P_O2 = 12.50 psi -> 7.08x
 
         Power-law scaling: Enhancement = (P_O2 / P_O2_baseline)^1.4
 

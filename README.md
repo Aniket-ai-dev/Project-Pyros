@@ -134,19 +134,19 @@ Every investigation in PROJECT PYROS is fully documented with authentic fuels, s
 
 | ID | Acronym | Investigation Name | Hardware Facility | Gravity | Fuel Phase & Material | Tested $\text{O}_2$ Range |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | **BRE** | Burning Rate Emulator | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Methane / Ethylene on 6.4mm spherical burner) | 18.0% – 35.0% |
-| 2 | **E-FIELD** | Electric-Field Effects on Flames | CIR (Combustion Rack) | Simulated Partial | Gas (Methane / Ethylene in DC electric field) | 21.0% – 30.0% |
-| 3 | **CFI-G** | Cool Flames Investigation with Gases | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Propane / Nitrogen spherical inside-out flame) | 21.0% – **85.0%** |
-| 4 | **s-Flame** | Structure of Spherical Diffusion Flames | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Methane / Hydrogen spherical burner) | 15.0% – 30.0% |
-| 5 | **CLD Flame** | Co-flow Laminar Diffusion Flame | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Ethylene / Nitrogen co-flow duct) | 18.0% – 30.0% |
-| 6 | **Flame Design** | Carbon Control in Diffusion Flames | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Ethylene / $\text{CH}_4$ with oxygen enrichment) | 21.0% – 50.0% |
-| 7 | **FLEX** | Flame Extinguishment Experiment | CIR (MDCA) | $0.00\text{g}$ | Liquid (Heptane / Methanol free droplets, 1.5–4.0mm) | 15.0% – 21.0% |
-| 8 | **FLEX-2** | Flame Extinguishment Experiment-2 | CIR (MDCA) | $0.00\text{g}$ | Liquid (Decane / Heptane / Ethanol droplet arrays) | 14.0% – 21.0% |
-| 9 | **CFI** | Cool Flames Investigation | CIR (MDCA) | $0.00\text{g}$ | Liquid (n-Octane / Decane droplets; cool-flame regime) | 14.0% – 21.0% |
-| 10 | **BASS** | Burning and Suppression of Solids | MSG (SPICE duct) | $0.00\text{g}$ | Solid (PMMA slabs, SIBAL cotton-fiberglass cloth) | 16.0% – 29.0% |
-| 11 | **BASS-II** | Burning & Suppression of Solids — II | MSG (SPICE duct) | $0.00\text{g}$ | Solid (Nomex fabric, PMMA rods, Teflon rods) | 15.0% – 30.0% |
-| 12 | **SPICE** | Smoke Point In Co-flow Experiment | MSG (SPICE duct) | $0.00\text{g}$ | Gas/Solid (Methane / Ethylene / SIBAL cloth) | 21.0% – 28.0% |
-| 13 | **SLICE** | Structure & Liftoff in Combustion | MSG (SPICE duct) | $0.00\text{g}$ | Gas (Methane / Ethylene lifted flame burner) | 18.0% – 25.0% |
+| 1 | **BRE** | Burning Rate Emulator | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Methane / Ethylene on 6.4mm spherical burner) | 15.0% – 21.0% |
+| 2 | **E-FIELD** | Electric-Field Effects on Flames | CIR (Combustion Rack) | Simulated Partial | Gas (Methane / Ethylene in DC electric field) | 21.0% – 24.0% |
+| 3 | **CFI-G** | Cool Flames Investigation with Gases | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Propane / Nitrogen spherical inside-out flame) | 40.0% – **85.0%** |
+| 4 | **s-Flame** | Structure of Spherical Diffusion Flames | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Methane / Ethylene spherical burner) | 15.0% – 21.0% |
+| 5 | **CLD Flame** | Co-flow Laminar Diffusion Flame | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Ethylene / Methane co-flow burner) | 21.0% – 24.0% |
+| 6 | **Flame Design** | Carbon Control in Diffusion Flames | CIR (Combustion Rack) | $0.00\text{g}$ | Gas (Ethylene / $\text{N}_2$-diluted with $\text{O}_2$ enrichment) | 21.0% – 40.0% |
+| 7 | **FLEX** | Flame Extinguishment Experiment | CIR (MDCA) | $0.00\text{g}$ | Liquid (Heptane / Methanol / Decane droplets, 1.5–5.0mm) | 21.0% ($\text{N}_2$/$\text{CO}_2$/$\text{He}$) |
+| 8 | **FLEX-2** | Flame Extinguishment Experiment-2 | CIR (MDCA) | $0.00\text{g}$ | Liquid (Decane / Heptane / Methanol / bi-component droplets) | 15.0% – 21.0% |
+| 9 | **CFI** | Cool Flames Investigation | CIR (MDCA) | $0.00\text{g}$ | Liquid (Decane / Dodecane / Hexadecane cool-flame droplets) | 14.0% – 21.0% |
+| 10 | **BASS** | Burning and Suppression of Solids | MSG (SPICE duct) | $0.00\text{g}$ | Solid (PMMA slabs, SIBAL cloth, Nomex fabric) | 15.0% – 21.0% |
+| 11 | **BASS-II** | Burning & Suppression of Solids — II | MSG (SPICE duct) | $0.00\text{g}$ | Solid (SIBAL cloth, Mylar film, PMMA rods, Nomex/Kevlar) | 16.0% – 21.0% |
+| 12 | **SPICE** | Smoke Point In Co-flow Experiment | MSG (SPICE duct) | $0.00\text{g}$ | Gas (Methane / Ethylene / Propane co-flow smoke point) | 21.0% – 24.0% |
+| 13 | **SLICE** | Structure & Liftoff in Combustion | MSG (SPICE duct) | $0.00\text{g}$ | Gas (Methane / Propane / Ethylene lifted flame burner) | 21.0% |
 | 14 | **Saffire-I** | Spacecraft Fire Experiment-I | Cygnus Resupply | $0.00\text{g}$ | Solid (Large $40\times100\text{ cm}$ SIBAL cotton-fiberglass sheet) | 21.0% (Cabin air) |
 | 15 | **Saffire-II** | Spacecraft Fire Experiment-II | Cygnus Resupply | $0.00\text{g}$ | Solid (NASA-STD-6001 PMMA, Nomex, silicone fabric) | 21.0% (Cabin air) |
 | 16 | **Saffire-III** | Spacecraft Fire Experiment-III | Cygnus Resupply | $0.00\text{g}$ | Solid (Large $40\times100\text{ cm}$ sheet in high-speed flow) | 21.0% (Cabin air) |
@@ -154,8 +154,8 @@ Every investigation in PROJECT PYROS is fully documented with authentic fuels, s
 | 18 | **SAME-R** | Smoke Aerosol Measurement Exp. (Reflight) | MSG (Glovebox) | $0.00\text{g}$ | Aerosol (Pyrolyzed aircraft wire & spacecraft cable smoke)| 21.0% |
 | 19 | **DAFT** | Dust & Aerosol Feasibility Test | MSG (Glovebox) | $0.00\text{g}$ | Dust (Repurposed SAME sensor for abrasive lunar regolith)| 21.0% |
 | 20 | **DAFT-2** | Dust & Aerosol Feasibility Test — 2 | MSG (Glovebox) | $0.00\text{g}$ | Dust (Second-generation regolith particulate sensor) | 21.0% |
-| 21 | **LUCI** | Lunar Combustion Investigation | Gateway / Surface | $0.166\text{g}$ | Gas/Solid (Planned Lunar Gateway flammability testbed) | 21.0% – 34.0% |
-| 22 | **FM2** | Flammability on the Moon | Artemis Surface | $0.166\text{g}$ | Solid (Planned Artemis lunar surface polymer flammability)| 30.0% – 34.0% |
+| 21 | **LUCI** | Lunar Combustion Investigation | Gateway / Surface | $0.166\text{g}$ | Gas/Solid (Planned Lunar Gateway flammability testbed) | 21.0% – 34.0% (8.2 psi) |
+| 22 | **FM2** | Flammability on the Moon | Artemis Surface | $0.166\text{g}$ | Solid (Planned Artemis lunar surface polymer flammability)| 34.0% (8.2 psia) |
 
 ---
 

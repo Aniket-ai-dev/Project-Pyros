@@ -1122,6 +1122,9 @@ def _build_investigations() -> list[Investigation]:
             ],
             atmosphere=[
                 AtmosphereCondition(oxygen_pct=21.0, pressure_psi=14.7, diluent="N2", flow_velocity_cm_s=None),
+                # 8.2 psi is a planned reduced-pressure test condition for LUCI, distinct from
+                # the 10.2 psi baseline used for Moon Base habitat fire-safety scenarios.
+                # Both map to ~34% O2 to reduce EVA pre-breathe time (NASA ECLSS studies).
                 AtmosphereCondition(oxygen_pct=34.0, pressure_psi=8.2, diluent="N2", flow_velocity_cm_s=None),
             ],
             sensors=[],
@@ -1164,6 +1167,9 @@ def _build_investigations() -> list[Investigation]:
                 FuelSpec(fuel_type=FuelType.SOLID, material_name="spacecraft materials (TBD)", shape="flat samples (TBD)", dimensions_mm="TBD"),
             ],
             atmosphere=[
+                # 8.2 psia is NASA's planned Artemis exploration atmosphere (34% O2 / 8.2 psia for FM2),
+                # distinct from the 10.2 psi Moon Base habitat scenario baseline.
+                # Both use ~34% O2 to minimize EVA pre-breathe duration (NASA ECLSS studies).
                 AtmosphereCondition(oxygen_pct=34.0, pressure_psi=8.2, diluent="N2", flow_velocity_cm_s=None),
             ],
             sensors=[],

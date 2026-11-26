@@ -136,7 +136,7 @@ PYROS replaces naive linear assumptions with peer-reviewed combustion equations:
 Under Roper (1977) diffusion flame theory, buoyancy-dominated flame height scales weakly with gravity:
 $$L_f(g) = L_f(1\text{g}) \cdot \min\left(3.0, \max\left(1.0, g^{-0.25}\right)\right)$$
 - **Earth ($1\text{g}$):** $30.0\text{ mm}$ baseline.
-- **Moon ($0.166\text{g}$):** $47.4\text{ mm}$ ($+58\%$ elongation).
+- **Moon ($0.166\text{g}$):** $47.0\text{ mm}$ ($+57\%$ elongation).
 - **True Microgravity ($g \to 0$):** Transitions to momentum- and diffusion-controlled spherical regimes, asymptotically bounded at $2.5\times$ to $3.0\times$ baseline.
 
 ### 2. True Oxygen Partial Pressure ($P_{\text{O}_2}$) Flammability Scaling
@@ -145,8 +145,8 @@ $$P_{\text{O}_2} = P_{\text{total}} \times \left(\frac{\text{O}_2\%}{100}\right)
 $$\text{Flammability Factor} = \left(\frac{P_{\text{O}_2}}{P_{\text{O}_2,\text{baseline}}}\right)^{1.4}$$
 - **Sea-Level Earth Air ($14.7\text{ psi}, 21\%\text{ O}_2$):** $P_{\text{O}_2} = 3.09\text{ psi} \implies 1.00\times$ (Normoxic baseline).
 - **Lunar Base Habitat ($10.2\text{ psi}, 34\%\text{ O}_2$):** $P_{\text{O}_2} = 3.47\text{ psi} \implies 1.18\times$ (Normoxic elevated).
-- **Spacesuit EVA ($4.3\text{ psi}, 100\%\text{ O}_2$):** $P_{\text{O}_2} = 4.30\text{ psi} \implies 1.58\times$ (Hyperoxic hazard).
-- **Apollo 1 Cabin ($16.7\text{ psi}, 100\%\text{ O}_2$):** $P_{\text{O}_2} = 16.70\text{ psi} \implies 10.74\times$ (Explosive surge).
+- **Spacesuit EVA ($4.3\text{ psi}, 100\%\text{ O}_2$):** $P_{\text{O}_2} = 4.30\text{ psi} \implies 1.59\times$ (Hyperoxic hazard).
+- **Apollo 1 Cabin ($16.7\text{ psi}, 100\%\text{ O}_2$):** $P_{\text{O}_2} = 16.70\text{ psi} \implies 10.63\times$ (Explosive surge).
 
 ### 3. Natural Convection Velocity Scale
 $$V_{\text{conv}} \sim \sqrt{g \cdot \beta \cdot \Delta T \cdot L}$$

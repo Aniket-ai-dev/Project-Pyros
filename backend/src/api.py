@@ -387,7 +387,7 @@ async def get_historical_incidents():
                 "pressure_psi": 16.7,
                 "diluent": "None (Pure O2)",
                 "po2_psi": 16.7,
-                "hazard_rating": "EXTREME_HYPEROXIC (10.7x Flammability Surge)",
+                "hazard_rating": "EXTREME_HYPEROXIC (10.63x Flammability Surge)",
             },
             "root_cause": (
                 "Electrical arcing from silver-plated copper wire with scratched Teflon insulation "

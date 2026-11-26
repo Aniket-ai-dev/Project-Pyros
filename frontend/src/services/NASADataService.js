@@ -279,7 +279,7 @@ export class NASADataService {
         upper_bound: empirical.oxygen_enhancement_factor.value * 1.08,
         unit: 'multiplier',
         confidence: 0.96,
-        physical_basis: 'Power-law oxidizer kinetics scaling (X_O2 / 0.21)^1.18 benchmarked to NASA-STD-6001 upward flammability index.'
+        physical_basis: 'Power-law oxidizer kinetics scaling (P_O2 / P_O2_baseline)^1.4 with P_O2 = P_total * (O2% / 100), benchmarked to NASA-STD-6001.'
       },
       {
         parameter_name: 'Flame Height Scaling',
@@ -287,7 +287,7 @@ export class NASADataService {
         upper_bound: empirical.flame_height_scaling.estimated_mm * 1.12,
         unit: 'mm',
         confidence: 0.91,
-        physical_basis: 'Empirical flame envelope model combining spherical diffusion dome (micro-g) with buoyant plume stretching (partial-g).'
+        physical_basis: 'Roper (1977) buoyant scaling L_f ~ g^(-0.25) clamped [1.0x, 3.0x], transitioning to a 2.5x diffusion-bounded spherical envelope in microgravity.'
       },
       {
         parameter_name: 'Flame Spread Rate',
@@ -416,29 +416,48 @@ export class NASADataService {
 
   /**
    * NASA Empirical Partial-Gravity Aerodynamics Fallback Model
+   *
+   * Aligned with backend CombustionPhysics (physics_constraints.py):
+   *   - Flame height: Roper (1977) scaling  L_f ~ g^(-0.25), clamped [1x, 3x]
+   *   - Convection velocity: V ~ sqrt(g·β·ΔT·L)  with β=1/800 K, ΔT=500 K, L=0.05 m
+   *   - Buoyancy: Grashof-linear  max(0, g)
+   *   - Oxygen enhancement: (P_O2 / P_O2_baseline)^1.4  per flammability factor
    */
   computeEmpiricalBounds(g, o2, psi) {
     const pRatio = psi / 14.696; // Normalized to sea-level 1 atm
     const o2Norm = o2 / 21.0;
 
-    // 1. Buoyancy strength fraction (0 at zero-g, 1.0 at standard Earth)
-    const buoyancyVal = Math.max(0.0, g * pRatio * Math.pow(o2Norm, 0.22));
+    // 1. Buoyancy strength (Grashof-linear, matches backend buoyancy_strength)
+    const buoyancyVal = Math.max(0.0, g);
 
-    // 2. Natural convection velocity (Grashof scaling: u_conv ~ sqrt(g * L * beta * deltaT))
-    // Earth baseline = 0.554 m/s
-    const convVel = g > 0.001 ? (0.554 * Math.sqrt(g) * Math.pow(pRatio, 0.28)) : 0.0;
+    // 2. Natural convection velocity: V = sqrt(g*9.81 * (1/800) * 500 * 0.05)
+    //    At Earth-g (g=1): sqrt(9.81 * 0.000625 * 500 * 0.05) = 0.554 m/s
+    //    Matches backend natural_convection_velocity() exactly.
+    const gSI = g * 9.81;
+    const beta = 1.0 / 800.0;
+    const deltaT = 500.0;
+    const lengthScale = 0.05;
+    const convVel = Math.sqrt(Math.max(0.0, gSI * beta * deltaT * lengthScale));
 
-    // 3. Oxygen Enhancement Factor (Flammability multiplier)
-    const o2Enhancement = Math.pow(o2Norm, 1.18);
+    // 3. Oxygen Enhancement / Flammability Factor: (P_O2 / P_O2_baseline)^1.4
+    //    P_O2 = psi * (o2/100),  P_O2_baseline = 14.7 * 0.21 = 3.087 psi (matches backend)
+    const pO2 = psi * (o2 / 100.0);
+    const pO2Baseline = 14.7 * 0.21;
+    const o2Enhancement = Math.pow(pO2 / pO2Baseline, 1.4);
 
-    // 4. Flame height scaling (in mm)
-    // In microgravity: spherical diffusion dome ~ 18-24 mm.
-    // In 1g Earth: buoyant flame plume stretched to ~ 36-52 mm.
-    const baseHeight = 22.0;
-    const gStretch = 1.0 + Math.pow(g, 0.45) * 1.45;
-    const o2Scale = Math.pow(o2Norm, 0.40);
-    const pScale = Math.pow(pRatio, 0.25);
-    const estHeight = baseHeight * gStretch * o2Scale * pScale;
+    // 4. Flame height scaling (Roper 1977, matches backend flame_height_scaling)
+    //    Earth baseline L_earth = 30.0 mm (canonical lab diffusion flame).
+    //    At g > 0: scale = min(3.0, max(1.0, g^-0.25))
+    //    At g ≤ 0 (true microgravity): spherical regime → 2.5× baseline.
+    const L_earth = 30.0;
+    let estHeight;
+    if (g <= 0.0) {
+      estHeight = L_earth * 2.5;
+    } else {
+      const gClamped = Math.max(0.01, g);
+      const scaleFactor = Math.min(3.0, Math.max(1.0, Math.pow(gClamped, -0.25)));
+      estHeight = L_earth * scaleFactor;
+    }
 
     // 5. Flame spread rate (mm/s lower & upper bounds)
     const baseSpread = 0.45 * Math.pow(o2Norm, 1.25) * Math.pow(pRatio, 0.5);
