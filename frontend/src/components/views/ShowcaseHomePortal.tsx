@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import StarsBackground from '../ui/StarsBackground';
+import IntroWarpGate from './IntroWarpGate';
 
 interface EnvSpec {
   id: string;
@@ -217,11 +218,40 @@ function PhysicsChamberDiagram() {
 export default function ShowcaseHomePortal() {
   const [selectedId, setSelectedId] = useState<string>('station');
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'fallback'>('checking');
+  const [showIntro, setShowIntro] = useState(true);
 
   const explorerRef = useRef<{ open: () => void } | null>(null);
   const auditRef = useRef<{ open: () => void } | null>(null);
 
   const activeEnv = ENVIRONMENTS.find((e) => e.id === selectedId) || ENVIRONMENTS[0];
+
+  useLayoutEffect(() => {
+    try {
+      if (window.sessionStorage.getItem('pyros_intro_seen') === '1') {
+        setShowIntro(false);
+      }
+    } catch {
+      // Ignore storage access errors
+    }
+  }, []);
+
+  const handleIntroComplete = () => {
+    try {
+      window.sessionStorage.setItem('pyros_intro_seen', '1');
+    } catch {
+      // Ignore storage access errors
+    }
+    setShowIntro(false);
+  };
+
+  const handleReplayIntro = () => {
+    try {
+      window.sessionStorage.removeItem('pyros_intro_seen');
+    } catch {
+      // Ignore storage access errors
+    }
+    setShowIntro(true);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -263,7 +293,9 @@ export default function ShowcaseHomePortal() {
   };
 
   return (
-    <div className="portal-shell">
+    <>
+      <IntroWarpGate isVisible={showIntro} onComplete={handleIntroComplete} />
+      <div className="portal-shell">
       <div className="portal-canvas-bg">
         <StarsBackground count={160} size={1.1} color="#6f7c91" speedX={0.012} speedY={0.006} />
       </div>
@@ -321,6 +353,19 @@ export default function ShowcaseHomePortal() {
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
             <span>Science Audit</span>
+          </button>
+
+          <button
+            type="button"
+            id="btn-replay-intro"
+            className="topbar-btn"
+            onClick={handleReplayIntro}
+            title="Replay galaxy warp intro screen"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <span>Replay Intro</span>
           </button>
         </div>
       </header>
@@ -449,6 +494,7 @@ export default function ShowcaseHomePortal() {
           </div>
         </section>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
