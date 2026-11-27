@@ -3468,6 +3468,14 @@ a {
   pointer-events: none;
 }
 
+.intro-center-logo {
+  width: clamp(168px, 24vw, 240px);
+  height: clamp(168px, 24vw, 240px);
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
 .intro-title-nasal {
   font-family: 'Nasalization', var(--font-sans);
   font-size: clamp(32px, 6.4vw, 68px);
@@ -3546,7 +3554,15 @@ a {
   .intro-nasa-logo {
     height: 34px;
   }
-  .intro-title-nasal {
+  .intro-center-logo {
+  width: clamp(168px, 24vw, 240px);
+  height: clamp(168px, 24vw, 240px);
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.intro-title-nasal {
     letter-spacing: 0.1em;
   }
   .intro-skip-btn {

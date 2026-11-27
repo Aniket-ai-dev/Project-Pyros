@@ -103,8 +103,8 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
         monochrome
         maxStars={1200}
         brightness={1}
-        speedMultiplier={1.2}
-        twinkleIntensity={20}
+        speedMultiplier={0.22}
+        twinkleIntensity={24}
         paused={phase !== 'standby'}
         className={`intro-stars-canvas ${phase !== 'standby' ? 'playing' : ''}`}
       />
@@ -138,7 +138,11 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
       </div>
 
       <div className={`intro-center-stage ${phase !== 'standby' ? 'hidden-stage' : ''}`}>
-        <h1 className="intro-title-nasal">PROJECT PYROS</h1>
+        <img
+          src="/logo.png"
+          alt="Project Pyros"
+          className="intro-center-logo"
+        />
         <p className="intro-subtitle">
           Microgravity combustion and planetary surface research platform
         </p>
