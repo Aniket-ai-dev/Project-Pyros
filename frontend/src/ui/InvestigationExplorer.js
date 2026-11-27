@@ -760,20 +760,20 @@ export class InvestigationExplorer {
 
             compareResultContainer.innerHTML = `
               <div class="compare-result-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">
-                  <strong style="color:#0284c7; font-size:12.5px;">Comparison: ${detail.acronym} ↔ ${otherInv.acronym}</strong>
-                  <span style="font-size:10px; color:#64748b; background:#f1f5f9; padding:2px 8px; border-radius:4px;">NASA GRAPH VERIFIED</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:8px;">
+                  <strong style="color:var(--accent-cyan); font-size:12.5px;">Comparison: ${detail.acronym} vs ${otherInv.acronym}</strong>
+                  <span class="tag-pill">NASA GRAPH VERIFIED</span>
                 </div>
 
                 <div class="compare-rel-pill">
-                  <strong>Hardware & Instrument Lineage:</strong><br>
+                  <strong>Hardware &amp; Instrument Lineage:</strong><br>
                   ${hwRelText}
                 </div>
 
                 <div class="compare-grid">
                   <div class="compare-block">
-                    <div class="compare-block-title">Shared Variables & Infrastructure</div>
-                    <ul style="padding-left:14px; margin:0; font-size:11px; color:#334155;">
+                    <div class="compare-block-title">Shared Variables &amp; Infrastructure</div>
+                    <ul style="padding-left:14px; margin:0; font-size:11px; color:var(--text-secondary);">
                       <li>Hardware: <strong>${compData.shared_variables?.shared_hardware || detail.hardware}</strong></li>
                       <li>Environment: <strong>${detail.gravity}</strong></li>
                     </ul>
@@ -781,15 +781,16 @@ export class InvestigationExplorer {
 
                   <div class="compare-block">
                     <div class="compare-block-title">Contrasting Variables</div>
-                    <ul style="padding-left:14px; margin:0; font-size:11px; color:#334155;">
+                    <ul style="padding-left:14px; margin:0; font-size:11px; color:var(--text-secondary);">
                       <li>${detail.acronym} Focus: <strong>${detail.pillar}</strong></li>
                       <li>${otherInv.acronym} Focus: <strong>${otherInv.pillar || 'EXPLORATION'}</strong></li>
                     </ul>
                   </div>
                 </div>
 
-                <div style="font-size:11.5px; line-height:1.45; color:#475569; background:#f8fafc; padding:8px 10px; border-radius:6px; border:1px solid #e2e8f0;">
-                  <strong>Scientific Synthesis:</strong> ${compData.combined_insight || compData.gap_analysis}
+                <div class="cd-chart-card" style="padding:8px 10px;">
+                  <strong style="color:var(--text-primary); font-size:12px;">Scientific Synthesis</strong>
+                  <span style="font-size:12px; color:var(--text-secondary);">${compData.combined_insight || compData.gap_analysis || compData.explanation || 'Both investigations contribute complementary microgravity combustion bounds.'}</span>
                 </div>
               </div>
             `;

@@ -48,7 +48,10 @@ export class ScenarioSimulationMapper {
     }
 
     const extrap = backendResponse.extrapolation;
-    const answer = backendResponse.answer || backendResponse.comparison || {};
+    const rawAnswer = backendResponse.answer || backendResponse.comparison || {};
+    const answer = typeof rawAnswer === 'string'
+      ? { combined_insight: rawAnswer }
+      : rawAnswer;
     const rankedInvs = backendResponse.ranked_investigations || [];
     const sources = backendResponse.sources || [];
 
@@ -68,7 +71,8 @@ export class ScenarioSimulationMapper {
     let hasExtrapolatedBounds = false;
     let bounds = [];
 
-    // ── 1. CHECK FOR FULL EXTRAPOLATION DATA ────────────────────────────────
+    // ── 1. CHECK FOR FULL EXTRAPOLATION OR LIVE BACKEND DICT BOUNDS ──────────
+    const apiEnv = backendResponse.environment || {};
     if (extrap && typeof extrap === 'object' && extrap.target_gravity !== undefined && extrap.target_gravity !== null) {
       const gNum = Number(extrap.target_gravity);
       if (!isNaN(gNum)) {
@@ -85,6 +89,63 @@ export class ScenarioSimulationMapper {
       fuelDesc = (extrap.fuel_description || '').trim();
       bounds = Array.isArray(extrap.physics_bounds) ? extrap.physics_bounds : [];
       hasExtrapolatedBounds = bounds.length > 0;
+    } else if (backendResponse.bounds && typeof backendResponse.bounds === 'object') {
+      if (apiEnv.gravity_g !== undefined && apiEnv.gravity_g !== null) targetG = Number(apiEnv.gravity_g);
+      if (apiEnv.o2_pct !== undefined && apiEnv.o2_pct !== null) targetO2 = Number(apiEnv.o2_pct);
+      if (apiEnv.pressure_psi !== undefined && apiEnv.pressure_psi !== null) targetPsi = Number(apiEnv.pressure_psi);
+      fuelDesc = (apiEnv.fuel_description || '').trim();
+
+      const bDict = backendResponse.bounds;
+      const converted = [];
+      if (bDict.buoyancy_strength) {
+        converted.push({
+          parameter_name: 'Buoyancy Force Scaling',
+          lower_bound: bDict.buoyancy_strength.value,
+          upper_bound: bDict.buoyancy_strength.value,
+          physical_basis: bDict.buoyancy_strength.formula || 'Linear gravitational scaling g/g0.',
+          confidence: 0.96,
+        });
+      }
+      if (bDict.natural_convection_velocity_m_s) {
+        converted.push({
+          parameter_name: 'Natural Convection Velocity',
+          lower_bound: bDict.natural_convection_velocity_m_s.value,
+          upper_bound: bDict.natural_convection_velocity_m_s.value,
+          physical_basis: bDict.natural_convection_velocity_m_s.formula || 'Buoyancy velocity sqrt(g/g0).',
+          confidence: 0.92,
+        });
+      }
+      if (bDict.oxygen_enhancement_factor) {
+        converted.push({
+          parameter_name: 'Oxygen Enhancement Factor',
+          lower_bound: bDict.oxygen_enhancement_factor.value,
+          upper_bound: bDict.oxygen_enhancement_factor.value,
+          physical_basis: bDict.oxygen_enhancement_factor.formula || 'Oxidizer concentration ratio vs 21% air.',
+          confidence: 0.94,
+        });
+      }
+      if (bDict.flame_height_scaling) {
+        converted.push({
+          parameter_name: 'Flame Height Scaling',
+          lower_bound: bDict.flame_height_scaling.estimated_mm,
+          upper_bound: bDict.flame_height_scaling.estimated_mm,
+          physical_basis: bDict.flame_height_scaling.formula || 'Roper laminar diffusion height correlation.',
+          confidence: 0.88,
+        });
+      }
+      if (bDict.flame_spread_rate_mm_s) {
+        converted.push({
+          parameter_name: 'Flame Spread Rate',
+          lower_bound: bDict.flame_spread_rate_mm_s.lower_bound,
+          upper_bound: bDict.flame_spread_rate_mm_s.upper_bound,
+          physical_basis: bDict.flame_spread_rate_mm_s.basis || 'Empirical opposed-flow & radiant flame spread envelope.',
+          confidence: 0.84,
+        });
+      }
+      if (converted.length > 0) {
+        bounds = converted;
+        hasExtrapolatedBounds = true;
+      }
     }
 
     // ── 2. FALLBACK EXTRACTION FROM SCENARIO TEXT / BACKEND CONTEXT ────────

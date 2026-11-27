@@ -86,18 +86,52 @@ export class MoonBaseApp {
     this.camera.position.set(-6.2, 6.8, 29.0);
     this.camera.lookAt(0.0, 2.4, 0.0);
 
-    // Camera is completely fixed per user specification: disable all user movement
+    this.userInteracted = false;
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enabled = false;
-    this.controls.enableRotate = false;
-    this.controls.enablePan = false;
-    this.controls.enableZoom = false;
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.06;
+    this.controls.enableRotate = true;
+    this.controls.enablePan = true;
+    this.controls.enableZoom = true;
+    this.controls.minDistance = 2.0;
+    this.controls.maxDistance = 68.0;
+    this.controls.maxPolarAngle = Math.PI * 0.48;
     this.controls.target.set(0.0, 2.4, 0.0);
+    this.controls.addEventListener('start', () => {
+      this.userInteracted = true;
+    });
     this.controls.update();
   }
 
   setupKeyboardControls() {
-    // Camera is completely fixed per user specification; flight controls disabled
+    this._onKeyDown = (e) => {
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': this.keys.forward = true; this.userInteracted = true; break;
+        case 'KeyS': case 'ArrowDown': this.keys.backward = true; this.userInteracted = true; break;
+        case 'KeyA': case 'ArrowLeft': this.keys.left = true; this.userInteracted = true; break;
+        case 'KeyD': case 'ArrowRight': this.keys.right = true; this.userInteracted = true; break;
+        case 'Space':
+          this.keys.up = true;
+          this.userInteracted = true;
+          e.preventDefault();
+          break;
+        case 'ShiftLeft': case 'ShiftRight': this.keys.down = true; this.userInteracted = true; break;
+      }
+    };
+    this._onKeyUp = (e) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': this.keys.forward = false; break;
+        case 'KeyS': case 'ArrowDown': this.keys.backward = false; break;
+        case 'KeyA': case 'ArrowLeft': this.keys.left = false; break;
+        case 'KeyD': case 'ArrowRight': this.keys.right = false; break;
+        case 'Space': this.keys.up = false; break;
+        case 'ShiftLeft': case 'ShiftRight': this.keys.down = false; break;
+      }
+    };
+    window.addEventListener('keydown', this._onKeyDown);
+    window.addEventListener('keyup', this._onKeyUp);
   }
 
   setupScene() {
@@ -121,6 +155,7 @@ export class MoonBaseApp {
     const resetButtons = document.querySelectorAll('#btn-reset-cam, [data-action="reset-view"]');
     resetButtons.forEach(btnReset => {
       btnReset.addEventListener('click', () => {
+        this.userInteracted = false;
         this.transitionToView('panorama');
         btnReset.classList.add('active');
         setTimeout(() => {
@@ -132,10 +167,11 @@ export class MoonBaseApp {
       });
     });
 
-    // 3. HUD Collapse / Toggle
+    // 3. HUD Collapse / Toggle / Reopen
     const btnToggleHud = document.getElementById('btn-toggle-hud');
     const hudPanel = document.getElementById('hud-moon-panel');
     const btnCollapse = document.getElementById('btn-collapse-hud');
+    const tabReopen = document.getElementById('tab-reopen-hud');
 
     if (hudPanel) {
       hudPanel.addEventListener('wheel', (e) => {
@@ -152,18 +188,24 @@ export class MoonBaseApp {
       }, { passive: true });
     }
 
+    const setCollapsed = (collapsed) => {
+      if (hudPanel) hudPanel.classList.toggle('collapsed', collapsed);
+      if (btnToggleHud) btnToggleHud.classList.toggle('active', !collapsed);
+      if (tabReopen) tabReopen.classList.toggle('visible', collapsed);
+    };
+
     if (btnToggleHud && hudPanel) {
       btnToggleHud.addEventListener('click', () => {
-        hudPanel.classList.toggle('collapsed');
-        btnToggleHud.classList.toggle('active', !hudPanel.classList.contains('collapsed'));
+        setCollapsed(!hudPanel.classList.contains('collapsed'));
       });
     }
 
     if (btnCollapse && hudPanel) {
-      btnCollapse.addEventListener('click', () => {
-        hudPanel.classList.add('collapsed');
-        if (btnToggleHud) btnToggleHud.classList.remove('active');
-      });
+      btnCollapse.addEventListener('click', () => setCollapsed(true));
+    }
+
+    if (tabReopen) {
+      tabReopen.addEventListener('click', () => setCollapsed(false));
     }
 
     // 4. Fullscreen
@@ -204,11 +246,11 @@ export class MoonBaseApp {
 
           if (chamberBadge) {
             chamberBadge.className = 'chamber-status-badge vented';
-            chamberBadge.innerHTML = '<span class="pulse-dot-red"></span><span id="chamber-status-text">VENTED // HARD VACUUM EXTINCTION (0.0% O₂)</span>';
+            chamberBadge.innerHTML = '<span class="status-dot warn"></span><span id="chamber-status-text">VENTED // VACUUM EXTINCTION (0% O2)</span>';
           }
           btnVent.classList.add('reignite');
           if (btnVentLabel) {
-            btnVentLabel.innerHTML = 'Re-pressurize & Reignite (21% O₂ // 0.166g Flame)';
+            btnVentLabel.textContent = 'Re-pressurize & Reignite (21% O2)';
           }
         } else {
           // Re-seal & re-pressurize with habitat air (21% O2, 101.3 kPa) -> Reignite flame
@@ -218,11 +260,11 @@ export class MoonBaseApp {
 
           if (chamberBadge) {
             chamberBadge.className = 'chamber-status-badge sealed';
-            chamberBadge.innerHTML = '<span class="pulse-dot-green"></span><span id="chamber-status-text">SEALED (21% O₂ // 101.3 kPa)</span>';
+            chamberBadge.innerHTML = '<span class="status-dot online"></span><span id="chamber-status-text">SEALED (21% O2 // 101.3 kPa)</span>';
           }
           btnVent.classList.remove('reignite');
           if (btnVentLabel) {
-            btnVentLabel.innerHTML = '⚡ Vent Chamber to Lunar Vacuum (Simulate Extinction)';
+            btnVentLabel.textContent = 'Vent Chamber to Lunar Vacuum';
           }
         }
       });
@@ -230,7 +272,38 @@ export class MoonBaseApp {
   }
 
   setupSimulationModes() {
-    // Simulation modes removed per user specification; base operates in nominal mode
+    const modeSpecs = {
+      normal: { label: 'NOMINAL', pill: 'hud-pill online', solar: '14.8 kW', load: '8.4 kW', batt: '94%', o2: '21.3 kPa (21%)', ice: '-22.4 C' },
+      power: { label: 'PEAK SOLAR', pill: 'hud-pill eva', solar: '22.4 kW', load: '9.1 kW', batt: '99%', o2: '21.3 kPa (21%)', ice: '-19.8 C' },
+      lifesupport: { label: 'ECLSS BOOST', pill: 'hud-pill online', solar: '14.8 kW', load: '11.6 kW', batt: '91%', o2: '23.1 kPa (22.8%)', ice: '-21.0 C' },
+      thermal: { label: 'THERMAL LOOP', pill: 'hud-pill', solar: '14.2 kW', load: '10.8 kW', batt: '89%', o2: '21.2 kPa (20.9%)', ice: '-14.2 C' },
+      emergency: { label: 'EMERGENCY', pill: 'hud-pill critical', solar: '6.2 kW', load: '4.1 kW', batt: '62%', o2: '18.6 kPa (18.4%)', ice: '-24.8 C' },
+    };
+
+    document.querySelectorAll('.moon-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        if (!mode) return;
+        document.querySelectorAll('.moon-mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (this.moonScene) {
+          this.moonScene.setSimulationMode(mode);
+        }
+        const spec = modeSpecs[mode] || modeSpecs.normal;
+        const badge = document.getElementById('moon-mode-badge');
+        if (badge) { badge.textContent = spec.label; badge.className = spec.pill; }
+        const sEl = document.getElementById('moon-solar-kw');
+        if (sEl) sEl.textContent = spec.solar;
+        const lEl = document.getElementById('moon-load-kw');
+        if (lEl) lEl.textContent = spec.load;
+        const bEl = document.getElementById('moon-battery-pct');
+        if (bEl) bEl.textContent = spec.batt;
+        const oEl = document.getElementById('moon-o2-kpa');
+        if (oEl) oEl.textContent = spec.o2;
+        const iEl = document.getElementById('moon-ice-temp');
+        if (iEl) iEl.textContent = spec.ice;
+      });
+    });
   }
 
   setupPyrosMenu() {
@@ -317,6 +390,16 @@ export class MoonBaseApp {
         new THREE.Vector3(-2.8, 1.65, 9.6),
         new THREE.Vector3(-2.8, 1.35, 6.8)
       );
+    } else if (viewType === 'habitat') {
+      this.startCinematicTransition(
+        new THREE.Vector3(3.6, 4.4, 14.0),
+        new THREE.Vector3(0.0, 2.4, 0.0)
+      );
+    } else if (viewType === 'power') {
+      this.startCinematicTransition(
+        new THREE.Vector3(14.5, 5.8, 11.8),
+        new THREE.Vector3(6.2, 2.0, 1.5)
+      );
     } else {
       this.startCinematicTransition(
         new THREE.Vector3(-6.2, 6.8, 29.0),
@@ -330,7 +413,34 @@ export class MoonBaseApp {
   }
 
   updateFreeFlight(delta) {
-    // Flight controls disabled per user specification
+    if (this.isTransitioning || !this.camera || !this.controls) return;
+    if (!this._fwd) {
+      this._fwd = new THREE.Vector3();
+      this._right = new THREE.Vector3();
+      this._up = new THREE.Vector3(0, 1, 0);
+      this._delta = new THREE.Vector3();
+    }
+    const speed = 12.0 * delta;
+    this.camera.getWorldDirection(this._fwd);
+    this._fwd.y = 0;
+    if (this._fwd.lengthSq() > 0.0001) this._fwd.normalize();
+    else this._fwd.set(0, 0, -1);
+    this._right.crossVectors(this._fwd, this._up).normalize();
+
+    let moved = false;
+    this._delta.set(0, 0, 0);
+    if (this.keys.forward) { this._delta.addScaledVector(this._fwd, speed); moved = true; }
+    if (this.keys.backward) { this._delta.addScaledVector(this._fwd, -speed); moved = true; }
+    if (this.keys.right) { this._delta.addScaledVector(this._right, speed); moved = true; }
+    if (this.keys.left) { this._delta.addScaledVector(this._right, -speed); moved = true; }
+    if (this.keys.up) { this._delta.y += speed; moved = true; }
+    if (this.keys.down) { this._delta.y -= speed; moved = true; }
+
+    if (moved) {
+      this.camera.position.add(this._delta);
+      this.controls.target.add(this._delta);
+      if (this.camera.position.y < 0.8) this.camera.position.y = 0.8;
+    }
   }
 
   onWindowResize() {
@@ -338,9 +448,6 @@ export class MoonBaseApp {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    if (this.currentView === 'panorama' && !this.isTransitioning) {
-      this.camera.lookAt(0.0, 2.4, 0.0);
-    }
   }
 
   renderLoop(timestamp) {
@@ -352,15 +459,18 @@ export class MoonBaseApp {
 
     const t = timestamp * 0.001;
 
-    // Update cinematic glide
+    // Update cinematic glide and free flight
     this.updateCinematicTransition(timestamp);
+    this.updateFreeFlight(delta);
 
-    // Subtle, gentle cinematic panorama breathing when in fixed panorama view
-    if (!this.isTransitioning && this.currentView === 'panorama') {
+    // Subtle cinematic panorama breathing until user interacts manually
+    if (!this.isTransitioning && !this.userInteracted && this.currentView === 'panorama') {
       const driftX = Math.sin(t * 0.22) * 0.45;
       const driftY = Math.cos(t * 0.18) * 0.22;
       this.camera.position.set(-6.2 + driftX, 6.8 + driftY, 29.0);
       this.camera.lookAt(0.0, 2.4, 0.0);
+    } else if (!this.isTransitioning && this.controls) {
+      this.controls.update();
     }
 
     if (this.moonScene) {
@@ -374,6 +484,8 @@ export class MoonBaseApp {
     this.isDestroyed = true;
     if (this.rafId) cancelAnimationFrame(this.rafId);
     if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onKeyDown) window.removeEventListener('keydown', this._onKeyDown);
+    if (this._onKeyUp) window.removeEventListener('keyup', this._onKeyUp);
     if (this.renderer) {
       try { this.renderer.dispose(); } catch (e) {}
     }

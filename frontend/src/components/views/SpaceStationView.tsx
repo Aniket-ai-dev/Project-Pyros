@@ -1,1299 +1,833 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { initVerticalControls } from '@/ui/VerticalControlsController';
-
-const HTML_CONTENT = `<!-- =========================================================================
-       1. CINEMATIC LOADING ANIMATION SCREEN (PROJECT PYROS)
-       ========================================================================= -->
-  <div id="pyros-loading-screen" class="pyros-loader-overlay hidden" style="display: none;" onclick="this.classList.add('hidden');">
-    <div class="pyros-loader-content">
-      
-      <!-- Glowing Insignia / Flame Orb -->
-      <div class="pyros-loader-emblem">
-        <div class="pyros-emblem-glow"></div>
-        <div class="pyros-emblem-ring"></div>
-        <div style="font-size: 20px; font-weight: bold; color: #38bdf8; font-family: monospace;">[PYROS]</div>
-      </div>
-
-      <!-- Title & Branding -->
-      <div class="pyros-loader-text-group">
-        <span class="pyros-loader-subtitle">NASA MICROGRAVITY SIMULATION PLATFORM</span>
-        <h1 class="pyros-loader-title">PROJECT PYROS</h1>
-        <p class="pyros-loader-tagline">Orbital Space Station & Combustion Intelligence</p>
-      </div>
-
-      <!-- Progress Bar & Status -->
-      <div class="pyros-loader-progress-box">
-        <div class="pyros-loader-bar-track">
-          <div id="pyros-loader-bar-fill" class="pyros-loader-bar-fill"></div>
-        </div>
-        <div class="pyros-loader-status-row">
-          <span id="pyros-loader-status-text" class="pyros-loader-status">INITIALIZING SYSTEM MODULES...</span>
-          <span id="pyros-loader-percent" class="pyros-loader-percent">0%</span>
-        </div>
-      </div>
-
-      <button id="btn-skip-loading" class="pyros-loader-skip-btn">Click anywhere to skip</button>
-
-    </div>
-  </div>
-
-  <!-- =========================================================================
-       2. PROJECT PYROS MAIN MENU (Scene Selector)
-       ========================================================================= -->
-  <div id="pyros-main-menu" class="pyros-menu-overlay" style="display: none;">
-    <div class="pyros-menu-backdrop"></div>
-    <div class="pyros-menu-container">
-      
-      <!-- Top Brand Header -->
-      <header class="pyros-menu-header">
-        <div class="pyros-menu-badge">
-          <span class="pyros-badge-dot"></span>
-          <span>NASA PHYSICAL SCIENCES INFORMATICS // MISSION COMMAND</span>
-        </div>
-        <h1 class="pyros-menu-title">PROJECT PYROS</h1>
-        <p class="pyros-menu-desc">Select an operational simulation environment to initiate exploration</p>
-      </header>
-
-      <!-- Scene Selection Cards Grid -->
-      <div class="pyros-scenes-grid">
-
-        <!-- SCENE 1: Space Station (ACTIVE) -->
-        <div class="pyros-scene-card active" id="card-scene-station">
-          <div class="scene-card-visual station-visual">
-            <div class="scene-visual-badge active">
-              <span class="live-dot"></span>
-              <span>AVAILABLE NOW</span>
-            </div>
-            <!-- Station Module SVG Illustration -->
-            <div class="scene-illustration">
-              <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
-                <rect x="25" y="24" width="70" height="32" rx="16" fill="rgba(56, 189, 248, 0.12)" stroke="#38bdf8" stroke-width="2"/>
-                <line x1="10" y1="40" x2="25" y2="40" stroke="#94a3b8" stroke-width="3"/>
-                <line x1="95" y1="40" x2="110" y2="40" stroke="#94a3b8" stroke-width="3"/>
-                <rect x="5" y="28" width="8" height="24" rx="2" fill="#64748b"/>
-                <rect x="107" y="28" width="8" height="24" rx="2" fill="#64748b"/>
-                <circle cx="60" cy="40" r="8" fill="rgba(56, 189, 248, 0.25)" stroke="#38bdf8" stroke-width="1.5"/>
-                <circle cx="60" cy="40" r="3" fill="#38bdf8"/>
-                <line x1="42" y1="24" x2="42" y2="56" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                <line x1="78" y1="24" x2="78" y2="56" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-              </svg>
-            </div>
-          </div>
-          <div class="scene-card-body">
-            <div class="scene-header-meta">
-              <span class="scene-tag">ORBITAL HABITAT // 0.00g</span>
-              <span class="scene-version">v2.4 READY</span>
-            </div>
-            <h3 class="scene-name">Space Station Laboratory</h3>
-            <p class="scene-summary">
-              Explore the Destiny & Columbus pressurized module with interactive ECLSS atmosphere controls, microgravity candle flames, and the Microgravity Science Glovebox (MSG).
-            </p>
-            <div class="scene-features-pills">
-              <span>- 3D Free Flight</span>
-              <span>- ECLSS Controls</span>
-              <span>- 22 NASA Missions</span>
-              <span>- Glovebox Exp</span>
-            </div>
-            <button id="btn-enter-station" class="scene-launch-btn">
-              <span id="txt-enter-station-btn">Launch Space Station</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- SCENE 2: Mars Planet Surface (ACTIVE) -->
-        <div class="pyros-scene-card active" id="card-scene-mars" onclick="window.location.href='/mars'">
-          <div class="scene-card-visual mars-visual">
-            <div class="scene-visual-badge active" style="background: rgba(249, 115, 22, 0.15); border-color: rgba(249, 115, 22, 0.4); color: #fb923c;">
-              <span class="live-dot" style="background: #f97316; box-shadow: 0 0 6px #f97316;"></span>
-              <span>AVAILABLE NOW</span>
-            </div>
-            <div class="scene-illustration">
-              <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
-                <ellipse cx="60" cy="48" rx="42" ry="16" fill="rgba(245, 158, 11, 0.12)" stroke="rgba(249, 115, 22, 0.45)" stroke-width="1.8"/>
-                <path d="M30 48 Q 60 16, 90 48" fill="none" stroke="#f97316" stroke-width="2.2"/>
-                <circle cx="60" cy="30" r="5" fill="#f97316" opacity="0.9"/>
-              </svg>
-            </div>
-          </div>
-          <div class="scene-card-body">
-            <div class="scene-header-meta">
-              <span class="scene-tag" style="color: #fb923c;">PLANETARY SURFACE // 0.38g</span>
-              <span class="scene-version" style="color: #fb923c;">v1.0 READY</span>
-            </div>
-            <h3 class="scene-name">Mars Planet Surface</h3>
-            <p class="scene-summary">
-              Accurate Martian Jezero Crater terrain with iron-oxide dunes, impact basins, NASA Surveyor science lander, geodesic habitat dome, and 0.38g flame test chamber.
-            </p>
-            <div class="scene-features-pills">
-              <span>- Jezero Crater Dunes</span>
-              <span>- 0.38g Gravity</span>
-              <span>- NASA Outpost</span>
-              <span>- Dust Phenomena</span>
-            </div>
-            <a href="/mars" class="scene-launch-btn" style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);">
-              <span>Explore Mars Surface</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-        </div>
-
-        <!-- SCENE 3: Martian Rover Circuit Failure (NEW / ACTIVE) -->
-        <div class="pyros-scene-card active" id="card-scene-rover" onclick="window.location.href='/rover'">
-          <div class="scene-card-visual rover-visual" style="border-color: rgba(239, 68, 68, 0.4);">
-            <div class="scene-visual-badge active" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #f87171;">
-              <span class="live-dot" style="background: #ef4444; box-shadow: 0 0 6px #ef4444;"></span>
-              <span>AVAILABLE NOW</span>
-            </div>
-            <div class="scene-illustration">
-              <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
-                <!-- PCB Substrate -->
-                <rect x="22" y="16" width="76" height="48" rx="4" fill="rgba(16, 185, 129, 0.12)" stroke="#10b981" stroke-width="1.8"/>
-                <!-- Power Controller (Epicenter) -->
-                <rect x="32" y="24" width="22" height="18" rx="2" fill="rgba(239, 68, 68, 0.3)" stroke="#ef4444" stroke-width="1.5"/>
-                <!-- Flight Computer -->
-                <rect x="62" y="24" width="26" height="16" rx="2" fill="rgba(56, 189, 248, 0.2)" stroke="#38bdf8" stroke-width="1.2"/>
-                <!-- Battery Pack -->
-                <rect x="32" y="48" width="56" height="10" rx="2" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" stroke-width="1.2"/>
-                <!-- Gold Bus Traces -->
-                <path d="M43 24v-8M75 24v-8M54 33h8M43 42v6" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
-                <!-- Arc / Spark dot -->
-                <circle cx="43" cy="33" r="2.5" fill="#f87171"/>
-                <path d="M41 33h4M43 31v4" stroke="#ffffff" stroke-width="1"/>
-              </svg>
-            </div>
-          </div>
-          <div class="scene-card-body">
-            <div class="scene-header-meta">
-              <span class="scene-tag" style="color: #f87171;">AVIONICS COMPARTMENT // 0.38g</span>
-              <span class="scene-version" style="color: #f87171;">v1.0 READY</span>
-            </div>
-            <h3 class="scene-name">Rover Circuit Failure</h3>
-            <p class="scene-summary">
-              Inside the Warm Electronics Box (WEB): Martian dust cooling insulation, power controller thermal runaway, electrical arcing, and autonomous bus isolation.
-            </p>
-            <div class="scene-features-pills">
-              <span>- 3D Avionics PCB</span>
-              <span>- Thermal Runaway</span>
-              <span>- Electrical Arcs</span>
-              <span>- Auto-Isolation</span>
-            </div>
-            <a href="/rover" class="scene-launch-btn" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);">
-              <span>Inspect Rover Electronics</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-        </div>
-
-        <!-- SCENE 4: Moon Base (NEW / AVAILABLE NOW) -->
-        <div class="pyros-scene-card active" id="card-scene-moon" onclick="window.location.href='/moon'">
-          <div class="scene-card-visual" style="background: radial-gradient(circle at center, rgba(148, 163, 184, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%); border-color: rgba(56, 189, 248, 0.4);">
-            <div class="scene-visual-badge active" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
-              <span class="live-dot" style="background: #38bdf8; box-shadow: 0 0 6px #38bdf8;"></span>
-              <span>AVAILABLE NOW</span>
-            </div>
-            <div class="scene-illustration">
-              <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
-                <path d="M15 62 Q 60 48, 105 62" stroke="#94a3b8" stroke-width="2" fill="none"/>
-                <circle cx="32" cy="24" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
-                <circle cx="34" cy="22" r="3" fill="#22c55e" opacity="0.8"/>
-                <rect x="52" y="38" width="16" height="20" rx="3" fill="rgba(226, 232, 240, 0.3)" stroke="#e2e8f0" stroke-width="1.5"/>
-                <ellipse cx="60" cy="38" rx="6" ry="4" fill="#38bdf8" opacity="0.8"/>
-                <line x1="76" y1="36" x2="98" y2="36" stroke="#38bdf8" stroke-width="2.5"/>
-                <line x1="87" y1="36" x2="87" y2="58" stroke="#64748b" stroke-width="1.5"/>
-              </svg>
-            </div>
-          </div>
-          <div class="scene-card-body">
-            <div class="scene-header-meta">
-              <span class="scene-tag" style="color: #38bdf8;">LUNAR OUTPOST // 0.166g</span>
-              <span class="scene-version" style="color: #38bdf8;">v1.0 READY</span>
-            </div>
-            <h3 class="scene-name">Moon Base (NASA Ice Home)</h3>
-            <p class="scene-summary">
-              NASA Inflatable Ice Home on the Moon: Translucent quilted ice-composite radiation shield, two-story pressurized habitat, airlock vestibule, dual support modules, and LUCI 0.166g lunar combustion test stand.
-            </p>
-            <div class="scene-features-pills">
-              <span>- NASA Ice Home</span>
-              <span>- 0.166g Lunar Physics</span>
-              <span>- Translucent Dome</span>
-              <span>- Deep Space Sky</span>
-            </div>
-            <a href="/moon" class="scene-launch-btn" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
-              <span>Launch Moon Base</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Menu Footer -->
-      <footer class="pyros-menu-footer">
-        <div class="menu-footer-left">
-          <span>PROJECT PYROS // v2.4</span>
-          <span class="dot">•</span>
-          <span>NASA PSI Space Apps Challenge</span>
-        </div>
-        <div class="menu-footer-right">
-          <span>3D WebGL PBR Engine Active</span>
-          <span class="pulse-indicator"></span>
-        </div>
-      </footer>
-
-      <!-- Floating Close Menu Button (Visible when reopened from station) -->
-      <button id="btn-close-main-menu" class="pyros-menu-close-btn" title="Back to Simulation" aria-label="Close Menu" style="display: none;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
-      </button>
-
-    </div>
-  </div>
-
-  <!-- 3D Three.js WebGL Viewport Canvas (FULL BACKGROUND & DIRECTLY INTERACTIVE) -->
-  <canvas id="canvas-station"></canvas>
-
-  <!-- TOP FLOATING DOCK (Clean, modern, aesthetic navbar) -->
-    <!-- FLOATING SWIPEABLE CAPSULE NAVBAR (Reference Match) -->
-  <header class="pyros-capsule-navbar">
-    <!-- Pinned Left Circular Emblem (Home) -->
-    <a href="/" class="capsule-brand-circle" title="Project Pyros Home">
-      <img src="/logo.png" alt="Project Pyros Logo" class="capsule-brand-logo" />
-    </a>
-
-    <!-- Draggable & Swipeable Horizontal Sliding Track -->
-    <div class="capsule-slide-track">
-      <!-- 1. Home -->
-      <a href="/" class="capsule-item" title="Home Screen">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
-        <span class="capsule-item-label">Home</span>
-      </a>
-
-      <!-- 2. Corridor Viewpoint (Active Pod with dot) -->
-      <button class="capsule-item viewpoint-btn active" data-view="corridor" title="Corridor Center">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-        </div>
-        <span class="capsule-item-label">Corridor</span>
-      </button>
-
-      <!-- 3. Glovebox -->
-      <button class="capsule-item viewpoint-btn" data-view="glovebox" title="Candle Experiment in Glovebox">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="7"/></svg>
-        </div>
-        <span class="capsule-item-label">Glovebox</span>
-      </button>
-
-      <!-- 4. Room Candle -->
-      <button class="capsule-item viewpoint-btn" data-view="candle" title="Room Candle Station">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-        </div>
-        <span class="capsule-item-label">Candle</span>
-      </button>
-
-      <!-- 5. Diffusers -->
-      <button class="capsule-item viewpoint-btn" data-view="vents" title="Ceiling Diffusers">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><path d="M9.59 4.59A2 2 0 1 1 11 8H2"/></svg>
-        </div>
-        <span class="capsule-item-label">Diffusers</span>
-      </button>
-
-      <!-- 6. Cupola -->
-      <button class="capsule-item viewpoint-btn" data-view="hatch" title="Deep Space Window">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/></svg>
-        </div>
-        <span class="capsule-item-label">Cupola</span>
-      </button>
-
-      <!-- 7. 22 NASA Missions -->
-      <button id="btn-open-nasa-explorer" class="capsule-item" title="22 NASA Investigations Database">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
-        </div>
-        <span class="capsule-item-label">Missions</span>
-      </button>
-
-      <!-- 8. Criteria Audit -->
-      <button id="btn-criteria-audit" class="capsule-item" title="NASA Space Apps Challenge Criteria Audit">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-        </div>
-        <span class="capsule-item-label">Audit</span>
-      </button>
-
-      <!-- 9. Reset Camera -->
-      <button id="btn-reset-cam" class="capsule-item" title="Reset Camera View">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </div>
-        <span class="capsule-item-label">Reset Cam</span>
-      </button>
-
-      <!-- 10. Toggle HUD -->
-      <button id="btn-toggle-hud" class="capsule-item active" title="Toggle HUD Controls Panel">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-        </div>
-        <span class="capsule-item-label">HUD</span>
-      </button>
-
-      <!-- 11. Fullscreen -->
-      <button id="btn-fullscreen" class="capsule-item" title="Fullscreen">
-        <div class="capsule-item-icon">
-          <svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-        </div>
-        <span class="capsule-item-label">Full</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- =========================================================================
-       UNIFIED SINGLE-SIDE HUD PANEL (Left side only, leaving 80% screen open!)
-       ========================================================================= -->
-  <aside id="hud-unified-panel" class="cd-unified-panel">
-    
-    <!-- Panel Header: Title + Collapse Button -->
-    <div class="cd-panel-head-bar">
-      <div class="cd-panel-title-wrap">
-        <span class="cd-panel-chip">PROJECT PYROS</span>
-        <h2 class="cd-panel-heading">ECLSS & Research Deck</h2>
-      </div>
-      <button id="btn-collapse-hud" class="cd-panel-close-btn" title="Minimize Panel"><span>✕</span></button>
-    </div>
-
-    <!-- Segmented Tab Navigation Switcher -->
-    <div class="cd-tab-strip">
-      <button class="cd-tab-btn active" data-tab="tab-atmosphere" title="Atmospheric Life Support & Controls">
-        <span>Atmosphere</span>
-      </button>
-      <button class="cd-tab-btn" data-tab="tab-missions" title="NASA Flight Mission Presets">
-        <span>Missions</span>
-      </button>
-      <button class="cd-tab-btn" data-tab="tab-combustion" title="Combustion Scale Trends">
-        <span>Combustion</span>
-      </button>
-      <button class="cd-tab-btn tab-btn-si" data-tab="tab-scenario" id="tab-btn-scenario" title="AI Fire Scenario Intelligence">
-        <span>Scenario SI</span>
-      </button>
-    </div>
-
-    <!-- Scrollable Tab Content Container -->
-    <div class="cd-tab-scroll-wrap">
-
-      <!-- ===================================================================
-           TAB 1: ATMOSPHERE & ENVIRONMENTAL CONTROLS
-           =================================================================== -->
-      <div id="tab-atmosphere" class="cd-tab-pane active">
-        
-        <!-- CARD 1: Cabin Atmosphere & Flammability Spectrum -->
-        <section class="cd-card cd-card-revenue">
-          <div class="cd-card-head">
-            <div class="cd-card-title-wrap">
-              <h3 class="cd-card-title">Cabin Atmosphere</h3>
-              <span class="cd-card-caption">ECLSS Active Life Support // Destiny Module</span>
-            </div>
-            <button class="cd-opt-btn" title="Options">···</button>
-          </div>
-
-          <!-- Hero Value & Trend Badge -->
-          <div class="cd-hero-block">
-            <div class="cd-hero-metric">
-              <span id="val-oxygen-percent">21.0</span><span class="cd-hero-unit">% O₂</span>
-            </div>
-            <div id="badge-o2-status-wrap" class="cd-trend-pill success">
-              <span class="trend-arrow">↑</span>
-              <span id="badge-o2-status">NOMINAL</span>
-              <span class="trend-note">(101.3 kPa)</span>
-            </div>
-          </div>
-
-          <!-- Scientific Telemetry Micro-Pills -->
-          <div class="cd-flame-telemetry-row">
-            <div class="flame-tel-chip">
-              <span class="tel-lbl">Partial Pressure</span>
-              <span class="tel-val" id="val-oxygen-po2">21.3 kPa</span>
-            </div>
-            <div class="flame-tel-chip">
-              <span class="tel-lbl">Flammability Index</span>
-              <span class="tel-val" id="val-flammability-index">Φ = 0.21</span>
-            </div>
-            <div class="flame-tel-chip">
-              <span class="tel-lbl">LOI Safety Margin</span>
-              <span class="tel-val success">+6.9% Safe</span>
-            </div>
-          </div>
-
-          <!-- Clean Bar + Scientifically Calibrated Flammability Curve -->
-          <div class="cd-barline-chart-wrap">
-            <div class="cd-bars-container">
-              <div class="cd-bar-col" data-step="0" data-o2="0" title="Space Vacuum (0% O2)">
-                <div class="cd-bar-fill">
-                  <div class="cd-bar-badge" id="o2-bar-badge-0">0% Vac</div>
-                </div>
-              </div>
-              <div class="cd-bar-col" data-step="1" data-o2="11" title="Hypoxia Regimes (11% O2)">
-                <div class="cd-bar-fill">
-                  <div class="cd-bar-badge" id="o2-bar-badge-1">11% Hyp</div>
-                </div>
-              </div>
-              <div class="cd-bar-col active" data-step="2" data-o2="21" title="Nominal Sea Level Equiv (21% O2)">
-                <div class="cd-bar-fill">
-                  <div class="cd-bar-badge" id="o2-bar-badge">+21% Nom</div>
-                </div>
-              </div>
-              <div class="cd-bar-col" data-step="3" data-o2="32" title="Exploration Atmosphere / EVA (32% O2)">
-                <div class="cd-bar-fill">
-                  <div class="cd-bar-badge" id="o2-bar-badge-3">32% EVA</div>
-                </div>
-              </div>
-              <div class="cd-bar-col" data-step="4" data-o2="100" title="Pure Oxygen Combustion Hazard (100% O2)">
-                <div class="cd-bar-fill">
-                  <div class="cd-bar-badge" id="o2-bar-badge-4">100% Pure</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Scientifically Calibrated Flammability Curve & Area Gradient -->
-            <svg class="cd-line-svg" viewBox="0 0 320 80" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="o2CurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.6"/>
-                  <stop offset="25%" stop-color="#ef4444" stop-opacity="0.8"/>
-                  <stop offset="50%" stop-color="#3b82f6" stop-opacity="1"/>
-                  <stop offset="75%" stop-color="#06b6d4" stop-opacity="0.9"/>
-                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="1"/>
-                </linearGradient>
-                <linearGradient id="o2AreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18"/>
-                  <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
-                </linearGradient>
-              </defs>
-              <!-- Filled subtle area under curve -->
-              <path d="M 24 64 C 70 60, 110 52, 160 38 C 210 24, 260 20, 296 16 L 296 74 L 24 74 Z" fill="url(#o2AreaGrad)" />
-              <!-- LOI Extinction Guide line -->
-              <line x1="100" y1="12" x2="100" y2="74" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.6"/>
-              <!-- Smooth Roper Buoyant Flammability Curve -->
-              <path d="M 24 64 C 70 60, 110 52, 160 38 C 210 24, 260 20, 296 16" fill="none" stroke="url(#o2CurveGrad)" stroke-width="2.6" stroke-linecap="round"/>
-            </svg>
-          </div>
-
-          <!-- Scale Presets Row -->
-          <div class="cd-scale-presets">
-            <button class="o2-preset-btn cd-scale-btn" data-o2="0">
-              <span class="preset-name">0% Vac</span>
-              <span class="preset-sub">0.0 kPa</span>
-            </button>
-            <button class="o2-preset-btn cd-scale-btn" data-o2="11">
-              <span class="preset-name">11% Hyp</span>
-              <span class="preset-sub">11.1 kPa</span>
-            </button>
-            <button class="o2-preset-btn cd-scale-btn active" data-o2="21">
-              <span class="preset-name">21% Nom</span>
-              <span class="preset-sub">21.3 kPa</span>
-            </button>
-            <button class="o2-preset-btn cd-scale-btn" data-o2="32">
-              <span class="preset-name">32% EVA</span>
-              <span class="preset-sub">32.4 kPa</span>
-            </button>
-            <button class="o2-preset-btn cd-scale-btn" data-o2="100">
-              <span class="preset-name">100% Pure</span>
-              <span class="preset-sub">101.3 kPa</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- CARD 2: Atmospheric Ratio Donut Gauge -->
-        <section class="cd-card cd-card-occupancy">
-          <div class="cd-card-head">
-            <div class="cd-card-title-wrap">
-              <h3 class="cd-card-title">Atmospheric Ratio</h3>
-              <span class="cd-card-caption">Partial Pressure Composition & Dalton's Law</span>
-            </div>
-            <button class="cd-opt-btn" title="Options">···</button>
-          </div>
-
-          <div class="cd-donut-layout">
-            <div class="cd-donut-chart">
-              <svg class="cd-donut-svg" viewBox="0 0 160 160">
-                <defs>
-                  <pattern id="donutHatchPattern" width="6" height="6" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                    <line x1="0" y1="0" x2="0" y2="6" stroke="#94a3b8" stroke-width="2" />
-                  </pattern>
-                </defs>
-                <circle cx="80" cy="80" r="58" fill="none" stroke="#f1f5f9" stroke-width="20"/>
-                <circle id="donut-segment-n2" cx="80" cy="80" r="58" fill="none" stroke="#f43f5e" stroke-width="20"
-                        stroke-dasharray="235 365" stroke-dashoffset="0" stroke-linecap="round"/>
-                <circle id="donut-segment-o2" cx="80" cy="80" r="58" fill="none" stroke="#10b981" stroke-width="20"
-                        stroke-dasharray="88 365" stroke-dashoffset="-242" stroke-linecap="round"/>
-                <circle id="donut-segment-trace" cx="80" cy="80" r="58" fill="none" stroke="url(#donutHatchPattern)" stroke-width="20"
-                        stroke-dasharray="35 365" stroke-dashoffset="-335" stroke-linecap="round"/>
-              </svg>
-              <div class="cd-donut-center">
-                <span class="donut-big-num">101.3</span>
-                <span class="donut-sub-lbl">kPa</span>
-                <span class="donut-micro-lbl">1.00 atm</span>
-              </div>
-            </div>
-
-            <div class="cd-donut-legend">
-              <div class="cd-leg-item">
-                <div class="cd-leg-left">
-                  <span class="cd-leg-dot dot-pink"></span>
-                  <div class="cd-leg-info">
-                    <span class="cd-leg-name">Nitrogen (N₂)</span>
-                    <span class="cd-leg-dalton">pN₂: 79.0 kPa · 592.8 mmHg</span>
-                  </div>
-                </div>
-                <div class="cd-leg-val">78%</div>
-              </div>
-              <div class="cd-leg-item">
-                <div class="cd-leg-left">
-                  <span class="cd-leg-dot dot-green"></span>
-                  <div class="cd-leg-info">
-                    <span class="cd-leg-name">Oxygen (O₂)</span>
-                    <span class="cd-leg-dalton">pO₂: <span id="val-oxygen-po2-legend">21.3</span> kPa · 159.6 mmHg</span>
-                  </div>
-                </div>
-                <div class="cd-leg-val" id="val-oxygen-percent-2">21%</div>
-              </div>
-              <div class="cd-leg-item">
-                <div class="cd-leg-left">
-                  <span class="cd-leg-dot dot-grey"></span>
-                  <div class="cd-leg-info">
-                    <span class="cd-leg-name">Trace / Argon</span>
-                    <span class="cd-leg-dalton">pAr: 1.0 kPa · 7.6 mmHg</span>
-                  </div>
-                </div>
-                <div class="cd-leg-val">1%</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ECLSS Environmental Micro-Telemetry Footer -->
-          <div class="cd-env-telemetry-grid">
-            <div class="env-tel-col">
-              <span class="env-k">Cabin Temp</span>
-              <span class="env-v">21.5°C</span>
-            </div>
-            <div class="env-tel-col">
-              <span class="env-k">Rel. Humidity</span>
-              <span class="env-v">42.0%</span>
-            </div>
-            <div class="env-tel-col">
-              <span class="env-k">CO₂ Scrubbed</span>
-              <span class="env-v">2.8 mmHg</span>
-            </div>
-            <div class="env-tel-col">
-              <span class="env-k">Dew Point</span>
-              <span class="env-v">8.4°C</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- CARD 3: Active Environmental Controls -->
-        <section class="cd-card cd-card-controls">
-          <div class="cd-card-head">
-            <div class="cd-card-title-wrap">
-              <h3 class="cd-card-title">Environmental Controls</h3>
-              <span class="cd-card-caption">ECLSS Flow & Artificial Gravity</span>
-            </div>
-            <button class="cd-opt-btn" title="Options">···</button>
-          </div>
-
-          <div class="cd-controls-stack">
-            <!-- Row 1: Oxygen Flow Control (Green segmented capsule pill bar) -->
-            <div class="cd-regime-row">
-              <div class="cd-regime-top">
-                <div class="cd-regime-user">
-                  <div class="cd-avatar-badge green">O₂</div>
-                  <div class="cd-user-info">
-                    <span class="cd-user-name">Oxygen Flow Regulator</span>
-                    <span class="cd-role-tag">Active ECLSS Life Support</span>
-                  </div>
-                </div>
-                <div class="cd-regime-val"><span id="hud-cell-o2-val">21.0%</span></div>
-              </div>
-
-              <!-- Segmented Pill Capsule Bar (24 pills) -->
-              <div class="cd-segmented-capsules" id="pill-bar-oxygen">
-                <span class="capsule-seg green active"></span><span class="capsule-seg green active"></span><span class="capsule-seg green active"></span><span class="capsule-seg green active"></span>
-                <span class="capsule-seg green active"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span>
-                <span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span>
-                <span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span>
-                <span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span>
-                <span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span><span class="capsule-seg green"></span>
-              </div>
-
-              <input type="range" id="slider-station-oxygen" class="cd-clean-slider" min="0" max="100" step="0.5" value="21.0">
-
-              <div class="cd-regime-meta">
-                <span class="meta-item">● Flow: <strong id="val-vent-flow">28.4 L/min</strong></span>
-                <span class="meta-item">Turbine: <strong id="val-vent-rpm">1,720 RPM</strong></span>
-                <span class="meta-item">Louver: <strong id="val-vent-aperture">24°</strong></span>
-              </div>
-            </div>
-
-            <!-- Row 2: Gravity Acceleration Control (Blue segmented capsule pill bar) -->
-            <div class="cd-regime-row">
-              <div class="cd-regime-top">
-                <div class="cd-regime-user">
-                  <div class="cd-avatar-badge blue">G</div>
-                  <div class="cd-user-info">
-                    <span class="cd-user-name">Artificial Gravity Field</span>
-                    <span class="cd-role-tag">Centrifugal Body Force Acceleration</span>
-                  </div>
-                </div>
-                <div class="cd-regime-val"><span id="val-gravity-g">0.00</span> g</div>
-              </div>
-
-              <!-- Segmented Pill Capsule Bar (24 pills) -->
-              <div class="cd-segmented-capsules" id="pill-bar-gravity">
-                <span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span>
-                <span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span>
-                <span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span>
-                <span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span>
-                <span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span>
-                <span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span><span class="capsule-seg blue"></span>
-              </div>
-
-              <input type="range" id="slider-station-gravity" class="cd-clean-slider" min="0" max="2.0" step="0.01" value="0.00">
-
-              <!-- Gravity Quick Preset Pills -->
-              <div class="cd-gravity-presets">
-                <button class="gravity-preset-btn cd-g-pill active" data-g="0">0.00g ISS</button>
-                <button class="gravity-preset-btn cd-g-pill" data-g="0.166">0.166g Moon</button>
-                <button class="gravity-preset-btn cd-g-pill" data-g="0.38">0.38g Mars</button>
-                <button class="gravity-preset-btn cd-g-pill" data-g="1.0">1.00g Earth</button>
-              </div>
-
-              <div class="cd-regime-meta">
-                <span class="meta-item">● Mode: <strong id="badge-gravity-status">0.00 g // ZERO-G</strong></span>
-                <span class="meta-item">State: <strong id="hud-cell-gravity-sub">Weightless</strong></span>
-              </div>
-            </div>
-
-            <!-- Row 3: Quick Action Pills & Lighting Regimes -->
-            <div class="cd-actions-cluster">
-              <div class="cd-btn-group">
-                <button id="btn-nudge-objects" class="cd-action-capsule" title="Impart impulse to floating zero-g tools">Toss Objects</button>
-                <button id="btn-reset-objects" class="cd-action-capsule" title="Reset physics objects to Destiny racks">Reset</button>
-              </div>
-              <div class="cd-light-pills">
-                <button class="light-mode-btn cd-mode-pill active" data-mode="nominal" title="Nominal Daylight Operations">[NOMINAL]</button>
-                <button class="light-mode-btn cd-mode-pill" data-mode="sleep" title="Crew Sleep Night Mode">[SLEEP]</button>
-                <span id="pill-emergency-indicator" class="cd-emerg-badge" style="display: none;" title="Auto Red Alert: Cabin O₂ ≤ 10%">[EMERGENCY]</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-      </div>
-
-      <!-- ===================================================================
-           TAB 2: NASA MISSION PRESETS & ARCHIVES
-           =================================================================== -->
-      <div id="tab-missions" class="cd-tab-pane">
-        <!-- Active Mission Status Banner -->
-        <section class="cd-card cd-card-active-mission">
-          <div class="cd-card-head">
-            <div class="cd-card-title-wrap">
-              <h3 class="cd-card-title">Active Flight Condition</h3>
-              <span class="cd-card-caption">NASA Spaceflight Simulation Matrix</span>
-            </div>
-            <span class="tag-pill-sm tag-green">LIVE</span>
-          </div>
-
-          <div class="active-mission-banner">
-            <div class="mission-banner-head">
-              <span class="mission-flag">🇺🇸 NASA</span>
-              <h4 id="active-mission-name" class="mission-hero-name">SPICE-II (Candle Flame)</h4>
-            </div>
-            <p id="active-mission-desc" class="mission-hero-desc">0.00g ISS Microgravity // 21.0% O₂ // Symmetrical Pure Blue Diffusion Dome</p>
-          </div>
-
-          <button id="btn-browse-22-missions" class="cd-open-modal-action">
-            <span>Browse All 22 NASA Mission Archives</span>
-          </button>
-        </section>
-
-        <!-- 6-INCH FLAMMABILITY PARADOX CALLOUT BANNER -->
-        <section class="cd-card cd-card-paradox">
-          <div class="paradox-header">
-            <span class="tag-pill-sm tag-amber">⚠️ NASA STD-6001 // FLAMMABILITY PARADOX</span>
-            <span class="paradox-sub-tag">0.16g LUNAR RISK</span>
-          </div>
-          <h4 class="paradox-title">The 6-Inch Flammability Paradox</h4>
-          <div class="paradox-body">
-            <p class="paradox-lead">
-              <strong>Why Earth Testing Fails in Lunar Habitats:</strong> Under NASA STD-6001 Test 1, materials are qualified by passing a 6-inch burn in 1g. In partial gravity (0.16g Moon) with 34% O₂ and low ventilation (2–15 cm/s), convective cooling drops, causing materials certified on Earth to ignite and sustain combustion.
-            </p>
-            <div class="paradox-comparison-pills">
-              <div class="comp-pill earth-comp">
-                <span class="comp-icon">🌍</span>
-                <div class="comp-text">
-                  <span class="comp-label">Earth (1.0g // 21% O₂)</span>
-                  <span class="comp-val">Passed 6-in test · High buoyant cooling</span>
-                </div>
-              </div>
-              <div class="comp-pill moon-comp">
-                <span class="comp-icon">🌙</span>
-                <div class="comp-text">
-                  <span class="comp-label">Lunar Habitat (0.16g // 34% O₂)</span>
-                  <span class="comp-val">Anomalous spread · Low convective heat loss</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Curated Mission Presets List -->
-        <section class="cd-card cd-card-mission-presets">
-          <div class="cd-card-head">
-            <div class="cd-card-title-wrap">
-              <h3 class="cd-card-title">Mission Environments</h3>
-              <span class="cd-card-caption">Instant Empirical World Presets</span>
-            </div>
-            <span class="cd-preset-count">6 Presets</span>
-          </div>
-
-          <div class="mission-presets-stack">
-            <!-- Preset 1: SPICE-II Microgravity Candle -->
-            <div class="mission-item-card active" data-mission="NASA SPICE-II" data-g="0.00" data-o2="21.0" data-psi="14.7">
-              <div class="mission-item-top">
-                <span class="mission-tag tag-blue">0.00g // ZERO-G</span>
-                <span class="mission-hardware">MSG Bay 102</span>
-              </div>
-              <h4 class="mission-name">SPICE-II (Candle Flame)</h4>
-              <p class="mission-sub">21.0% O₂ · 14.7 psi · Spherical Blue Dome</p>
-              <button class="btn-apply-mission-preset">Inject Mission</button>
-            </div>
-
-            <!-- Preset 2: BASS-II Hypoxic Extinction Limit -->
-            <div class="mission-item-card" data-mission="NASA BASS-II" data-g="0.00" data-o2="16.5" data-psi="14.7">
-              <div class="mission-item-top">
-                <span class="mission-tag tag-amber">0.00g // HYPOXIA</span>
-                <span class="mission-hardware">CIR Rack</span>
-              </div>
-              <h4 class="mission-name">BASS-II (Quenching Limit)</h4>
-              <p class="mission-sub">16.5% O₂ · 14.7 psi · Radiative Starvation</p>
-              <button class="btn-apply-mission-preset">Inject Mission</button>
-            </div>
-
-            <!-- Preset 3: Saffire-IV Cygnus Fire Safety -->
-            <div class="mission-item-card" data-mission="NASA Saffire-IV" data-g="0.00" data-o2="34.0" data-psi="10.2">
-              <div class="mission-item-top">
-                <span class="mission-tag tag-pink">0.00g // ENRICHED</span>
-                <span class="mission-hardware">Cygnus Spacecraft</span>
-              </div>
-              <h4 class="mission-name">Saffire-IV (Spacecraft Safety)</h4>
-              <p class="mission-sub">34.0% O₂ · 10.2 psi · Exploration Atmosphere</p>
-              <button class="btn-apply-mission-preset">Inject Mission</button>
-            </div>
-
-            <!-- Preset 4: Artemis Base Camp (Lunar Surface) -->
-            <div class="mission-item-card" data-mission="NASA Artemis Gateway" data-g="0.166" data-o2="34.0" data-psi="10.2">
-              <div class="mission-item-top">
-                <span class="mission-tag tag-green">0.17g // LUNAR</span>
-                <span class="mission-hardware">Lunar Gateway</span>
-              </div>
-              <h4 class="mission-name">Artemis Base Camp (Moon)</h4>
-              <p class="mission-sub">34.0% O₂ · 10.2 psi · Partial-g Buoyancy</p>
-              <button class="btn-apply-mission-preset">Inject Mission</button>
-            </div>
-
-            <!-- Preset 5: Mars Surface Laboratory -->
-            <div class="mission-item-card" data-mission="NASA Mars Science Lab" data-g="0.38" data-o2="21.0" data-psi="14.7">
-              <div class="mission-item-top">
-                <span class="mission-tag tag-amber">0.38g // MARS</span>
-                <span class="mission-hardware">Mars Habitat</span>
-              </div>
-              <h4 class="mission-name">Mars Surface Laboratory</h4>
-              <p class="mission-sub">21.0% O₂ · 14.7 psi · Tapered Buoyant Flame</p>
-              <button class="btn-apply-mission-preset">Inject Mission</button>
-            </div>
-
-            <!-- Preset 6: Terrestrial 1g Earth Ground Reference -->
-            <div class="mission-item-card" data-mission="NASA Glenn Terrestrial 1g" data-g="1.00" data-o2="21.0" data-psi="14.7">
-              <div class="mission-item-top">
-                <span class="mission-tag tag-blue">1.00g // EARTH</span>
-                <span class="mission-hardware">Glenn Ground Lab</span>
-              </div>
-              <h4 class="mission-name">Earth Ground Reference (1g)</h4>
-              <p class="mission-sub">21.0% O₂ · 14.7 psi · Buoyant Flickering Teardrop</p>
-              <button class="btn-apply-mission-preset">Inject Mission</button>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- ===================================================================
-           TAB 3: COMBUSTION SCALE TRENDS
-           =================================================================== -->
-      <div id="tab-combustion" class="cd-tab-pane">
-        <section class="cd-card cd-card-trends">
-          <div class="cd-card-head">
-            <div class="cd-card-title-wrap">
-              <h3 class="cd-card-title">Combustion Scale Trends</h3>
-              <span class="cd-card-caption">Gravity vs Flame Geometry ($CH^*/C_2^*$)</span>
-              <div class="cd-validation-pill" title="Calibrated against empirical flight data from NASA BASS, BASS-II (cotton/PMMA), and SoFIE experiments on the ISS.">
-                <span class="validation-pulse-dot"></span>
-                <span class="validation-text">Calibrated against empirical flight data from NASA BASS, BASS-II (cotton/PMMA), and SoFIE experiments on the ISS.</span>
-              </div>
-            </div>
-            <button class="cd-opt-btn" title="Options">···</button>
-          </div>
-
-          <!-- Scaled Graph with Pink & Violet Diagonal Striped Hatch Fill -->
-          <div class="cd-trends-chart-wrap">
-            <svg class="cd-trends-chart-svg" viewBox="0 0 340 130" preserveAspectRatio="none">
-              <defs>
-                <pattern id="trendPinkPattern" width="7" height="7" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="0" y2="7" stroke="#f43f5e" stroke-width="2" />
-                </pattern>
-                <pattern id="trendPurplePattern" width="7" height="7" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                  <line x1="0" y1="0" x2="0" y2="7" stroke="#8b5cf6" stroke-width="2" />
-                </pattern>
-              </defs>
-
-              <line x1="15" y1="25" x2="325" y2="25" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="15" y1="65" x2="325" y2="65" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 3"/>
-              <line x1="15" y1="105" x2="325" y2="105" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="170" y1="15" x2="170" y2="105" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="3 3"/>
-
-              <polygon points="15,65 45,80 95,45 170,22 170,95 95,100 45,105 15,65" fill="url(#trendPinkPattern)"/>
-              <polygon points="170,22 225,60 280,70 325,55 325,90 280,100 225,95 170,95" fill="url(#trendPurplePattern)"/>
-
-              <polyline points="15,65 45,80 95,45 170,22 225,60 280,70 325,55" fill="none" stroke="#0f172a" stroke-width="2"/>
-              <polyline points="15,65 45,105 95,100 170,95 225,95 280,100 325,90" fill="none" stroke="#0f172a" stroke-width="2"/>
-
-              <circle cx="15" cy="65" r="3" fill="#0f172a"/>
-              <circle cx="45" cy="80" r="3" fill="#0f172a"/>
-              <circle cx="95" cy="45" r="3" fill="#0f172a"/>
-              <circle cx="170" cy="22" r="3.5" fill="#0f172a"/>
-              <circle cx="225" cy="60" r="3" fill="#0f172a"/>
-              <circle cx="280" cy="70" r="3" fill="#0f172a"/>
-              <circle cx="325" cy="55" r="3" fill="#0f172a"/>
-
-              <circle cx="45" cy="105" r="3" fill="#0f172a"/>
-              <circle cx="95" cy="100" r="3" fill="#0f172a"/>
-              <circle cx="170" cy="95" r="3" fill="#0f172a"/>
-              <circle cx="225" cy="95" r="3" fill="#0f172a"/>
-              <circle cx="280" cy="100" r="3" fill="#0f172a"/>
-            </svg>
-
-            <div class="cd-trend-bubble">1,420 K</div>
-          </div>
-
-          <!-- Gravity Scale Timeline Buttons -->
-          <div class="cd-timeline-scrub">
-            <button class="gravity-preset-btn cd-timeline-btn active" data-g="0.00">0g ISS</button>
-            <button class="gravity-preset-btn cd-timeline-btn" data-g="0.166">0.17g Moon</button>
-            <span class="timeline-dot-cluster">‹ • ›</span>
-            <button class="gravity-preset-btn cd-timeline-btn" data-g="0.38">0.38g Mars</button>
-            <button class="gravity-preset-btn cd-timeline-btn" data-g="1.00">1.0g Earth</button>
-          </div>
-
-          <!-- Bottom Footer Comparison -->
-          <div class="cd-trends-foot">
-            <div class="cd-foot-stat">
-              <span class="foot-stat-lbl">Microgravity (0g)</span>
-              <div class="foot-stat-val">26 mm Dome <span class="tag-pill-sm tag-green">↑ 9%</span></div>
-            </div>
-            <div class="cd-foot-stat">
-              <span class="foot-stat-lbl">Terrestrial (1g)</span>
-              <div class="foot-stat-val">58 mm Needle <span class="tag-pill-sm tag-pink">↓ 5%</span></div>
-            </div>
-          </div>
-
-          <!-- NASA ISS Empirical Calibration Citation Banner -->
-          <div class="trends-empirical-banner">
-            <div class="trends-empirical-header">
-              <span class="tag-pill-sm tag-blue">🛰️ NASA ISS BENCHMARK</span>
-              <span class="empirical-badge-sub">CIR / MSG Spaceflight Verification</span>
-            </div>
-            <p class="trends-empirical-note">
-              Calibrated against empirical flight data from <strong>NASA BASS</strong>, <strong>BASS-II</strong> (cotton/fiberglass &amp; PMMA acrylic flammability limits under low-speed ventilation), and <strong>SoFIE-GEL</strong> microgravity extinction boundaries on the ISS.
-            </p>
-          </div>
-        </section>
-      </div>
-
-      <!-- ===================================================================
-           TAB 5: SCENARIO INTELLIGENCE (PROJECT PYROS SI ENGINE)
-           =================================================================== -->
-      <div id="tab-scenario" class="cd-tab-pane">
-
-        <!-- CARD 1: Scenario Input & Action Toolbar -->
-        <section class="cd-card cd-card-scenario-input">
-          <div class="cd-card-head">
-            <div class="cd-card-title-wrap">
-              <h3 class="cd-card-title">Scenario Intelligence</h3>
-              <span class="cd-card-caption">Natural Language Fire Safety Synthesis</span>
-            </div>
-            <span class="tag-pill-sm tag-blue" id="si-engine-badge">NASA PSI + SI</span>
-          </div>
-
-          <p class="scenario-prompt-hint">
-            Describe an operational mission, planetary habitat, or microgravity fire scenario in natural language:
-          </p>
-
-          <div class="scenario-input-wrapper">
-            <textarea id="scenario-text-input" class="cd-scenario-textarea" rows="3"
-              placeholder='Describe a fire safety scenario, such as "A lunar habitat with 32% oxygen at 10 psi and a burning polymer."'></textarea>
-
-            <div class="scenario-examples-bar">
-              <span class="examples-tag">Quick Examples:</span>
-              <div class="examples-chips">
-                <button type="button" class="scenario-chip-btn" data-scenario="A lunar habitat with 32% oxygen at 10 psi, low ventilation, and a burning polymer material.">🌙 Lunar 32% O₂ Polymer</button>
-                <button type="button" class="scenario-chip-btn" data-scenario="Simulate a Martian habitat at 0.38g with 25% oxygen at 12 psi and PMMA plastic.">🔴 Mars 0.38g PMMA</button>
-                <button type="button" class="scenario-chip-btn" data-scenario="A fire experiment on the ISS in microgravity with solid fabrics in low ventilation.">🛰️ ISS 0g Fabric</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="scenario-actions-row">
-            <button id="btn-analyze-scenario" class="cd-analyze-btn">
-              <span class="btn-icon">⚡</span>
-              <span id="btn-analyze-text">Analyze Scenario</span>
-            </button>
-            <button id="btn-clear-scenario" class="cd-clear-btn" title="Clear scenario text" aria-label="Clear scenario text">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                <path d="M3 3v5h5"/>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Loading & Scientific Processing State -->
-          <div id="scenario-loading-state" class="scenario-status-box loading" style="display: none;">
-            <div class="scenario-spinner-wrap">
-              <div class="scenario-spinner"></div>
-            </div>
-            <div class="scenario-status-content">
-              <div class="scenario-status-title" id="scenario-loading-title">PROCESSING SCIENTIFIC SCENARIO...</div>
-              <p class="scenario-status-desc" id="scenario-loading-step">
-                Querying NASA PSI knowledge base, retrieving flight data, and solving deterministic physics bounds...
-              </p>
-              <div class="scenario-mini-steps" id="scenario-loading-steps-row">
-                <span class="step-dot active"></span><span>Semantic Search</span>
-                <span class="step-dot active"></span><span>Evidence Ranking</span>
-                <span class="step-dot active"></span><span>Combustion Physics Bounds</span>
-              </div>
-              <div id="scenario-fast-fallback-wrap" style="display: none; margin-top: 10px;">
-                <button type="button" id="btn-force-offline-analysis" class="btn-fast-fallback" title="Render backend container is spinning up. Click to instantly synthesize results using all 22 embedded NASA flight missions.">
-                  <span class="btn-icon">⚡</span>
-                  <span>Switch to Instant Offline Analysis</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Error Banner Display -->
-          <div id="scenario-error-state" class="scenario-status-box error" style="display: none;">
-            <div class="error-icon">⚠️</div>
-            <div class="error-content">
-              <div class="error-title" id="scenario-error-title">Backend Connection Error</div>
-              <p class="error-desc" id="scenario-error-desc">
-                Unable to connect to PYROS Engine. Manual simulation controls remain operational.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <!-- CONTAINER FOR RESULTS (Hidden until analysis succeeds) -->
-        <div id="scenario-results-container" class="scenario-results-wrap" style="display: none;">
-
-          <!-- SECTION A: Detected Target Conditions -->
-          <section id="scenario-target-conditions-card" class="cd-card cd-card-target-cond">
-            <div class="cd-card-head">
-              <div class="cd-card-title-wrap">
-                <h3 class="cd-card-title">Detected Target Conditions</h3>
-                <span class="cd-card-caption">Extracted from Scenario Context</span>
-              </div>
-              <span class="tag-pill-sm tag-green" id="res-extraction-badge">EXTRACTED</span>
-            </div>
-
-            <div class="target-grid-4">
-              <div class="target-cell">
-                <span class="target-lbl">Target Gravity</span>
-                <span class="target-val" id="res-target-gravity">—</span>
-                <span class="target-sub" id="res-target-gravity-sub">—</span>
-                <span class="transparency-pill pill-direct">DIRECT PHYSICS INPUT</span>
-              </div>
-              <div class="target-cell">
-                <span class="target-lbl">Target Oxygen (O₂)</span>
-                <span class="target-val" id="res-target-o2">—</span>
-                <span class="target-sub" id="res-target-o2-sub">—</span>
-                <span class="transparency-pill pill-direct">DIRECT PHYSICS INPUT</span>
-              </div>
-              <div class="target-cell">
-                <span class="target-lbl">Target Pressure</span>
-                <span class="target-val" id="res-target-pressure">—</span>
-                <span class="target-sub" id="res-target-pressure-sub">—</span>
-                <span class="transparency-pill pill-telemetry">SCIENTIFIC TELEMETRY ONLY</span>
-              </div>
-              <div class="target-cell">
-                <span class="target-lbl">Fuel / Material</span>
-                <span class="target-val" id="res-target-fuel">—</span>
-                <span class="target-sub">Combustible Phase</span>
-                <span class="transparency-pill pill-derived">DERIVED KINETIC PRESET</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- SECTION B: Deterministic Physics Bounds -->
-          <section id="scenario-physics-bounds-card" class="cd-card cd-card-physics-bounds">
-            <div class="cd-card-head">
-              <div class="cd-card-title-wrap">
-                <h3 class="cd-card-title">Deterministic Physics Bounds</h3>
-                <span class="cd-card-caption">Roper Scaling & Oxidizer Partial Pressure</span>
-              </div>
-              <span class="tag-pill-sm tag-blue">HARD BOUNDS</span>
-            </div>
-
-            <div id="scenario-physics-bounds-list" class="physics-bounds-stack">
-              <!-- Dynamically populated matching parameter names -->
-            </div>
-          </section>
-
-          <!-- SECTION C: Scientific Assessment & Insight -->
-          <section id="scenario-insight-card" class="cd-card cd-card-insight">
-            <div class="cd-card-head">
-              <div class="cd-card-title-wrap">
-                <h3 class="cd-card-title">Scientific Intelligence Insight</h3>
-                <span class="cd-card-caption">PSI Multi-Investigation Synthesis</span>
-              </div>
-              <span class="tag-pill-sm tag-purple">SI REASONING</span>
-            </div>
-
-            <div class="insight-block">
-              <h4 class="insight-subhead">Combined Combustion Assessment</h4>
-              <p id="res-combined-insight" class="insight-body-text">—</p>
-            </div>
-
-            <div class="insight-block" id="wrap-res-gap-analysis">
-              <h4 class="insight-subhead">Tested vs. Untested Gaps</h4>
-              <p id="res-gap-analysis" class="insight-body-text">—</p>
-            </div>
-
-            <div class="insight-block" id="wrap-res-recommendations" style="display: none;">
-              <h4 class="insight-subhead">Operational Safety Recommendations</h4>
-              <ul id="res-recommendations-list" class="insight-list"></ul>
-            </div>
-          </section>
-
-          <!-- SECTION D: NASA Flight Evidence (Ranked Investigations) -->
-          <section id="scenario-evidence-card" class="cd-card cd-card-evidence">
-            <div class="cd-card-head">
-              <div class="cd-card-title-wrap">
-                <h3 class="cd-card-title">NASA Flight Evidence</h3>
-                <span class="cd-card-caption">Correlated PSI Investigations</span>
-              </div>
-              <span class="tag-pill-sm tag-green" id="res-ranked-count">0 PRECEDENTS</span>
-            </div>
-
-            <div id="res-investigations-list" class="ranked-inv-stack">
-              <!-- Dynamically populated from ranked_investigations -->
-            </div>
-
-            <div class="sources-footer" id="wrap-res-sources">
-              <span class="sources-label">Citations:</span>
-              <div id="res-sources-chips" class="sources-chips"></div>
-            </div>
-          </section>
-
-          <!-- SECTION E: Scientific Confidence & Caveats -->
-          <section id="scenario-confidence-card" class="cd-card cd-card-confidence">
-            <div class="cd-card-head">
-              <div class="cd-card-title-wrap">
-                <h3 class="cd-card-title">Confidence & Scientific Caveats</h3>
-                <span class="cd-card-caption">Extrapolation Boundaries & Limitations</span>
-              </div>
-              <span id="res-confidence-badge" class="tag-pill-sm tag-amber">CONFIDENCE</span>
-            </div>
-
-            <div class="extrapolation-advisory-banner">
-              <span class="advisory-icon">ℹ️</span>
-              <p class="advisory-text">
-                <strong>Extrapolation Notice:</strong> Predictions are strictly bounded by 0g (ISS) and 1g (Earth) empirical data endpoints. No partial-gravity flight data currently exists in the NASA PSI database.
-              </p>
-            </div>
-
-            <div class="confidence-text-block" id="wrap-confidence-text">
-              <p id="res-confidence-text" class="confidence-summary">—</p>
-            </div>
-
-            <div class="caveats-block" id="wrap-res-caveats">
-              <h5 class="caveats-title">Bound Assumptions & Limitations</h5>
-              <ul id="res-caveats-list" class="caveats-list"></ul>
-            </div>
-          </section>
-
-          <!-- SECTION F: Missing Extrapolation Fallback (When response.extrapolation is null) -->
-          <section id="scenario-missing-extrapolation-card" class="cd-card cd-card-missing-extrap" style="display: none;">
-            <div class="missing-extrap-banner">
-              <span class="missing-icon">ℹ️</span>
-              <div class="missing-content">
-                <h4 class="missing-title">General Scenario Analysis Complete</h4>
-                <p class="missing-desc">
-                  Partial-gravity extrapolation is not available for this scenario (no partial-gravity keywords detected or standard conditions specified).
-                  Scientific insights, ranked NASA investigations, and citations are displayed above.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <!-- SECTION G: Scenario Simulation Action -->
-          <section class="cd-card cd-card-simulate-action">
-            <!-- Simulation Status Banner (Hidden until scenario is simulated) -->
-            <div id="scenario-sim-status-banner" class="sim-status-banner" style="display: none;">
-              <span id="sim-status-dot" class="sim-status-dot active"></span>
-              <span id="sim-status-text" class="sim-status-text">SCENARIO ACTIVE</span>
-            </div>
-
-            <button id="btn-simulate-scenario" class="cd-simulate-btn" disabled title="Analyze a scenario first to enable simulation">
-              <span id="sim-btn-label" class="sim-btn-label">SIMULATE SCENARIO</span>
-              <span id="sim-btn-badge" class="sim-btn-phase-badge">Phase 3: Ready</span>
-            </button>
-            <p id="simulate-guard-notice" class="simulate-guard-notice">
-              <strong>Scientific Integration:</strong> Applies validated gravity, oxygen, and fuel kinetics directly to the 3D fluid solver and station habitat scene.
-            </p>
-
-            <div id="scenario-sim-warning-container" style="display: none;"></div>
-          </section>
-
-        </div>
-
-      </div>
-
-    </div>
-    <!-- Subtle decorative sparkles from reference -->
-    <div class="hud-sparkle-decor" aria-hidden="true">✨</div>
-  </aside>
-
-  <!-- COLLAPSED EDGE TAB TRIGGER (When panel is minimized) -->
-  <button id="tab-reopen-hud" class="cd-edge-tab cd-edge-left" title="Open Lab Controls">
-    <span class="tab-text">Lab Controls</span>
-    <span class="tab-arrow">[OPEN]</span>
-  </button>
-
-  <!-- Vertical Collapsible Navigation & Flight Controls Menu (Right Side) -->
-  <aside class="pyros-vertical-controls" aria-label="Flight & Camera Navigation Controls">
-    <div class="controls-header">
-      <div class="controls-title-group">
-        <span class="controls-title-dot"></span>
-        <span class="controls-title">Flight Controls</span>
-      </div>
-      <button class="controls-hide-btn" title="Hide controls (Press H)">[HIDE ⮞]</button>
-    </div>
-    <div class="controls-body">
-      <div class="control-row">
-        <div class="control-keys">
-          <kbd class="key-cap">W</kbd>
-          <kbd class="key-cap">A</kbd>
-          <kbd class="key-cap">S</kbd>
-          <kbd class="key-cap">D</kbd>
-        </div>
-        <span class="control-label">Fly Astronaut</span>
-      </div>
-      <div class="control-row">
-        <div class="control-keys">
-          <kbd class="key-cap">Space</kbd>
-          <kbd class="key-cap">Shift</kbd>
-        </div>
-        <span class="control-label">Float Up / Down</span>
-      </div>
-      <div class="control-row">
-        <div class="control-keys">
-          <kbd class="key-cap">Left Drag</kbd>
-        </div>
-        <span class="control-label">Look 360°</span>
-      </div>
-      <div class="control-row">
-        <div class="control-keys">
-          <kbd class="key-cap">Right Drag</kbd>
-        </div>
-        <span class="control-label">Pan Camera</span>
-      </div>
-      <div class="control-row">
-        <div class="control-keys">
-          <kbd class="key-cap">Scroll</kbd>
-        </div>
-        <span class="control-label">Zoom In / Out</span>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Collapsed Right-Edge Floating Reopen Tab -->
-  <button class="controls-reopen-tab" title="Show controls (Press H)">
-    <span>⌨ CONTROLS</span>
-    <span>⮜</span>
-  </button>
-
-  <!-- Global Error Logger -->
-  <script>
-    function showGlobalErr(msg) {
-      console.error('Captured runtime error:', msg);
-      const errBox = document.getElementById('global-err-box') || (function() {
-        const d = document.createElement('div');
-        d.id = 'global-err-box';
-        d.style.cssText = 'position:fixed;bottom:10px;left:10px;background:rgba(220,38,38,0.95);color:#fff;padding:8px 14px;border-radius:6px;font-family:monospace;font-size:12px;z-index:999999;max-width:80vw;box-shadow:0 4px 12px rgba(0,0,0,0.5);';
-        document.body.appendChild(d);
-        return d;
-      })();
-      errBox.textContent = 'Runtime Error: ' + msg;
-    }
-    window.addEventListener('error', function(e) {
-      showGlobalErr(e.message || (e.error && e.error.message) || e.error);
-    });
-    window.addEventListener('unhandledrejection', function(e) {
-      showGlobalErr(e.reason && e.reason.message ? e.reason.message : e.reason);
-    });
-  </script>
-
-  <!-- Application Entry Point -->`;
+import SimulationTopBar from '../layout/SimulationTopBar';
+import { SpaceStationApp } from '../../station/stationMain.js';
+
+const STATION_SHORTCUTS = [
+  { keys: ['W', 'A', 'S', 'D'], action: 'Translate through module' },
+  { keys: ['Space', 'Shift'], action: 'Elevate / descend' },
+  { keys: ['Drag'], action: 'Orbit cabin view' },
+  { keys: ['Scroll'], action: 'Zoom in / out' },
+  { keys: ['Click'], action: 'Inspect flame / louver' },
+];
+
+const CURATED_MISSIONS = [
+  {
+    id: 'ISS Baseline (Saffire-I)',
+    badge: '0.00g // 21% O2',
+    desc: 'Large-scale solid fuel flame spread across Cotton-Fiberglass in Destiny microgravity.',
+    g: '0.00',
+    o2: '21.0',
+    psi: '14.7',
+  },
+  {
+    id: 'BASS-II Solid Fuel',
+    badge: '0.00g // 21% O2',
+    desc: 'Opposed vs concurrent low-speed ventilation flame extinction limits in Microgravity Glovebox.',
+    g: '0.00',
+    o2: '21.0',
+    psi: '14.7',
+  },
+  {
+    id: 'ACME Cool Flame / FLEX-2',
+    badge: '0.00g // 30% O2',
+    desc: 'Spherical heptane droplet two-stage low-temperature combustion above Earth stoichiometric air.',
+    g: '0.00',
+    o2: '30.0',
+    psi: '14.7',
+  },
+  {
+    id: 'Artemis Exploration Atmosphere',
+    badge: '0.16g // 34% O2',
+    desc: 'Lunar Gateway / Habitat reduced pressure 8.2 psi enriched O2 flammability screening.',
+    g: '0.16',
+    o2: '34.0',
+    psi: '8.2',
+  },
+  {
+    id: 'Skylab / EVA Pure Oxygen',
+    badge: '0.00g // 100% O2',
+    desc: 'Low-pressure pure oxygen pre-breathe chamber test envelope (34.5 kPa total pressure).',
+    g: '0.00',
+    o2: '100.0',
+    psi: '5.0',
+  },
+];
+
+const O2_BAR_STEPS = [
+  { step: 0, o2: 0, badge: '0% Vac', label: '0%', heightPct: 14 },
+  { step: 1, o2: 11, badge: '11% Hyp', label: '11%', heightPct: 28 },
+  { step: 2, o2: 21, badge: '+21% Nom', label: '21%', heightPct: 48 },
+  { step: 3, o2: 32, badge: '32% EVA', label: '32%', heightPct: 68 },
+  { step: 4, o2: 100, badge: '100% Pure', label: '100%', heightPct: 96 },
+];
 
 export default function SpaceStationView() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const appRef = useRef<any>(null);
+  const appRef = useRef<SpaceStationApp | null>(null);
 
   useEffect(() => {
-    initVerticalControls();
-    let isMounted = true;
-
-    import('../../station/stationMain.js')
-      .then(({ SpaceStationApp }) => {
-        if (!isMounted) return;
-        if (appRef.current) {
-          appRef.current.destroy();
-        }
-        appRef.current = new SpaceStationApp();
-      })
-      .catch((err) => console.error('Failed to init SpaceStationApp:', err));
-
+    const app = new SpaceStationApp();
+    appRef.current = app;
     return () => {
-      isMounted = false;
-      if (appRef.current && typeof appRef.current.destroy === 'function') {
-        appRef.current.destroy();
-        appRef.current = null;
-      }
+      app.destroy();
+      appRef.current = null;
     };
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="clean-ui-body station-view-root"
-      dangerouslySetInnerHTML={{ __html: HTML_CONTENT }}
-    />
+    <div className="sim-viewport-page">
+      <SimulationTopBar
+        activeRoute="station"
+        envCode="ISS-0G"
+        shortcuts={STATION_SHORTCUTS}
+        showExplorerBtn
+        showAuditBtn
+        showHudToggleBtn
+        showResetCamBtn
+        showFullscreenBtn
+      />
+
+      {/* Fullscreen Three.js Canvas */}
+      <canvas id="canvas-station" className="sim-canvas" />
+
+      {/* Reopen Tab (shown when HUD is collapsed) */}
+      <button type="button" id="tab-reopen-hud" className="hud-reopen-tab">
+        <span>Open ECLSS HUD</span>
+      </button>
+
+      {/* Bottom Camera Viewpoint Strip */}
+      <div className="viewpoint-strip" role="toolbar" aria-label="Station camera viewpoints">
+        <button type="button" className="viewpoint-btn active" data-view="corridor">
+          Corridor
+        </button>
+        <button type="button" className="viewpoint-btn" data-view="glovebox">
+          Glovebox MSG
+        </button>
+        <button type="button" className="viewpoint-btn" data-view="candle">
+          Flame Rig
+        </button>
+        <button type="button" className="viewpoint-btn" data-view="vents">
+          ECLSS Louvers
+        </button>
+        <button type="button" className="viewpoint-btn" data-view="hatch">
+          Crew Hatch
+        </button>
+      </div>
+
+      {/* Left Collapsible Telemetry & Control HUD */}
+      <aside id="hud-unified-panel" className="hud-panel-unified">
+        <div className="hud-panel-header">
+          <div className="hud-panel-title-wrap">
+            <span className="hud-panel-title">ISS Destiny &amp; Columbus</span>
+            <span id="nasa-backend-status-pill" className="hud-pill">
+              EMBEDDED MODEL
+            </span>
+          </div>
+          <button
+            type="button"
+            id="btn-collapse-hud"
+            className="hud-collapse-btn"
+            title="Collapse HUD"
+            aria-label="Collapse HUD"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        </div>
+
+        {/* 4 Navigation Tabs */}
+        <div className="cd-tabs-header" role="tablist">
+          <button type="button" role="tab" className="cd-tab-btn active" data-tab="tab-atmosphere">
+            Atmosphere
+          </button>
+          <button type="button" role="tab" className="cd-tab-btn" data-tab="tab-missions">
+            Missions
+          </button>
+          <button type="button" role="tab" className="cd-tab-btn" data-tab="tab-combustion">
+            Combustion
+          </button>
+          <button type="button" role="tab" className="cd-tab-btn" data-tab="tab-scenario">
+            Scenario SI
+          </button>
+        </div>
+
+        <div className="cd-tabs-body">
+          {/* TAB 1: ATMOSPHERE & ECLSS */}
+          <div id="tab-atmosphere" className="cd-tab-pane active">
+            <div className="cd-kpi-row">
+              <div className="cd-kpi-card">
+                <div className="cd-kpi-top">
+                  <span className="cd-kpi-label">Cabin O2</span>
+                  <span id="badge-o2-status-wrap" className="cd-trend-pill success">
+                    <span id="o2-status-dot" className="status-dot online" />
+                    <span id="badge-o2-status">NOMINAL</span>
+                  </span>
+                </div>
+                <div id="hud-cell-o2-val" className="cd-kpi-val">
+                  21.0%
+                </div>
+                <div id="hud-cell-po2-val" className="cd-kpi-sub">
+                  pO2: 21.3 kPa
+                </div>
+              </div>
+
+              <div className="cd-kpi-card">
+                <div className="cd-kpi-top">
+                  <span className="cd-kpi-label">Gravity Field</span>
+                  <span className="cd-trend-pill info">
+                    <span id="gravity-status-dot" className="status-dot online" />
+                    <span id="badge-gravity-status">0.00 g</span>
+                  </span>
+                </div>
+                <div id="hud-cell-gravity-val" className="cd-kpi-val">
+                  0.00 g
+                </div>
+                <div id="hud-cell-gravity-sub" className="cd-kpi-sub">
+                  Microgravity
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic N2 / O2 / Ar Gas Donut Composition */}
+            <div className="cd-donut-card">
+              <div className="cd-section-head">
+                <span className="cd-section-title">Gas Composition</span>
+                <span className="cd-section-badge">ECLSS MIX</span>
+              </div>
+              <div className="cd-donut-row">
+                <div className="cd-donut-svg-wrap">
+                  <svg viewBox="0 0 136 136" className="cd-donut-svg" aria-label="Cabin gas breakdown">
+                    <circle
+                      cx="68"
+                      cy="68"
+                      r="58"
+                      fill="none"
+                      stroke="rgba(236, 240, 246, 0.08)"
+                      strokeWidth="12"
+                    />
+                    <circle
+                      id="donut-segment-n2"
+                      cx="68"
+                      cy="68"
+                      r="58"
+                      fill="none"
+                      stroke="#38bdf8"
+                      strokeWidth="12"
+                      strokeDasharray="284.6 364.4"
+                      strokeDashoffset="0"
+                    />
+                    <circle
+                      id="donut-segment-o2"
+                      cx="68"
+                      cy="68"
+                      r="58"
+                      fill="none"
+                      stroke="#e5a03b"
+                      strokeWidth="12"
+                      strokeDasharray="76.5 364.4"
+                      strokeDashoffset="-284.6"
+                    />
+                    <circle
+                      id="donut-segment-trace"
+                      cx="68"
+                      cy="68"
+                      r="58"
+                      fill="none"
+                      stroke="#3fb984"
+                      strokeWidth="12"
+                      strokeDasharray="3.3 364.4"
+                      strokeDashoffset="-361.1"
+                    />
+                  </svg>
+                  <div className="cd-donut-center">
+                    <strong id="val-total-pressure-kpa">101.3 kPa</strong>
+                    <span id="val-total-pressure-atm">1.00 atm</span>
+                  </div>
+                </div>
+
+                <div className="cd-donut-legend">
+                  <div className="cd-legend-item">
+                    <span className="cd-legend-left">
+                      <span className="cd-legend-dot" style={{ background: '#38bdf8' }} />
+                      <span>N2 (<span id="val-n2-percent">78.1%</span>)</span>
+                    </span>
+                    <span id="val-n2-kpa" className="mono">79.1 kPa</span>
+                  </div>
+                  <div className="cd-legend-item">
+                    <span className="cd-legend-left">
+                      <span className="cd-legend-dot" style={{ background: '#e5a03b' }} />
+                      <span>O2 (<span id="val-oxygen-percent-2">21%</span>)</span>
+                    </span>
+                    <span className="mono">
+                      <span id="val-oxygen-po2-legend">21.3</span> kPa
+                    </span>
+                  </div>
+                  <div className="cd-legend-item">
+                    <span className="cd-legend-left">
+                      <span className="cd-legend-dot" style={{ background: '#3fb984' }} />
+                      <span>Ar (<span id="val-trace-percent">0.9%</span>)</span>
+                    </span>
+                    <span id="val-trace-kpa" className="mono">0.9 kPa</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Oxygen Control & Envelope Alert */}
+            <div className="cd-control-card">
+              <div className="cd-slider-box">
+                <div className="cd-slider-head">
+                  <span className="label-text">Oxygen fraction (%)</span>
+                  <span className="cd-slider-val">
+                    <span id="val-oxygen-percent">21.0</span>%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="slider-station-oxygen"
+                  className="cd-range"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  defaultValue="21.0"
+                />
+              </div>
+
+              <div className="cd-chip-row">
+                <button type="button" className="o2-preset-btn" data-o2="0">
+                  0% Vac
+                </button>
+                <button type="button" className="o2-preset-btn" data-o2="11">
+                  11% Hyp
+                </button>
+                <button type="button" className="o2-preset-btn active" data-o2="21">
+                  21% Air
+                </button>
+                <button type="button" className="o2-preset-btn" data-o2="32">
+                  32% EVA
+                </button>
+                <button type="button" className="o2-preset-btn" data-o2="100">
+                  100% O2
+                </button>
+              </div>
+
+              <div className="cd-bar-chart-row">
+                {O2_BAR_STEPS.map((b) => (
+                  <button
+                    type="button"
+                    key={b.step}
+                    className={`cd-bar-col ${b.step === 2 ? 'active' : ''}`}
+                    data-step={b.step}
+                    data-o2={b.o2}
+                  >
+                    <span className="cd-bar-badge">{b.badge}</span>
+                    <div className="cd-bar-fill" style={{ height: `${b.heightPct}%` }} />
+                    <span className="cd-bar-label">{b.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div id="o2-alert-banner" className="o2-alert-banner nominal">
+                <span id="o2-alert-text">
+                  Atmosphere nominal: Life support active at 101.3 kPa sea-level equivalent.
+                </span>
+              </div>
+            </div>
+
+            {/* ECLSS Mechanical Telemetry */}
+            <div className="cd-chart-card">
+              <div className="cd-section-head">
+                <span className="cd-section-title">ECLSS Hardware &amp; Flammability</span>
+              </div>
+              <table className="cd-data-table">
+                <tbody>
+                  <tr>
+                    <td>Partial pressure pO2</td>
+                    <td id="val-oxygen-po2" className="mono-cell">
+                      21.3 kPa
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Oxidizer index</td>
+                    <td id="val-flammability-index" className="mono-cell">
+                      Phi = 0.21
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>LOI margin (17.5% ref)</td>
+                    <td id="val-loi-margin" className="mono-cell">
+                      +3.5% vs LOI
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Louver aperture</td>
+                    <td id="val-vent-aperture" className="mono-cell">
+                      45 deg
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Turbine speed</td>
+                    <td id="val-vent-rpm" className="mono-cell">
+                      2,400 RPM
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>O2 mass flow</td>
+                    <td id="val-vent-flow" className="mono-cell">
+                      28.4 L/min
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Artificial Gravity & Cabin State */}
+            <div className="cd-control-card">
+              <div className="cd-slider-box">
+                <div className="cd-slider-head">
+                  <span className="label-text">Centrifugal / artificial gravity</span>
+                  <span className="cd-slider-val">
+                    <span id="val-gravity-g">0.00</span> g
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="slider-station-gravity"
+                  className="cd-range"
+                  min="0"
+                  max="2.0"
+                  step="0.01"
+                  defaultValue="0.0"
+                />
+              </div>
+
+              <div className="cd-chip-row">
+                <button type="button" className="gravity-preset-btn active" data-g="0.00">
+                  0.00g
+                </button>
+                <button type="button" className="gravity-preset-btn" data-g="0.17">
+                  0.17g
+                </button>
+                <button type="button" className="gravity-preset-btn" data-g="0.38">
+                  0.38g
+                </button>
+                <button type="button" className="gravity-preset-btn" data-g="1.00">
+                  1.00g
+                </button>
+                <button type="button" className="gravity-preset-btn" data-g="1.50">
+                  1.50g
+                </button>
+              </div>
+
+              <div className="cd-sub-row">
+                <span>Cabin payloads</span>
+                <div className="cd-chip-row">
+                  <button type="button" id="btn-nudge-objects" className="cd-mini-btn">
+                    Impulse
+                  </button>
+                  <button type="button" id="btn-reset-objects" className="cd-mini-btn">
+                    Reset Objects
+                  </button>
+                </div>
+              </div>
+
+              <div className="cd-sub-row">
+                <span>Cabin lighting</span>
+                <div className="cd-chip-row">
+                  <button type="button" className="light-mode-btn active" data-mode="nominal">
+                    Daylight
+                  </button>
+                  <button type="button" className="light-mode-btn" data-mode="sleep">
+                    Night
+                  </button>
+                  <span id="pill-emergency-indicator" className="tag-pill badge-red" style={{ display: 'none' }}>
+                    RED ALERT
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* TAB 2: NASA MISSIONS & PRESETS */}
+          <div id="tab-missions" className="cd-tab-pane">
+            <div className="mission-active-card">
+              <div className="cd-section-head">
+                <span className="cd-section-title">Active Investigation</span>
+                <span className="cd-section-badge">LOADED</span>
+              </div>
+              <div id="active-mission-name" className="mission-active-name">
+                ISS Baseline (Saffire-I)
+              </div>
+              <div id="active-mission-desc" className="mission-active-desc">
+                0.00g ISS Zero-G // 21.0% O2 // 14.7 psi nominal cabin environment.
+              </div>
+              <button
+                type="button"
+                id="btn-browse-22-missions"
+                className="btn-secondary-inline"
+                style={{ marginTop: 4 }}
+              >
+                Open Full 22-Investigation Archive
+              </button>
+            </div>
+
+            <div className="cd-section-head">
+              <span className="cd-section-title">Flight Benchmark Presets</span>
+            </div>
+
+            <div className="mission-scroll-list">
+              {CURATED_MISSIONS.map((m, idx) => (
+                <div
+                  key={m.id}
+                  className={`mission-item-card ${idx === 0 ? 'active' : ''}`}
+                  data-mission={m.id}
+                  data-g={m.g}
+                  data-o2={m.o2}
+                  data-psi={m.psi}
+                >
+                  <div className="mission-item-top">
+                    <span className="mission-item-title">{m.id}</span>
+                    <span className="mission-badge">{m.badge}</span>
+                  </div>
+                  <p className="cd-section-hint">{m.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* TAB 3: COMBUSTION PHYSICS & ROPER SCALING */}
+          <div id="tab-combustion" className="cd-tab-pane">
+            <div className="cd-control-card">
+              <div className="cd-section-head">
+                <span className="cd-section-title">NASA Physics Bounds Engine</span>
+                <span className="cd-section-badge">ROPER + GRASHOF</span>
+              </div>
+
+              <div className="cd-slider-box">
+                <div className="cd-slider-head">
+                  <span className="label-text">Target gravity</span>
+                  <span className="cd-slider-val">
+                    <span id="val-nasa-gravity">0.00</span> g
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="slider-nasa-gravity"
+                  className="cd-range"
+                  min="0"
+                  max="2.0"
+                  step="0.01"
+                  defaultValue="0.0"
+                />
+              </div>
+
+              <div className="cd-slider-box">
+                <div className="cd-slider-head">
+                  <span className="label-text">Target oxygen</span>
+                  <span className="cd-slider-val">
+                    <span id="val-nasa-o2">21.0</span>%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="slider-nasa-o2"
+                  className="cd-range"
+                  min="5"
+                  max="100"
+                  step="0.5"
+                  defaultValue="21.0"
+                />
+              </div>
+
+              <div className="cd-slider-box">
+                <div className="cd-slider-head">
+                  <span className="label-text">Cabin pressure</span>
+                  <span className="cd-slider-val">
+                    <span id="val-nasa-pressure">14.7</span> psi
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="slider-nasa-pressure"
+                  className="cd-range"
+                  min="3"
+                  max="20"
+                  step="0.1"
+                  defaultValue="14.7"
+                />
+              </div>
+
+              <div className="cd-chip-row">
+                <button type="button" className="nasa-preset-btn active" data-preset="iss">
+                  ISS 0g
+                </button>
+                <button type="button" className="nasa-preset-btn" data-preset="moon">
+                  Moon 34%
+                </button>
+                <button type="button" className="nasa-preset-btn" data-preset="mars">
+                  Mars 0.38g
+                </button>
+                <button type="button" className="nasa-preset-btn" data-preset="eva">
+                  EVA 100%
+                </button>
+                <button type="button" className="nasa-preset-btn" data-preset="cfig">
+                  CFIG 85%
+                </button>
+                <button type="button" className="nasa-preset-btn" data-preset="earth">
+                  Earth 1g
+                </button>
+              </div>
+            </div>
+
+            <div className="cd-kpi-row">
+              <div className="cd-kpi-card">
+                <span className="cd-kpi-label">Buoyancy ratio</span>
+                <span id="nasa-metric-buoyancy" className="cd-kpi-val">
+                  0.0%
+                </span>
+                <span className="cd-kpi-sub">Relative to Earth 1g</span>
+              </div>
+              <div className="cd-kpi-card">
+                <span className="cd-kpi-label">Convective flow</span>
+                <span className="cd-kpi-val">
+                  <span id="nasa-metric-convection">0.000</span> m/s
+                </span>
+                <span className="cd-kpi-sub">Buoyancy induced</span>
+              </div>
+              <div className="cd-kpi-card">
+                <span className="cd-kpi-label">O2 enhancement</span>
+                <span id="nasa-metric-o2-factor" className="cd-kpi-val">
+                  1.00x
+                </span>
+                <span className="cd-kpi-sub">vs 21% sea-level</span>
+              </div>
+              <div className="cd-kpi-card">
+                <span className="cd-kpi-label">Est. flame height</span>
+                <span className="cd-kpi-val">
+                  <span id="nasa-metric-flame-height">28.5</span> mm
+                </span>
+                <span id="nasa-metric-flame-spread" className="cd-kpi-sub">
+                  0.10 - 0.50 mm/s
+                </span>
+              </div>
+            </div>
+
+            {/* Dynamic Roper Curve Chart */}
+            <div className="cd-chart-card">
+              <div className="cd-section-head">
+                <span className="cd-section-title">Roper Scaling Curve (0g - 2g)</span>
+                <span className="cd-section-badge">LIVE CURVE</span>
+              </div>
+              <svg
+                id="roper-chart-svg"
+                viewBox="0 0 316 132"
+                width="100%"
+                height="132"
+                aria-label="Roper flame height and convective velocity scaling curve"
+              />
+              <p className="cd-section-hint">
+                As gravitational acceleration approaches zero, buoyant upward flow collapses. Oxygen transport relies on molecular diffusion, forming spherical soot shells with lower peak chemiluminescence in the CH* and C2* spectral bands.
+              </p>
+            </div>
+          </div>
+
+          {/* TAB 4: SCENARIO INTELLIGENCE (SI) */}
+          <div id="tab-scenario" className="cd-tab-pane">
+            <div className="cd-control-card">
+              <div className="cd-section-head">
+                <span className="cd-section-title">Scenario Intelligence</span>
+                <span className="cd-section-badge">PSI RAG + BOUNDS</span>
+              </div>
+              <textarea
+                id="scenario-text-input"
+                className="scenario-input"
+                placeholder="Describe target atmosphere, gravity, pressure, and fuel (e.g., Lunar habitat at 0.16g, 34% O2, 8.2 psi with polyimide wire insulation)..."
+              />
+
+              <div className="cd-chip-row">
+                <button
+                  type="button"
+                  className="scenario-chip-btn"
+                  data-scenario="Lunar habitat fire at 0.16g with 34% O2 at 8.2 psi burning polyimide insulation"
+                >
+                  Lunar 34% O2
+                </button>
+                <button
+                  type="button"
+                  className="scenario-chip-btn"
+                  data-scenario="Mars surface sealed habitat at 0.38g with 21% O2 at 14.7 psi testing cotton cellulose"
+                >
+                  Mars 0.38g
+                </button>
+                <button
+                  type="button"
+                  className="scenario-chip-btn"
+                  data-scenario="ISS microgravity 0.00g with 30% O2 enriched glovebox testing heptane droplet cool flame"
+                >
+                  ISS Cool Flame
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" id="btn-analyze-scenario" className="btn-analyze-primary">
+                  <span id="btn-analyze-text">Analyze Scenario</span>
+                </button>
+                <button type="button" id="btn-clear-scenario" className="btn-secondary-inline">
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            {/* Loading state */}
+            <div
+              id="scenario-loading-state"
+              className="scenario-result-card"
+              style={{ display: 'none' }}
+            >
+              <div id="scenario-loading-title" className="cd-section-title">
+                PROCESSING SCIENTIFIC SCENARIO...
+              </div>
+              <p id="scenario-loading-step" className="cd-section-hint">
+                Querying NASA PSI knowledge base and deterministic physics bounds...
+              </p>
+              <div id="scenario-fast-fallback-wrap" style={{ display: 'none' }}>
+                <button type="button" id="btn-force-offline-analysis" className="btn-secondary-inline">
+                  Use Instant Embedded Synthesis
+                </button>
+              </div>
+            </div>
+
+            {/* Error state */}
+            <div
+              id="scenario-error-state"
+              className="o2-alert-banner critical"
+              style={{ display: 'none', flexDirection: 'column', alignItems: 'flex-start' }}
+            >
+              <strong id="scenario-error-title">Analysis Unavailable</strong>
+              <span id="scenario-error-desc">Using local NASA model fallback.</span>
+            </div>
+
+            {/* Results container */}
+            <div
+              id="scenario-results-container"
+              style={{ display: 'none', flexDirection: 'column', gap: 10 }}
+            >
+              <div id="scenario-sim-status-banner" className="sim-status-banner" style={{ display: 'none' }}>
+                <span id="sim-status-dot" className="sim-status-dot" />
+                <span id="sim-status-text">Scenario ready for 3D simulation</span>
+              </div>
+
+              <button type="button" id="btn-simulate-scenario" className="btn-simulate-cta" disabled>
+                <span id="sim-btn-label">SIMULATE SCENARIO</span>
+                <span id="sim-btn-badge" className="tag-pill">
+                  STANDBY
+                </span>
+              </button>
+
+              <div id="scenario-sim-warning-container" style={{ display: 'none' }} />
+
+              <div id="scenario-target-conditions-card" className="scenario-result-card">
+                <div className="cd-section-head">
+                  <span className="cd-section-title">Extracted Target Conditions</span>
+                  <span id="res-extraction-badge" className="tag-pill-sm tag-cyan">
+                    EMBEDDED NASA MODEL
+                  </span>
+                </div>
+                <div className="cd-kpi-row">
+                  <div className="cd-kpi-card">
+                    <span className="cd-kpi-label">Gravity</span>
+                    <span id="res-target-gravity" className="cd-kpi-val">
+                      0.00 g
+                    </span>
+                    <span id="res-target-gravity-sub" className="cd-kpi-sub">
+                      Microgravity
+                    </span>
+                  </div>
+                  <div className="cd-kpi-card">
+                    <span className="cd-kpi-label">Oxygen</span>
+                    <span id="res-target-o2" className="cd-kpi-val">
+                      21.0%
+                    </span>
+                    <span id="res-target-o2-sub" className="cd-kpi-sub">
+                      Normoxic
+                    </span>
+                  </div>
+                  <div className="cd-kpi-card">
+                    <span className="cd-kpi-label">Pressure</span>
+                    <span id="res-target-pressure" className="cd-kpi-val">
+                      14.7 psi
+                    </span>
+                    <span id="res-target-pressure-sub" className="cd-kpi-sub">
+                      101.3 kPa
+                    </span>
+                  </div>
+                  <div className="cd-kpi-card">
+                    <span className="cd-kpi-label">Target fuel</span>
+                    <span id="res-target-fuel" className="cd-kpi-sub" style={{ color: 'var(--text-primary)' }}>
+                      Solid material
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="scenario-physics-bounds-card" className="scenario-result-card">
+                <span className="cd-section-title">Deterministic Physics Bounds</span>
+                <div id="scenario-physics-bounds-list" />
+              </div>
+
+              <div
+                id="scenario-missing-extrapolation-card"
+                className="scenario-result-card"
+                style={{ display: 'none' }}
+              >
+                <div className="missing-title cd-section-title" />
+                <p className="missing-desc cd-section-hint" />
+              </div>
+
+              <div className="scenario-result-card">
+                <span className="cd-section-title">Scientific Synthesis</span>
+                <p id="res-combined-insight" className="insight-body-text" />
+                <div id="wrap-res-gap-analysis" style={{ display: 'none' }}>
+                  <span className="cd-section-title">Research Gaps</span>
+                  <p id="res-gap-analysis" className="insight-body-text" />
+                </div>
+                <div id="wrap-res-recommendations" style={{ display: 'none' }}>
+                  <span className="cd-section-title">Recommendations</span>
+                  <ul id="res-recommendations-list" style={{ paddingLeft: 16, fontSize: 12, color: 'var(--text-secondary)' }} />
+                </div>
+              </div>
+
+              <div className="scenario-result-card">
+                <div className="cd-section-head">
+                  <span className="cd-section-title">NASA Precedents</span>
+                  <span id="res-ranked-count" className="tag-pill">
+                    0 PRECEDENTS
+                  </span>
+                </div>
+                <div id="res-investigations-list" style={{ display: 'flex', flexDirection: 'column', gap: 6 }} />
+                <div id="wrap-res-sources" className="cd-chip-row" style={{ display: 'none' }}>
+                  <div id="res-sources-chips" className="cd-chip-row" />
+                </div>
+              </div>
+
+              <div className="scenario-result-card">
+                <div className="cd-section-head">
+                  <span className="cd-section-title">Confidence &amp; Caveats</span>
+                  <span id="res-confidence-badge" className="tag-pill badge-cyan">
+                    MEDIUM CONFIDENCE
+                  </span>
+                </div>
+                <p id="res-confidence-text" className="cd-section-hint" />
+                <div id="wrap-res-caveats" style={{ display: 'none' }}>
+                  <ul id="res-caveats-list" style={{ paddingLeft: 16, fontSize: 11, color: 'var(--text-muted)' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
   );
 }

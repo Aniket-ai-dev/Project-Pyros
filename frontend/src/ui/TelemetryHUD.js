@@ -165,8 +165,8 @@ export class TelemetryHUD {
       this.metricRegime.textContent = 'ISS Zero-G (0.00g)';
       this.regimeText.textContent = 'Regime: Pure Molecular Diffusion (0.00g)';
       this.regimeBanner.className = 'regime-status-banner regime-microgravity';
-      this.numGrashof.textContent = '0.00 (Zero Buoyancy)';
-      this.numRayleigh.textContent = '0.00 (No Convective Roll)';
+      this.numGrashof.textContent = '0.00 (Diffusive)';
+      this.numRayleigh.textContent = '0.00 (No Conv.)';
     } else if (Math.abs(g - 1.62) < 0.1) {
       this.metricRegime.textContent = 'Lunar Surface (0.165g)';
       this.regimeText.textContent = 'Regime: Weak Buoyancy (0.165g Bulbous)';
@@ -194,7 +194,7 @@ export class TelemetryHUD {
     }
 
     if (c.ambientOxygen < 0.12) {
-      this.regimeText.textContent = 'Critical Alert: Hypoxic Starvation (<14% O₂)';
+      this.regimeText.textContent = 'Critical Alert: Hypoxic Starvation (<14% O2)';
       this.regimeBanner.className = 'regime-status-banner regime-critical';
     }
 
@@ -205,5 +205,61 @@ export class TelemetryHUD {
     // Heat release
     const power = (c.fuelRate * gasConfig.heatOfCombustion * (c.ambientOxygen / 0.21) * 1.5).toFixed(2);
     if (this.metricHeat) this.metricHeat.textContent = `${power} kW`;
+
+    this.updateRoperComparison();
+  }
+
+  updateRoperComparison() {
+    const svg = document.getElementById('roper-lab-svg');
+    if (!svg) return;
+    const gCurr = Math.abs(this.config.gravity) / 9.81;
+    const o2Ratio = Math.max(0.25, this.config.ambientOxygen / 0.21);
+    const fuelRate = this.config.fuelRate || 1.0;
+
+    const w = 284;
+    const h = 114;
+    const padL = 28;
+    const padR = 10;
+    const padT = 16;
+    const padB = 20;
+    const plotW = w - padL - padR;
+    const plotH = h - padT - padB;
+
+    const regimes = [
+      { label: '0g', g: 0.0, col: '#38bdf8' },
+      { label: 'Moon', g: 0.165, col: '#9aa4b4' },
+      { label: 'Mars', g: 0.38, col: '#ea7a31' },
+      { label: 'Earth', g: 1.0, col: '#e5a03b' },
+      { label: 'Hyper', g: 2.5, col: '#e5484d' },
+    ];
+
+    const calcScaledH = (g) => {
+      if (g < 0.03) return Math.min(68, (22 + o2Ratio * 6) * Math.sqrt(fuelRate));
+      return Math.min(68, (26 + o2Ratio * 12) * Math.sqrt(fuelRate) * Math.pow(g + 0.1, -0.2));
+    };
+
+    const barW = 30;
+    const gap = (plotW - regimes.length * barW) / (regimes.length + 1);
+    let barsSvg = '';
+    regimes.forEach((r, idx) => {
+      const val = calcScaledH(r.g);
+      const bh = (val / 70) * plotH;
+      const x = padL + gap + idx * (barW + gap);
+      const y = padT + plotH - bh;
+      const isNear = Math.abs(gCurr - r.g) < 0.12;
+      barsSvg += `
+        <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="3"
+          fill="${isNear ? r.col : 'rgba(236,240,246,0.14)'}"
+          stroke="${r.col}" stroke-width="${isNear ? 1.5 : 0.8}" />
+        <text x="${(x + barW / 2).toFixed(1)}" y="${(y - 3).toFixed(1)}" text-anchor="middle" fill="#9aa4b4" font-family="JetBrains Mono, monospace" font-size="8.5">${val.toFixed(0)}mm</text>
+        <text x="${(x + barW / 2).toFixed(1)}" y="${h - 5}" text-anchor="middle" fill="${isNear ? '#ecf0f6' : '#697487'}" font-family="JetBrains Mono, monospace" font-size="8.5">${r.label}</text>
+      `;
+    });
+
+    svg.innerHTML = `
+      <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" stroke="rgba(236, 240, 246, 0.14)" stroke-width="1" />
+      <text x="${padL}" y="10" fill="#9aa4b4" font-family="JetBrains Mono, monospace" font-size="8.5">Estimated flame length across g (O2=${(this.config.ambientOxygen * 100).toFixed(0)}%)</text>
+      ${barsSvg}
+    `;
   }
 }

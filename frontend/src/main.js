@@ -237,12 +237,49 @@ export class AeroFireApp {
           guideModal.classList.remove('open');
         }
       });
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          guideModal.classList.remove('open');
+    }
+
+    // Topbar camera reset & fullscreen controls
+    const btnResetCam = document.getElementById('btn-reset-cam');
+    if (btnResetCam && this.camera && this.controls) {
+      btnResetCam.addEventListener('click', () => {
+        this.camera.position.set(0.0, 0.50, 1.85);
+        this.controls.target.set(0, 0.32, 0);
+        this.controls.update();
+      });
+    }
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
         }
       });
     }
+
+    // Keyboard shortcuts: 1-6 gravity regimes & Escape to close modal
+    const presetGravities = [0.0, 1.62, 3.72, 9.81, 24.5, -9.81];
+    this._onKeyDown = (e) => {
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'Escape' && guideModal) {
+        guideModal.classList.remove('open');
+        return;
+      }
+      const idx = parseInt(e.key, 10) - 1;
+      if (idx >= 0 && idx < presetGravities.length) {
+        this.config.gravity = presetGravities[idx];
+        if (this.controlsUI) {
+          this.controlsUI.syncAllUI();
+        }
+        document.querySelectorAll('#controls-panel .mini-btn').forEach((b) => {
+          b.classList.toggle('active', Math.abs(parseFloat(b.dataset.g) - this.config.gravity) < 0.05);
+        });
+      }
+    };
+    window.addEventListener('keydown', this._onKeyDown);
   }
 
   triggerSpark() {
@@ -339,6 +376,7 @@ export class AeroFireApp {
     this.isDestroyed = true;
     if (this.rafId) cancelAnimationFrame(this.rafId);
     if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onKeyDown) window.removeEventListener('keydown', this._onKeyDown);
     if (this.renderer) {
       try { this.renderer.dispose(); } catch (e) {}
     }

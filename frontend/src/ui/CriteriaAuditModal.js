@@ -199,8 +199,8 @@ export class CriteriaAuditModal {
           <div class="audit-step-content" id="audit-step-3">
             <div class="step-hero-banner">
               <span class="objective-tag">CHALLENGE OBJECTIVE 3</span>
-              <h3>Spacesuits, Exploration Atmospheres & Oxidizer Partial Pressure Scaling</h3>
-              <p>The challenge details how spacesuits, lunar habitats, and high-O₂ experiments differ. Materials do not burn based on oxygen percentage alone, but on <strong>Oxygen Partial Pressure ($P_{\\text{O}_2} = P_{\\text{total}} \\times \\text{O}_2\\%$)</strong>. Below is the verified live calculation model.</p>
+              <h3>Spacesuits, Exploration Atmospheres &amp; Oxidizer Partial Pressure Scaling</h3>
+              <p>The challenge details how spacesuits, lunar habitats, and high-O2 experiments differ. Materials do not burn based on oxygen percentage alone, but on <strong>Oxygen Partial Pressure (P_O2 = P_total x O2%)</strong>. Below is the verified live calculation model.</p>
             </div>
 
             <!-- Comparative Summary Table -->
@@ -211,7 +211,7 @@ export class CriteriaAuditModal {
                     <th>Environment</th>
                     <th>Total Pressure</th>
                     <th>Oxygen Vol %</th>
-                    <th>Oxidizer $P_{\\text{O}_2}$</th>
+                    <th>Oxidizer pO2</th>
                     <th>Flammability Multiplier</th>
                     <th>Physiological & Safety Implication</th>
                   </tr>
@@ -277,7 +277,7 @@ export class CriteriaAuditModal {
               </div>
               <div class="calc-results-output">
                 <div class="calc-result-stat">
-                  <span class="stat-lbl">Calculated $P_{\\text{O}_2}$:</span>
+                  <span class="stat-lbl">Calculated pO2:</span>
                   <span class="stat-num" id="audit-calc-po2-result">3.47 psi</span>
                 </div>
                 <div class="calc-result-stat">
@@ -303,19 +303,19 @@ export class CriteriaAuditModal {
             <div class="physics-equations-grid">
               <div class="eq-card">
                 <h4>1. Roper Laminar Flame Height Scaling</h4>
-                <div class="eq-latex">$$L_f(g) = L_f(1\\text{g}) \\cdot \\min\\left(3.0, \\max\\left(1.0, g^{-0.25}\\right)\\right)$$</div>
+                <div class="eq-latex">L_f(g) = L_f(1g) · min(3.0, max(1.0, g^-0.25))</div>
                 <p>On Earth (1g), buoyant updraft pulls flames into elongated teardrops. In microgravity (0g), buoyant acceleration is zero, creating calm spherical diffusion shells. On the Moon (0.166g), flames expand to <strong>47.0 mm (+57%)</strong> due to reduced soot venting.</p>
               </div>
 
               <div class="eq-card">
                 <h4>2. Grashof Natural Convection Velocity</h4>
-                <div class="eq-latex">$$u_{\\text{conv}} \\sim \\sqrt{g \\cdot L \\cdot \\beta \\cdot \\Delta T}$$</div>
-                <p>Natural convection velocity scales with $\\sqrt{g}$. On the Moon, $u_{\\text{conv}}$ is only <strong>40.7%</strong> of Earth; on Mars (0.38g), it is <strong>61.6%</strong>, sharply lowering convective cooling and extending material flammability limits.</p>
+                <div class="eq-latex">u_conv ~ sqrt(g · L · beta · dT)</div>
+                <p>Natural convection velocity scales with sqrt(g). On the Moon, u_conv is only <strong>40.7%</strong> of Earth; on Mars (0.38g), it is <strong>61.6%</strong>, sharply lowering convective cooling and extending material flammability limits.</p>
               </div>
 
               <div class="eq-card">
                 <h4>3. E-FIELD Flames: Mimicking Gravity with Electric Fields</h4>
-                <div class="eq-latex">$$\\vec{f}_{\\text{ion}} = q \\cdot \\vec{E} \\approx \\vec{f}_{\\text{buoyancy}}$$</div>
+                <div class="eq-latex">f_ion = q · E ~ f_buoyancy</div>
                 <p>ACME's E-FIELD experiment applied DC electric fields to flame ions, inducing an ionic wind body force that successfully mimicked gravity-induced convective flow in zero-g.</p>
               </div>
 
@@ -344,7 +344,7 @@ export class CriteriaAuditModal {
               </div>
               <div class="calc-results-output">
                 <div class="calc-result-stat">
-                  <span class="stat-lbl">Current Gravity ($g$):</span>
+                  <span class="stat-lbl">Current Gravity (g):</span>
                   <span class="stat-num" id="audit-g-val">0.17 g</span>
                 </div>
                 <div class="calc-result-stat">

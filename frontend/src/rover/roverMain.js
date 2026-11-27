@@ -127,12 +127,19 @@ export class RoverApp {
     this.camTransStartTime = 0;
     this.camTransDuration = 1200;
 
-    // Cinematic Viewpoints: Strictly 2 camera presets
+    // Cinematic Viewpoints across Rover Warm Electronics Box subsystems
     this.viewpoints = {
-      overview: { pos: new THREE.Vector3(0.0, 0.32, 0.52), target: new THREE.Vector3(0.0, 0.06, -0.05) },
-      pcu: { pos: new THREE.Vector3(-0.08, 0.14, 0.08), target: new THREE.Vector3(-0.06, 0.080, -0.06) }
+      overview: { pos: new THREE.Vector3(0.0, 0.34, 0.56), target: new THREE.Vector3(0.0, 0.06, -0.05) },
+      pcu: { pos: new THREE.Vector3(-0.08, 0.16, 0.10), target: new THREE.Vector3(-0.06, 0.075, -0.04) },
+      regulator: { pos: new THREE.Vector3(-0.18, 0.19, 0.16), target: new THREE.Vector3(-0.06, 0.075, -0.04) },
+      thermal: { pos: new THREE.Vector3(-0.04, 0.44, 0.36), target: new THREE.Vector3(-0.06, 0.05, 0.02) },
+      rce: { pos: new THREE.Vector3(0.26, 0.22, 0.12), target: new THREE.Vector3(0.38, 0.08, -0.15) },
+      battery: { pos: new THREE.Vector3(-0.22, 0.22, 0.48), target: new THREE.Vector3(-0.35, 0.08, 0.32) },
+      motor: { pos: new THREE.Vector3(0.20, 0.20, 0.50), target: new THREE.Vector3(0.32, 0.08, 0.34) },
+      comms: { pos: new THREE.Vector3(0.0, 0.18, 0.40), target: new THREE.Vector3(-0.02, 0.06, 0.22) }
     };
 
+    this.keys = { forward: false, backward: false, left: false, right: false, up: false, down: false };
     this.lastTimestamp = 0;
     this.init();
   }
@@ -140,6 +147,7 @@ export class RoverApp {
   init() {
     this.setupRenderer();
     this.setupCamera();
+    this.setupKeyboardControls();
     this.setupScene();
     this.setupUI();
     this.setupRaycasting();
@@ -149,6 +157,69 @@ export class RoverApp {
     this._onResize = () => this.onWindowResize();
     window.addEventListener('resize', this._onResize);
     this.rafId = requestAnimationFrame((t) => this.renderLoop(t));
+  }
+
+  setupKeyboardControls() {
+    this._onKeyDown = (e) => {
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': this.keys.forward = true; break;
+        case 'KeyS': case 'ArrowDown': this.keys.backward = true; break;
+        case 'KeyA': case 'ArrowLeft': this.keys.left = true; break;
+        case 'KeyD': case 'ArrowRight': this.keys.right = true; break;
+        case 'Space':
+          this.keys.up = true;
+          e.preventDefault();
+          break;
+        case 'ShiftLeft': case 'ShiftRight': this.keys.down = true; break;
+      }
+    };
+    this._onKeyUp = (e) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': this.keys.forward = false; break;
+        case 'KeyS': case 'ArrowDown': this.keys.backward = false; break;
+        case 'KeyA': case 'ArrowLeft': this.keys.left = false; break;
+        case 'KeyD': case 'ArrowRight': this.keys.right = false; break;
+        case 'Space': this.keys.up = false; break;
+        case 'ShiftLeft': case 'ShiftRight': this.keys.down = false; break;
+      }
+    };
+    window.addEventListener('keydown', this._onKeyDown);
+    window.addEventListener('keyup', this._onKeyUp);
+  }
+
+  updateFreeMovement(dt) {
+    if (this.isCameraTransitioning || !this.camera || !this.controls) return;
+    if (!this._fwd) {
+      this._fwd = new THREE.Vector3();
+      this._right = new THREE.Vector3();
+      this._up = new THREE.Vector3(0, 1, 0);
+      this._delta = new THREE.Vector3();
+    }
+    const speed = 0.45 * dt;
+    this.camera.getWorldDirection(this._fwd);
+    this._fwd.y = 0;
+    if (this._fwd.lengthSq() > 0.0001) this._fwd.normalize();
+    else this._fwd.set(0, 0, -1);
+    this._right.crossVectors(this._fwd, this._up).normalize();
+
+    let moved = false;
+    this._delta.set(0, 0, 0);
+    if (this.keys.forward) { this._delta.addScaledVector(this._fwd, speed); moved = true; }
+    if (this.keys.backward) { this._delta.addScaledVector(this._fwd, -speed); moved = true; }
+    if (this.keys.right) { this._delta.addScaledVector(this._right, speed); moved = true; }
+    if (this.keys.left) { this._delta.addScaledVector(this._right, -speed); moved = true; }
+    if (this.keys.up) { this._delta.y += speed; moved = true; }
+    if (this.keys.down) { this._delta.y -= speed; moved = true; }
+
+    if (moved) {
+      this.camera.position.add(this._delta);
+      this.controls.target.add(this._delta);
+      this.camera.position.x = THREE.MathUtils.clamp(this.camera.position.x, -0.62, 0.62);
+      this.camera.position.y = THREE.MathUtils.clamp(this.camera.position.y, 0.08, 0.54);
+      this.camera.position.z = THREE.MathUtils.clamp(this.camera.position.z, -0.58, 0.64);
+    }
   }
 
   setupRenderer() {
@@ -311,10 +382,13 @@ export class RoverApp {
     if (btnPlayPause) {
       btnPlayPause.addEventListener('click', () => {
         this.playClickSound();
+        if (this.simTime >= this.totalDuration - 0.05 && !this.isPlaying) {
+          this.seekToTime(0.0);
+        }
         this.isPlaying = !this.isPlaying;
         btnPlayPause.innerHTML = this.isPlaying
-          ? '<span>[PAUSE]</span>'
-          : '<span>[PLAY]</span>';
+          ? '<span>Pause</span>'
+          : '<span>Play</span>';
       });
     }
 
@@ -397,10 +471,11 @@ export class RoverApp {
       });
     });
 
-    // HUD Collapse / Expand (Both panel chevron and navbar toggle button)
+    // HUD Collapse / Expand & Reopen Tab
     const btnCollapseHud = document.getElementById('btn-collapse-hud');
     const hudToggle = document.getElementById('btn-toggle-hud');
     const hudPanel = document.getElementById('hud-unified-panel');
+    const tabReopen = document.getElementById('tab-reopen-hud');
 
     if (hudPanel) {
       hudPanel.addEventListener('wheel', (e) => {
@@ -420,18 +495,41 @@ export class RoverApp {
     const setHUDCollapsed = (collapsed) => {
       if (hudPanel) hudPanel.classList.toggle('collapsed', collapsed);
       if (hudToggle) hudToggle.classList.toggle('active', !collapsed);
+      if (tabReopen) tabReopen.classList.toggle('visible', collapsed);
     };
 
     if (btnCollapseHud) {
-      btnCollapseHud.addEventListener('click', () => {
-        setHUDCollapsed(true);
-      });
+      btnCollapseHud.addEventListener('click', () => setHUDCollapsed(true));
     }
-
+    if (tabReopen) {
+      tabReopen.addEventListener('click', () => setHUDCollapsed(false));
+    }
     if (hudToggle) {
       hudToggle.addEventListener('click', () => {
         const isCollapsed = hudPanel ? !hudPanel.classList.contains('collapsed') : true;
         setHUDCollapsed(isCollapsed);
+      });
+    }
+
+    // Reset camera & fullscreen in shared topbar
+    const btnResetCam = document.getElementById('btn-reset-cam');
+    if (btnResetCam) {
+      btnResetCam.addEventListener('click', () => {
+        const vp = this.viewpoints.overview;
+        if (vp) this.startCameraFlight(vp.pos, vp.target);
+        document.querySelectorAll('.rover-cam-pill').forEach((b) => {
+          b.classList.toggle('active', b.dataset.view === 'overview');
+        });
+      });
+    }
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
       });
     }
 
@@ -676,7 +774,10 @@ export class RoverApp {
     if (valCurrent) valCurrent.textContent = s.busCurrent.toFixed(1);
 
     const valPcuTemp = document.getElementById('val-pcu-temp');
-    if (valPcuTemp) valPcuTemp.textContent = s.pcuTemp.toFixed(1);
+    if (valPcuTemp) {
+      valPcuTemp.textContent = s.pcuTemp.toFixed(1);
+      valPcuTemp.style.color = s.pcuTemp > 110 ? '#e5484d' : (s.pcuTemp > 55 ? '#e5a03b' : '#3fb984');
+    }
 
     // Contactor status indicator
     const contactorPill = document.getElementById('badge-contactor-status');
@@ -685,7 +786,59 @@ export class RoverApp {
       contactorPill.className = s.isolationTripped ? 'status-tag tag-red' : 'status-tag tag-green';
     }
 
+    this.updateRoverChart();
     this.updateComponentDetailHUD();
+  }
+
+  updateRoverChart() {
+    const svg = document.getElementById('rover-chart-svg');
+    if (!svg) return;
+    const w = 316;
+    const h = 112;
+    const padL = 28;
+    const padR = 12;
+    const padT = 16;
+    const padB = 18;
+    const plotW = w - padL - padR;
+    const plotH = h - padT - padB;
+
+    // 7-stage thermal (24 -> 185C) & 28V bus envelope across 0..35s
+    const tempPts = [
+      [0, 24], [5, 31], [10, 58], [15, 138], [20, 176], [25, 185], [30, 145], [35, 92]
+    ];
+    const voltPts = [
+      [0, 28.1], [5, 28.1], [10, 27.6], [15, 22.8], [20, 15.2], [25, 14.4], [30, 11.2], [35, 28.4]
+    ];
+
+    const pathTemp = tempPts
+      .map(([t, v], idx) => {
+        const x = padL + (t / 35) * plotW;
+        const y = padT + plotH - (v / 200) * plotH;
+        return `${idx === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(' ');
+    const pathVolt = voltPts
+      .map(([t, v], idx) => {
+        const x = padL + (t / 35) * plotW;
+        const y = padT + plotH - (v / 32) * plotH;
+        return `${idx === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(' ');
+
+    const headX = padL + (Math.min(35, Math.max(0, this.simTime)) / 35) * plotW;
+    svg.innerHTML = `
+      <g stroke="rgba(236, 240, 246, 0.08)" stroke-width="1">
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" />
+        <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" />
+      </g>
+      <path d="${pathTemp}" fill="none" stroke="#e5a03b" stroke-width="1.8" />
+      <path d="${pathVolt}" fill="none" stroke="#38bdf8" stroke-width="1.4" stroke-dasharray="3 3" />
+      <line x1="${headX.toFixed(1)}" y1="${padT}" x2="${headX.toFixed(1)}" y2="${padT + plotH}" stroke="#e5484d" stroke-width="1.4" />
+      <text x="${padL}" y="11" fill="#9aa4b4" font-family="JetBrains Mono, monospace" font-size="9">PCU Temp (amber, C) &amp; Bus (cyan, V)</text>
+      <text x="${padL}" y="${h - 4}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">0s</text>
+      <text x="${(padL + plotW * 0.48).toFixed(0)}" y="${h - 4}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">18s (Short)</text>
+      <text x="${(padL + plotW - 18).toFixed(0)}" y="${h - 4}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">35s</text>
+    `;
   }
 
   updateComponentDetailHUD() {
@@ -897,15 +1050,16 @@ export class RoverApp {
         this.isPlaying = false;
         const btnPlayPause = document.getElementById('btn-play-pause');
         if (btnPlayPause) {
-          btnPlayPause.innerHTML = '<span>[REPLAY]</span>';
+          btnPlayPause.innerHTML = '<span>Replay</span>';
         }
       }
       this.evaluateSimulationState();
       this.updateHUD();
     }
 
-    // Camera flight interpolation
+    // Camera flight interpolation + bounded WASD motion
     this.updateCameraFlight(timestamp);
+    this.updateFreeMovement(dt);
 
     // OrbitControls update
     this.controls.update();
@@ -931,6 +1085,8 @@ export class RoverApp {
     this.isDestroyed = true;
     if (this.rafId) cancelAnimationFrame(this.rafId);
     if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onKeyDown) window.removeEventListener('keydown', this._onKeyDown);
+    if (this._onKeyUp) window.removeEventListener('keyup', this._onKeyUp);
     if (this.audioCtx) {
       try { this.audioCtx.close(); } catch (e) {}
     }

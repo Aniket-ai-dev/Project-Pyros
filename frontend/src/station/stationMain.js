@@ -96,7 +96,7 @@ export class SpaceStationApp {
   init() {
     this.setupRenderer();
     this.setupCamera();
-    // Keyboard translation disabled: camera locked strictly to OrbitControls
+    this.setupKeyboardControls();
     this.setupFluidPhysics();
     this.setupScene();
     this.setupEvents();
@@ -154,7 +154,8 @@ export class SpaceStationApp {
 
   setupKeyboardControls() {
     this._onKeyDown = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
       switch (e.code) {
         case 'KeyW':
@@ -782,14 +783,15 @@ export class SpaceStationApp {
       // Backend Connection Pill
       const pill = document.getElementById('nasa-backend-status-pill');
       if (pill) {
-        if (res.source === 'live_backend') {
-          pill.textContent = 'ONLINE (LIVE ENGINE)';
+        if (res.isOnline) {
+          pill.textContent = 'API ONLINE';
           pill.className = 'hud-pill online';
         } else {
-          pill.textContent = 'STANDALONE (NASA MODEL)';
+          pill.textContent = 'EMBEDDED MODEL';
           pill.className = 'hud-pill';
         }
       }
+      this.updateRoperChart();
 
       // 4. Send computed aerodynamics and combustion parameters to fluid solver & candle
       if (this.fluidConfig) {
@@ -1199,7 +1201,6 @@ export class SpaceStationApp {
           warningContainer.style.display = 'block';
           warningContainer.innerHTML = mapperResult.warnings.map(w => `
             <div class="scenario-sim-warning-box">
-              <span class="warning-icon">ℹ️</span>
               <span class="warning-msg">${w}</span>
             </div>
           `).join('');
@@ -1226,7 +1227,6 @@ export class SpaceStationApp {
         const errors = (mapperResult && mapperResult.errors) || ['Missing required simulation parameters'];
         warningContainer.innerHTML = errors.map(err => `
           <div class="scenario-sim-warning-box">
-            <span class="warning-icon">⚠️</span>
             <span class="warning-msg"><strong>Simulation Guard:</strong> ${err}</span>
           </div>
         `).join('');
@@ -1246,12 +1246,12 @@ export class SpaceStationApp {
       if (extractBadge) {
         if (data.isOfflineSynthesis) {
           extractBadge.className = 'tag-pill-sm tag-cyan';
-          extractBadge.textContent = '⚡ NASA PSI EMBEDDED SYNTHESIS';
-          extractBadge.title = 'Instant high-fidelity synthesis using 22 NASA flight investigations (Render cold-start fallback)';
+          extractBadge.textContent = 'EMBEDDED NASA MODEL';
+          extractBadge.title = 'Computed locally using 22 NASA flight investigations and Roper scaling';
         } else {
           extractBadge.className = 'tag-pill-sm tag-green';
-          extractBadge.textContent = '● LIVE ENGINE SYNTHESIS';
-          extractBadge.title = 'Live inference from Project Pyros Engine on Render';
+          extractBadge.textContent = 'LIVE ENGINE SYNTHESIS';
+          extractBadge.title = 'Live inference from Project Pyros API';
         }
       }
 
@@ -1294,7 +1294,15 @@ export class SpaceStationApp {
       // Fill Physics Bounds by matching actual parameter name (NOT array index!)
       if (boundsListEl) {
         boundsListEl.innerHTML = '';
-        const bounds = (extrapolation && extrapolation.physics_bounds) || [];
+        let bounds = (extrapolation && extrapolation.physics_bounds) || [];
+        if (bounds.length === 0 && data.bounds && typeof data.bounds === 'object') {
+          const bd = data.bounds;
+          if (bd.buoyancy_strength) bounds.push({ parameter_name: 'Buoyancy Force Scaling', lower_bound: bd.buoyancy_strength.value, upper_bound: bd.buoyancy_strength.value, physical_basis: bd.buoyancy_strength.formula || 'Linear g/g0 scaling', confidence: 0.96 });
+          if (bd.natural_convection_velocity_m_s) bounds.push({ parameter_name: 'Natural Convection Velocity', lower_bound: bd.natural_convection_velocity_m_s.value, upper_bound: bd.natural_convection_velocity_m_s.value, physical_basis: bd.natural_convection_velocity_m_s.formula || 'Convective scaling sqrt(g/g0)', confidence: 0.92 });
+          if (bd.oxygen_enhancement_factor) bounds.push({ parameter_name: 'Oxygen Enhancement Factor', lower_bound: bd.oxygen_enhancement_factor.value, upper_bound: bd.oxygen_enhancement_factor.value, physical_basis: bd.oxygen_enhancement_factor.formula || 'Oxidizer concentration ratio', confidence: 0.94 });
+          if (bd.flame_height_scaling) bounds.push({ parameter_name: 'Flame Height Scaling', lower_bound: bd.flame_height_scaling.estimated_mm, upper_bound: bd.flame_height_scaling.estimated_mm, physical_basis: bd.flame_height_scaling.formula || 'Roper diffusion height estimate', confidence: 0.88 });
+          if (bd.flame_spread_rate_mm_s) bounds.push({ parameter_name: 'Flame Spread Rate', lower_bound: bd.flame_spread_rate_mm_s.lower_bound, upper_bound: bd.flame_spread_rate_mm_s.upper_bound, physical_basis: bd.flame_spread_rate_mm_s.basis || 'Empirical flame spread band', confidence: 0.84 });
+        }
 
         // Helper to format bound value with scientific transparency badge
         const renderBoundItem = (paramName, displayVal, basisText, confidence, pillType, pillLabel) => {
@@ -1411,14 +1419,17 @@ export class SpaceStationApp {
     // ── 2. SCIENTIFIC ASSESSMENT & INSIGHT ──────────────────────────────────
     const combinedEl = document.getElementById('res-combined-insight');
     if (combinedEl) {
-      const insight = answer?.combined_insight || extrapolation?.llm_hypothesis || 'Scientific synthesis completed across retrieved investigations.';
+      const insight =
+        (typeof answer === 'string' ? answer : answer?.combined_insight) ||
+        extrapolation?.llm_hypothesis ||
+        'Scientific synthesis completed across retrieved investigations.';
       combinedEl.textContent = insight;
     }
 
     const gapEl = document.getElementById('res-gap-analysis');
     const gapWrap = document.getElementById('wrap-res-gap-analysis');
     if (gapEl && gapWrap) {
-      if (answer && answer.gap_analysis) {
+      if (answer && typeof answer === 'object' && answer.gap_analysis) {
         gapWrap.style.display = 'block';
         gapEl.textContent = answer.gap_analysis;
       } else {
@@ -1429,7 +1440,7 @@ export class SpaceStationApp {
     const recList = document.getElementById('res-recommendations-list');
     const recWrap = document.getElementById('wrap-res-recommendations');
     if (recList && recWrap) {
-      if (answer && Array.isArray(answer.recommendations) && answer.recommendations.length > 0) {
+      if (answer && typeof answer === 'object' && Array.isArray(answer.recommendations) && answer.recommendations.length > 0) {
         recWrap.style.display = 'block';
         recList.innerHTML = answer.recommendations.map(r => `<li>${r}</li>`).join('');
       } else {
@@ -1445,7 +1456,7 @@ export class SpaceStationApp {
     if (invListEl) {
       invListEl.innerHTML = '';
       if (rankedInvs.length === 0) {
-        invListEl.innerHTML = '<p class="insight-body-text" style="color: #94a3b8; font-style: italic;">No specific ranked investigations matched.</p>';
+        invListEl.innerHTML = '<p class="insight-body-text">No specific ranked investigations matched.</p>';
       } else {
         rankedInvs.forEach(inv => {
           const card = document.createElement('div');
@@ -1541,17 +1552,59 @@ export class SpaceStationApp {
       o2Pills.forEach((p, idx) => p.classList.toggle('active', idx < activeO2Count));
     }
 
-    // Dynamic Donut SVG stroke-dasharray update
+    // Dynamic Donut SVG stroke-dasharray update (N2, O2, Ar/Trace)
+    const psi = (this.nasaParams && this.nasaParams.pressure_psi) ? this.nasaParams.pressure_psi : 14.7;
+    const totalKpa = psi * 6.89476;
+    const totalAtm = psi / 14.7;
+    const tracePct = val >= 99.0 ? 0.0 : Math.min(0.9, Math.max(0.0, 100.0 - val));
+    const n2Pct = Math.max(0.0, 100.0 - val - tracePct);
+
+    const po2Val = (val / 100.0) * totalKpa;
+    const pn2Val = (n2Pct / 100.0) * totalKpa;
+    const pTraceVal = (tracePct / 100.0) * totalKpa;
+
+    const circ = 2 * Math.PI * 58; // 364.42
+    const n2Arc = (n2Pct / 100.0) * circ;
+    const o2Arc = (val / 100.0) * circ;
+    const traceArc = (tracePct / 100.0) * circ;
+
+    const donutN2 = document.getElementById('donut-segment-n2');
+    if (donutN2) {
+      donutN2.setAttribute('stroke-dasharray', `${n2Arc.toFixed(1)} ${circ.toFixed(1)}`);
+      donutN2.setAttribute('stroke-dashoffset', '0');
+    }
     const donutO2 = document.getElementById('donut-segment-o2');
     if (donutO2) {
-      const circ = 2 * Math.PI * 58; // 364.42
-      const o2Arc = Math.max(3, (val / 100.0) * (circ * 0.75));
       donutO2.setAttribute('stroke-dasharray', `${o2Arc.toFixed(1)} ${circ.toFixed(1)}`);
+      donutO2.setAttribute('stroke-dashoffset', `-${n2Arc.toFixed(1)}`);
+    }
+    const donutTrace = document.getElementById('donut-segment-trace');
+    if (donutTrace) {
+      donutTrace.setAttribute('stroke-dasharray', `${traceArc.toFixed(1)} ${circ.toFixed(1)}`);
+      donutTrace.setAttribute('stroke-dashoffset', `-${(n2Arc + o2Arc).toFixed(1)}`);
+    }
+
+    const totKpaEl = document.getElementById('val-total-pressure-kpa');
+    if (totKpaEl) totKpaEl.textContent = `${totalKpa.toFixed(1)} kPa`;
+    const totAtmEl = document.getElementById('val-total-pressure-atm');
+    if (totAtmEl) totAtmEl.textContent = `${totalAtm.toFixed(2)} atm`;
+    const n2PctEl = document.getElementById('val-n2-percent');
+    if (n2PctEl) n2PctEl.textContent = `${n2Pct.toFixed(1)}%`;
+    const n2KpaEl = document.getElementById('val-n2-kpa');
+    if (n2KpaEl) n2KpaEl.textContent = `${pn2Val.toFixed(1)} kPa`;
+    const trPctEl = document.getElementById('val-trace-percent');
+    if (trPctEl) trPctEl.textContent = `${tracePct.toFixed(1)}%`;
+    const trKpaEl = document.getElementById('val-trace-kpa');
+    if (trKpaEl) trKpaEl.textContent = `${pTraceVal.toFixed(1)} kPa`;
+
+    const loiEl = document.getElementById('val-loi-margin');
+    if (loiEl) {
+      const margin = val - 17.5;
+      loiEl.textContent = `${margin >= 0 ? '+' : ''}${margin.toFixed(1)}% vs LOI`;
     }
 
     const hudPo2Cell = document.getElementById('hud-cell-po2-val');
-    const po2Val = (val / 100.0) * 101.3;
-    if (hudPo2Cell) hudPo2Cell.textContent = `pO₂: ${po2Val.toFixed(1)} kPa`;
+    if (hudPo2Cell) hudPo2Cell.textContent = `pO2: ${po2Val.toFixed(1)} kPa`;
 
     // Louver Aperture angle
     const apertureEl = document.getElementById('val-vent-aperture');
@@ -1623,47 +1676,49 @@ export class SpaceStationApp {
 
     if (val <= 10.0) {
       // Automatic Red Alert Emergency Mode (O2 <= 10%)
-      if (badgeStatus) badgeStatus.textContent = '[EMERGENCY] RED ALERT (≤10% O₂)';
+      if (badgeStatus) badgeStatus.textContent = 'RED ALERT (<=10% O2)';
       if (badgeWrap) badgeWrap.className = 'cd-trend-pill danger';
       if (alertBanner) alertBanner.className = 'o2-alert-banner critical';
-      if (alertText) alertText.textContent = `EMERGENCY: O₂ critical (${val.toFixed(1)}%). Station Red Alert protocol active.`;
-      if (statusDot) { statusDot.style.background = '#ef4444'; statusDot.style.boxShadow = '0 0 10px #ef4444'; }
+      if (alertText) alertText.textContent = `EMERGENCY: O2 critical (${val.toFixed(1)}%). Station Red Alert protocol active.`;
+      if (statusDot) statusDot.style.background = '#e5484d';
     } else if (val < 14.0) {
       // Hypoxia critical
       if (badgeStatus) badgeStatus.textContent = 'CRITICAL HYPOXIA';
       if (badgeWrap) badgeWrap.className = 'cd-trend-pill danger';
       if (alertBanner) alertBanner.className = 'o2-alert-banner critical';
-      if (alertText) alertText.textContent = `WARNING: Severe hypoxia (${val.toFixed(1)}% O₂). Louvers sealed to prevent outgassing.`;
-      if (statusDot) { statusDot.style.background = '#ef4444'; statusDot.style.boxShadow = '0 0 6px #ef4444'; }
+      if (alertText) alertText.textContent = `WARNING: Severe hypoxia (${val.toFixed(1)}% O2). Louvers sealed to prevent outgassing.`;
+      if (statusDot) statusDot.style.background = '#e5484d';
     } else if (val < 19.5) {
       // Depleted / Warning
-      if (badgeStatus) badgeStatus.textContent = 'LOW O₂ WARNING';
+      if (badgeStatus) badgeStatus.textContent = 'LOW O2 WARNING';
       if (badgeWrap) badgeWrap.className = 'cd-trend-pill warning';
       if (alertBanner) alertBanner.className = 'o2-alert-banner warning';
-      if (alertText) alertText.textContent = `Sub-nominal atmosphere: O₂ deficit detected. Diffusers throttling flow.`;
-      if (statusDot) { statusDot.style.background = '#f59e0b'; statusDot.style.boxShadow = '0 0 6px #f59e0b'; }
+      if (alertText) alertText.textContent = `Sub-nominal atmosphere: O2 deficit detected. Diffusers throttling flow.`;
+      if (statusDot) statusDot.style.background = '#ea7a31';
     } else if (val <= 24.0) {
       // Nominal
       if (badgeStatus) badgeStatus.textContent = 'NOMINAL';
       if (badgeWrap) badgeWrap.className = 'cd-trend-pill success';
       if (alertBanner) alertBanner.className = 'o2-alert-banner nominal';
-      if (alertText) alertText.textContent = 'Atmosphere nominal: Life support active at 101.3 kPa sea-level equivalent.';
-      if (statusDot) { statusDot.style.background = '#10b981'; statusDot.style.boxShadow = '0 0 6px #10b981'; }
+      if (alertText) alertText.textContent = `Atmosphere nominal: Life support active at ${totalKpa.toFixed(1)} kPa.`;
+      if (statusDot) statusDot.style.background = '#3fb984';
     } else if (val <= 35.0) {
       // EVA / Enriched
       if (badgeStatus) badgeStatus.textContent = 'EVA PROTOCOL';
       if (badgeWrap) badgeWrap.className = 'cd-trend-pill info';
       if (alertBanner) alertBanner.className = 'o2-alert-banner eva';
-      if (alertText) alertText.textContent = `Enriched O₂ (${val.toFixed(1)}%): Astronaut pre-breathe protocol for EVA egress.`;
-      if (statusDot) { statusDot.style.background = '#38bdf8'; statusDot.style.boxShadow = '0 0 6px #38bdf8'; }
+      if (alertText) alertText.textContent = `Enriched O2 (${val.toFixed(1)}%): Astronaut pre-breathe protocol for EVA egress.`;
+      if (statusDot) statusDot.style.background = '#38bdf8';
     } else {
       // Pure O2 / Hyperoxia / Flammability Hazard
       if (badgeStatus) badgeStatus.textContent = 'HYPEROXIA HAZARD';
       if (badgeWrap) badgeWrap.className = 'cd-trend-pill danger';
       if (alertBanner) alertBanner.className = 'o2-alert-banner critical';
-      if (alertText) alertText.textContent = `CRITICAL FIRE RISK: ${val.toFixed(1)}% O₂. Ceiling diffusers open at maximum flow.`;
-      if (statusDot) { statusDot.style.background = '#f97316'; statusDot.style.boxShadow = '0 0 6px #f97316'; }
+      if (alertText) alertText.textContent = `CRITICAL FIRE RISK: ${val.toFixed(1)}% O2. Ceiling diffusers open at maximum flow.`;
+      if (statusDot) statusDot.style.background = '#e5484d';
     }
+
+    this.updateRoperChart();
 
     // Synchronize Emergency Mode UI indicator with O2 threshold (<= 10%)
     const emergIndicator = document.getElementById('pill-emergency-indicator');
@@ -1762,7 +1817,6 @@ export class SpaceStationApp {
     }
     if (statusDot) {
       statusDot.style.background = dotColor;
-      statusDot.style.boxShadow = `0 0 6px ${dotColor}`;
     }
 
     // Presets active highlight
@@ -1770,6 +1824,67 @@ export class SpaceStationApp {
       const bG = parseFloat(btn.dataset.g);
       btn.classList.toggle('active', Math.abs(bG - val) < 0.05);
     });
+
+    this.updateRoperChart();
+  }
+
+  updateRoperChart() {
+    const svg = document.getElementById('roper-chart-svg');
+    if (!svg) return;
+    const gCurr = this.nasaParams ? this.nasaParams.gravity_g : 0.0;
+    const o2Curr = this.nasaParams ? this.nasaParams.o2_pct : 21.0;
+
+    const w = 316;
+    const h = 132;
+    const padL = 34;
+    const padR = 12;
+    const padT = 16;
+    const padB = 22;
+    const plotW = w - padL - padR;
+    const plotH = h - padT - padB;
+
+    const calcHeight = (g, o2) => {
+      const o2Fac = Math.max(0.35, o2 / 21.0);
+      if (g < 0.03) return Math.min(72, 22.0 + o2Fac * 6.5);
+      return Math.min(72, (24.0 + o2Fac * 14.0) * Math.pow(g + 0.08, -0.22));
+    };
+
+    const calcConv = (g) => (g <= 0.005 ? 0 : 0.28 * Math.sqrt(g));
+
+    const ptsH = [];
+    const ptsC = [];
+    const steps = 20;
+    for (let i = 0; i <= steps; i++) {
+      const g = (i / steps) * 2.0;
+      const x = padL + (g / 2.0) * plotW;
+      const fh = calcHeight(g, o2Curr);
+      const cv = calcConv(g);
+      const yH = padT + plotH - (fh / 75.0) * plotH;
+      const yC = padT + plotH - (cv / 0.45) * plotH;
+      ptsH.push(`${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${yH.toFixed(1)}`);
+      ptsC.push(`${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${yC.toFixed(1)}`);
+    }
+
+    const curX = padL + (Math.min(2.0, Math.max(0.0, gCurr)) / 2.0) * plotW;
+    const curY = padT + plotH - (calcHeight(gCurr, o2Curr) / 75.0) * plotH;
+
+    svg.innerHTML = `
+      <g stroke="rgba(236, 240, 246, 0.08)" stroke-width="1">
+        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" />
+        <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" />
+        <line x1="${padL}" y1="${padT + plotH * 0.5}" x2="${padL + plotW}" y2="${padT + plotH * 0.5}" stroke-dasharray="3 3" />
+      </g>
+      <path d="${ptsH.join(' ')}" fill="none" stroke="#e5a03b" stroke-width="1.8" />
+      <path d="${ptsC.join(' ')}" fill="none" stroke="#38bdf8" stroke-width="1.4" stroke-dasharray="4 3" />
+      <line x1="${curX.toFixed(1)}" y1="${padT}" x2="${curX.toFixed(1)}" y2="${padT + plotH}" stroke="rgba(236, 240, 246, 0.35)" stroke-width="1" />
+      <circle cx="${curX.toFixed(1)}" cy="${curY.toFixed(1)}" r="3.5" fill="#e5a03b" stroke="#0a0c10" stroke-width="1.5" />
+      <text x="${padL}" y="11" fill="#9aa4b4" font-family="JetBrains Mono, monospace" font-size="9">Flame H (amber, mm) vs Convection (cyan, m/s)</text>
+      <text x="4" y="${padT + 8}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">75</text>
+      <text x="4" y="${padT + plotH}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">0</text>
+      <text x="${padL}" y="${h - 6}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">0.0g</text>
+      <text x="${(padL + plotW * 0.46).toFixed(0)}" y="${h - 6}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">1.0g</text>
+      <text x="${(padL + plotW - 22).toFixed(0)}" y="${h - 6}" fill="#697487" font-family="JetBrains Mono, monospace" font-size="9">2.0g</text>
+    `;
   }
 
   // =========================================================================
@@ -1956,7 +2071,8 @@ export class SpaceStationApp {
         this.controls.update();
       }
     } else {
-      // 1. Update OrbitControls for mouse interaction (Camera locked strictly to OrbitControls)
+      // 1. Free-flight WASD + Space/Shift camera translation alongside OrbitControls
+      this.updateFreeMovement(dt);
       this.controls.update();
 
       // 2. Cabin boundaries protection: prevents clipping through walls, ceiling, floor, standoffs

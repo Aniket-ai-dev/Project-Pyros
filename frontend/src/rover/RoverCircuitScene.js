@@ -156,32 +156,32 @@ export class RoverCircuitScene {
   // 1. CINEMATIC LOW-KEY LIGHTING (ENCLOSED MARS ROVER AVIONICS BAY)
   // =========================================================================
   setupCinematicLighting() {
-    // Soft aerospace ambient fill with warm gold bounce from MLI blankets
-    this.ambientLight = new THREE.AmbientLight(0x1a222d, 0.45);
+    // Crisp inspection fill for matte aluminum Warm Electronics Box & PCBs
+    this.ambientLight = new THREE.AmbientLight(0x283548, 1.15);
     this.rootGroup.add(this.ambientLight);
 
     // Primary Overhead Inspection Luminaire (Mounted to ceiling bulkhead at y=0.58)
-    this.inspectionSpot = new THREE.SpotLight(0xfff8ee, 1.8);
+    this.inspectionSpot = new THREE.SpotLight(0xfff8ee, 8.5);
     this.inspectionSpot.position.set(-0.15, 0.58, 0.05);
     this.inspectionSpot.target.position.copy(this.epicenterPos);
-    this.inspectionSpot.angle = Math.PI / 3.2;
-    this.inspectionSpot.penumbra = 0.45;
-    this.inspectionSpot.decay = 1.2;
+    this.inspectionSpot.angle = Math.PI / 2.8;
+    this.inspectionSpot.penumbra = 0.5;
+    this.inspectionSpot.decay = 1.0;
     this.rootGroup.add(this.inspectionSpot);
     this.rootGroup.add(this.inspectionSpot.target);
 
     // Secondary Overhead Inspection Luminaire (Over card cage and power harness)
-    this.secondarySpot = new THREE.SpotLight(0xf1f5f9, 1.4);
+    this.secondarySpot = new THREE.SpotLight(0xf1f5f9, 6.5);
     this.secondarySpot.position.set(0.35, 0.58, -0.05);
     this.secondarySpot.target.position.set(0.32, 0.10, -0.05);
-    this.secondarySpot.angle = Math.PI / 3.0;
+    this.secondarySpot.angle = Math.PI / 2.6;
     this.secondarySpot.penumbra = 0.5;
-    this.secondarySpot.decay = 1.2;
+    this.secondarySpot.decay = 1.0;
     this.rootGroup.add(this.secondarySpot);
     this.rootGroup.add(this.secondarySpot.target);
 
     // Soft cool-blue internal rim/fill light catching metallic edges
-    this.rimLight = new THREE.DirectionalLight(0x60a5fa, 0.35);
+    this.rimLight = new THREE.DirectionalLight(0x7dd3fc, 0.85);
     this.rimLight.position.set(-0.65, 0.45, -0.40);
     this.rootGroup.add(this.rimLight);
 
@@ -1434,21 +1434,21 @@ export class RoverCircuitScene {
         if (mat.name === 'pcb_main') mat.color.setHex(0x0c1410);
         if (mat.name === 'daughter_pcb') mat.color.setHex(0x091c13);
       });
-      if (this.ambientLight) this.ambientLight.intensity = 0.45;
-      if (this.inspectionSpot) this.inspectionSpot.intensity = 1.8;
-      if (this.secondarySpot) this.secondarySpot.intensity = 1.4;
+      if (this.ambientLight) this.ambientLight.intensity = 1.15;
+      if (this.inspectionSpot) this.inspectionSpot.intensity = 8.5;
+      if (this.secondarySpot) this.secondarySpot.intensity = 6.5;
     } else if (mode === 'circuit') {
       this.standardMaterials.forEach(mat => {
         if (mat.name === 'pcb_main') mat.color.setHex(0x030805);
         if (mat.name === 'daughter_pcb') mat.color.setHex(0x020704);
       });
-      if (this.ambientLight) this.ambientLight.intensity = 0.22;
-      if (this.inspectionSpot) this.inspectionSpot.intensity = 0.7;
-      if (this.secondarySpot) this.secondarySpot.intensity = 0.5;
+      if (this.ambientLight) this.ambientLight.intensity = 0.45;
+      if (this.inspectionSpot) this.inspectionSpot.intensity = 2.6;
+      if (this.secondarySpot) this.secondarySpot.intensity = 2.0;
     } else if (mode === 'thermal') {
-      if (this.ambientLight) this.ambientLight.intensity = 0.55;
-      if (this.inspectionSpot) this.inspectionSpot.intensity = 0.5;
-      if (this.secondarySpot) this.secondarySpot.intensity = 0.4;
+      if (this.ambientLight) this.ambientLight.intensity = 0.9;
+      if (this.inspectionSpot) this.inspectionSpot.intensity = 2.2;
+      if (this.secondarySpot) this.secondarySpot.intensity = 1.8;
       this.updateThermalMaterials();
     }
   }

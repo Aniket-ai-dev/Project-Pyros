@@ -48,7 +48,7 @@ export class MarsApp {
   init() {
     this.setupRenderer();
     this.setupCamera();
-    // Keyboard translation disabled: camera locked strictly to OrbitControls
+    this.setupKeyboardControls();
     this.setupScene();
     this.setupEvents();
     this.setupPyrosMenu();
@@ -96,12 +96,17 @@ export class MarsApp {
 
   setupKeyboardControls() {
     this._onKeyDown = (e) => {
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       switch (e.code) {
         case 'KeyW': case 'ArrowUp': this.keys.forward = true; break;
         case 'KeyS': case 'ArrowDown': this.keys.backward = true; break;
         case 'KeyA': case 'ArrowLeft': this.keys.left = true; break;
         case 'KeyD': case 'ArrowRight': this.keys.right = true; break;
-        case 'Space': this.keys.up = true; break;
+        case 'Space':
+          this.keys.up = true;
+          e.preventDefault();
+          break;
         case 'ShiftLeft': case 'ShiftRight': this.keys.down = true; break;
       }
     };
@@ -193,6 +198,7 @@ export class MarsApp {
     const toggleHudBtn = document.getElementById('btn-toggle-hud');
     const hudPanel = document.getElementById('hud-mars-panel');
     const collapseBtn = document.getElementById('btn-collapse-hud');
+    const reopenTab = document.getElementById('tab-reopen-hud');
 
     if (hudPanel) {
       hudPanel.addEventListener('wheel', (e) => {
@@ -209,18 +215,24 @@ export class MarsApp {
       }, { passive: true });
     }
 
+    const setCollapsed = (collapsed) => {
+      if (hudPanel) hudPanel.classList.toggle('collapsed', collapsed);
+      if (toggleHudBtn) toggleHudBtn.classList.toggle('active', !collapsed);
+      if (reopenTab) reopenTab.classList.toggle('visible', collapsed);
+    };
+
     if (toggleHudBtn && hudPanel) {
       toggleHudBtn.addEventListener('click', () => {
-        const isCollapsed = hudPanel.classList.toggle('collapsed');
-        toggleHudBtn.classList.toggle('active', !isCollapsed);
+        setCollapsed(!hudPanel.classList.contains('collapsed'));
       });
     }
 
     if (collapseBtn && hudPanel) {
-      collapseBtn.addEventListener('click', () => {
-        hudPanel.classList.add('collapsed');
-        if (toggleHudBtn) toggleHudBtn.classList.remove('active');
-      });
+      collapseBtn.addEventListener('click', () => setCollapsed(true));
+    }
+
+    if (reopenTab) {
+      reopenTab.addEventListener('click', () => setCollapsed(false));
     }
 
     // Chamber Venting / Hypoxic Extinction Interactive Simulation
@@ -248,11 +260,11 @@ export class MarsApp {
 
           if (chamberBadge) {
             chamberBadge.className = 'chamber-status-badge vented';
-            chamberBadge.innerHTML = '<span class="pulse-dot-red"></span><span id="chamber-status-text">VENTED // 0.13% O₂ HYPOXIA EXTINCTION</span>';
+            chamberBadge.innerHTML = '<span class="status-dot warn"></span><span id="chamber-status-text">VENTED // 0.13% O2 HYPOXIA</span>';
           }
           btnVent.classList.add('reignite');
           if (btnVentLabel) {
-            btnVentLabel.innerHTML = 'Re-pressurize & Reignite (21% O₂)';
+            btnVentLabel.textContent = 'Re-pressurize & Reignite (21% O2)';
           }
         } else {
           // Re-seal & re-pressurize with habitat air (21% O2, 101.3 kPa) -> Reignite flame
@@ -262,11 +274,11 @@ export class MarsApp {
 
           if (chamberBadge) {
             chamberBadge.className = 'chamber-status-badge sealed';
-            chamberBadge.innerHTML = '<span class="pulse-dot-green"></span><span id="chamber-status-text">SEALED (21% O₂ // 101.3 kPa)</span>';
+            chamberBadge.innerHTML = '<span class="status-dot online"></span><span id="chamber-status-text">SEALED (21% O2 // 101.3 kPa)</span>';
           }
           btnVent.classList.remove('reignite');
           if (btnVentLabel) {
-            btnVentLabel.innerHTML = 'Vent Chamber to Mars Air (Simulate Extinction)';
+            btnVentLabel.textContent = 'Vent Chamber to Mars Air';
           }
         }
       });
@@ -392,7 +404,7 @@ export class MarsApp {
     this.lastTimestamp = now;
 
     this.updateCinematicTransition(now);
-    // Keyboard translation disabled: locked strictly to OrbitControls
+    this.updateKeyboardMovement(dt);
 
     if (this.marsScene) {
       this.marsScene.update(now * 0.001, dt);
