@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import SimulationTopBar from '../layout/SimulationTopBar';
-import { RoverApp } from '../../rover/RoverMain.js';
+import { RoverApp } from '../../rover/roverMain.js';
 
 const ROVER_SHORTCUTS = [
   { keys: ['W', 'A', 'S', 'D'], action: 'Translate inside WEB bay' },
