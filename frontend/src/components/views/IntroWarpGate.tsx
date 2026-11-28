@@ -10,9 +10,43 @@ interface IntroWarpGateProps {
 
 type GatePhase = 'standby' | 'playing' | 'exiting';
 
-const WARP_START_SEC = 3.2;
-const WARP_EXIT_SEC = 14.5;
-const SAFETY_TIMEOUT_MS = 15000;
+const WARP_START_SEC = 7;
+const WARP_EXIT_SEC = 14;
+const SAFETY_TIMEOUT_MS = 13500;
+const TITLE_WORDS = ['PROJECT', 'PYROS'] as const;
+
+type CharStyle = React.CSSProperties & {
+  '--char-index': number;
+  '--char-offset': number;
+};
+
+const TITLE_WORDS_DATA = TITLE_WORDS.map((word, wordIdx) => {
+  const startSeqIdx = TITLE_WORDS.slice(0, wordIdx).reduce((sum, w) => sum + w.length, 0);
+  const slotOffset = wordIdx === 0 ? 0 : TITLE_WORDS[0].length + 1;
+  return {
+    word,
+    chars: word.split('').map((char, charIdx) => ({
+      key: `${word}-${charIdx}`,
+      char,
+      style: {
+        '--char-index': startSeqIdx + charIdx,
+        '--char-offset': slotOffset + charIdx - 6,
+      } as CharStyle,
+    })),
+  };
+});
+
+function enforceWarpPlayback(video: HTMLVideoElement, forceSeek = false) {
+  try {
+    video.defaultPlaybackRate = 1;
+    video.playbackRate = 1;
+    if (video.readyState >= 1 && (forceSeek || video.currentTime < WARP_START_SEC - 0.1)) {
+      video.currentTime = WARP_START_SEC;
+    }
+  } catch {
+    // Ignore seek/rate errors before media metadata loads
+  }
+}
 
 export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGateProps) {
   const [phase, setPhase] = useState<GatePhase>('standby');
@@ -26,6 +60,11 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    try {
+      videoRef.current?.pause();
+    } catch {
+      // Ignore pause errors if video is not active
     }
     setPhase('exiting');
     setTimeout(() => {
@@ -42,10 +81,10 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
     if (v) {
       try {
         v.pause();
-        v.currentTime = 0.5;
       } catch {
-        // Ignore seek errors before metadata loads
+        // Ignore pause errors during reset
       }
+      enforceWarpPlayback(v, true);
     }
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -67,8 +106,9 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
     }
 
     try {
-      v.currentTime = WARP_START_SEC;
+      enforceWarpPlayback(v, true);
       await v.play();
+      enforceWarpPlayback(v);
     } catch {
       finishIntro();
     }
@@ -99,15 +139,17 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
       aria-modal="true"
       aria-label="Project Pyros Launch Gate"
     >
-      <StarsCanvas
-        monochrome
-        maxStars={1200}
-        brightness={1}
-        speedMultiplier={0.22}
-        twinkleIntensity={24}
-        paused={phase !== 'standby'}
-        className={`intro-stars-canvas ${phase !== 'standby' ? 'playing' : ''}`}
-      />
+      <div className={`intro-stars-wrap ${phase !== 'standby' ? 'playing' : ''}`}>
+        <StarsCanvas
+          monochrome
+          maxStars={1200}
+          brightness={1}
+          speedMultiplier={0.22}
+          twinkleIntensity={24}
+          paused={phase !== 'standby'}
+          className="intro-stars-canvas"
+        />
+      </div>
 
       <video
         ref={videoRef}
@@ -116,6 +158,8 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
         playsInline
         preload="auto"
         className={`intro-gate-video ${phase !== 'standby' ? 'playing' : ''}`}
+        onLoadedMetadata={(e) => enforceWarpPlayback(e.currentTarget)}
+        onPlay={(e) => enforceWarpPlayback(e.currentTarget)}
         onTimeUpdate={(e) => {
           if (phase === 'playing' && e.currentTarget.currentTime >= WARP_EXIT_SEC) {
             finishIntro();
@@ -138,35 +182,44 @@ export default function IntroWarpGate({ isVisible, onComplete }: IntroWarpGatePr
       </div>
 
       <div className={`intro-center-stage ${phase !== 'standby' ? 'hidden-stage' : ''}`}>
-        <img
-          src="/logo.png"
-          alt="Project Pyros"
-          className="intro-center-logo"
-        />
+        <h1 className="intro-title-nasal" aria-label="PROJECT PYROS">
+          {TITLE_WORDS_DATA.map(({ word, chars }) => (
+            <span key={word} className="intro-title-word" aria-hidden="true">
+              {chars.map(({ key, char, style }) => (
+                <span key={key} className="intro-char" style={style}>
+                  {char}
+                </span>
+              ))}
+            </span>
+          ))}
+        </h1>
+        <span className="intro-title-flare" aria-hidden="true" />
         <p className="intro-subtitle">
           Microgravity combustion and planetary surface research platform
         </p>
-        <button
-          type="button"
-          id="btn-intro-enter"
-          className="intro-enter-btn"
-          onClick={handleEnter}
-        >
-          <span>ENTER</span>
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div className="intro-enter-reveal">
+          <button
+            type="button"
+            id="btn-intro-enter"
+            className="intro-enter-btn"
+            onClick={handleEnter}
           >
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </button>
+            <span>ENTER</span>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {phase === 'playing' && (
