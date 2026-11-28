@@ -41,11 +41,14 @@ class TestPSIKnowledgeBase(unittest.TestCase):
         self.assertGreaterEqual(len(all_inv), 15, "Expected at least 15 investigations")
 
     def test_get_by_id(self) -> None:
-        """Should retrieve BRE by its ID."""
+        """Should retrieve BRE by its ID and handle missing IDs cleanly."""
         bre = self.kb.get_by_id("bre")
         self.assertIsNotNone(bre)
         self.assertEqual(bre.acronym, "BRE")
         self.assertEqual(bre.project, "ACME")
+        self.assertIsNone(self.kb.find_by_id("nonexistent-id"))
+        with self.assertRaises(KeyError):
+            self.kb.get_by_id("nonexistent-id")
 
     def test_get_by_pillar(self) -> None:
         """Should return investigations for each fire safety pillar."""
@@ -228,6 +231,46 @@ class TestCombustionPhysics(unittest.TestCase):
             micro_g_limit=12.0, earth_g_limit=15.0,
         )
         self.assertGreater(upper, lower)
+
+
+class TestLLMQuotaCircuitBreaker(unittest.TestCase):
+    """Verify 429 daily quota errors fast-fail and engage cooldown."""
+
+    def setUp(self) -> None:
+        from src.pipeline import reset_llm_cooldown
+        reset_llm_cooldown()
+
+    def tearDown(self) -> None:
+        from src.pipeline import reset_llm_cooldown
+        reset_llm_cooldown()
+
+    def test_daily_quota_fast_fails_without_sleeping(self) -> None:
+        from langchain_core.messages import HumanMessage
+        from src.pipeline import _safe_invoke_llm, is_llm_in_cooldown
+
+        mock_llm = MagicMock()
+        mock_llm.invoke.side_effect = RuntimeError(
+            "429 RESOURCE_EXHAUSTED GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+        )
+        with patch("time.sleep") as mock_sleep:
+            answer = _safe_invoke_llm(
+                mock_llm,
+                [HumanMessage(content="Predict flammability of solid polymers in a Lunar habitat at 34% O2 and 10.2 psi")],
+                question_text="Predict flammability of solid polymers in a Lunar habitat at 34% O2 and 10.2 psi",
+            )
+            mock_sleep.assert_not_called()
+
+        self.assertTrue(is_llm_in_cooldown())
+        self.assertEqual(mock_llm.invoke.call_count, 1)
+        self.assertIn("VERIFIED KNOWLEDGE BASE ANALYSIS", answer)
+
+        # Subsequent call should skip invoke entirely during cooldown
+        answer2 = _safe_invoke_llm(
+            mock_llm,
+            [HumanMessage(content="Question: Lunar habitat polymers 34% O2 10.2 psi")],
+        )
+        self.assertEqual(mock_llm.invoke.call_count, 1)
+        self.assertTrue(len(answer2) > 20)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,32 @@ interface Props {
   onOpenAudit: () => void;
 }
 
+function formatScenarioResult(data: unknown): string {
+  if (typeof data === 'string') return data;
+  if (!data || typeof data !== 'object') return String(data ?? '');
+
+  const payload = data as Record<string, any>;
+  const answer = payload.answer;
+  if (typeof answer === 'string') return answer;
+
+  if (answer && typeof answer === 'object') {
+    const sections: string[] = [];
+    if (answer.combined_insight) sections.push(`Insight:\n${answer.combined_insight}`);
+    if (answer.gap_analysis) sections.push(`Gap Analysis:\n${answer.gap_analysis}`);
+    if (Array.isArray(answer.recommendations) && answer.recommendations.length > 0) {
+      sections.push(`Recommendations:\n• ${answer.recommendations.join('\n• ')}`);
+    }
+    const extrap = payload.extrapolation;
+    if (extrap && typeof extrap === 'object' && typeof extrap.final_report === 'string') {
+      sections.push(extrap.final_report);
+    }
+    if (sections.length > 0) return sections.join('\n\n');
+    return JSON.stringify(answer, null, 2);
+  }
+
+  return JSON.stringify(payload, null, 2);
+}
+
 export default function StationHUD({
   isOpen,
   onClose,
@@ -49,7 +75,7 @@ export default function StationHUD({
       });
       if (res.ok) {
         const data = await res.json();
-        setScenarioResult(data.answer || JSON.stringify(data, null, 2));
+        setScenarioResult(formatScenarioResult(data));
       } else {
         setScenarioResult('Backend simulation response received with offline extrapolation fallbacks.');
       }
@@ -281,6 +307,7 @@ export default function StationHUD({
                   lineHeight: '1.5',
                   maxHeight: '200px',
                   overflowY: 'auto',
+                  whiteSpace: 'pre-wrap',
                 }}
               >
                 {scenarioResult}

@@ -711,7 +711,7 @@ def _deterministic_scenario_analysis(scenario_text: str) -> dict:
 
 def _deterministic_compare_investigations(investigation_ids: list[str]) -> dict:
     """Deterministic comparison between 2-5 investigations based on graph and KB."""
-    invs = [_kb.get_by_id(iid) for iid in investigation_ids if _kb.get_by_id(iid)]
+    invs = [inv for iid in investigation_ids if (inv := _kb.find_by_id(iid)) is not None]
     if not invs:
         return {"error": "No investigations found"}
 
@@ -824,7 +824,7 @@ def scenario_analysis(req: ScenarioRequest):
 def compare_investigations(req: CompareRequest):
     """Cross-investigation comparison using LLM synthesis or graph analysis."""
     for iid in req.investigation_ids:
-        if _kb.get_by_id(iid) is None:
+        if _kb.find_by_id(iid) is None:
             raise HTTPException(status_code=404, detail=f"Investigation '{iid}' not found")
 
     if _pipeline is not None:

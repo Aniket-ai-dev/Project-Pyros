@@ -1212,6 +1212,16 @@ class PSIKnowledgeBase:
         """Return all investigations."""
         return list(self._investigations)
 
+    def find_by_id(self, id: str) -> Optional[Investigation]:
+        """Return an investigation by ID (case/hyphen insensitive), or ``None``."""
+        if id in self._by_id:
+            return self._by_id[id]
+        clean_id = id.lower().replace("-", "").replace("_", "")
+        for key, inv in self._by_id.items():
+            if key.lower().replace("-", "").replace("_", "") == clean_id:
+                return inv
+        return None
+
     def get_by_id(self, id: str) -> Investigation:
         """Return a single investigation by its unique ID.
 
@@ -1221,12 +1231,9 @@ class PSIKnowledgeBase:
         Raises:
             KeyError: If no investigation matches the given ID.
         """
-        if id in self._by_id:
-            return self._by_id[id]
-        clean_id = id.lower().replace("-", "").replace("_", "")
-        for key, inv in self._by_id.items():
-            if key.lower().replace("-", "").replace("_", "") == clean_id:
-                return inv
+        inv = self.find_by_id(id)
+        if inv is not None:
+            return inv
         raise KeyError(f"No investigation with id '{id}'. Available: {sorted(self._by_id.keys())}")
 
     def get_by_pillar(self, pillar: str) -> list[Investigation]:

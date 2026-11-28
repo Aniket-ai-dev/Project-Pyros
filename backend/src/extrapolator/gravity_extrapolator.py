@@ -610,12 +610,6 @@ class GravityExtrapolator:
                 state["caveats"].append(caveat)
 
         return state
-        existing = set(state.get("caveats", []))
-        for caveat in standard_caveats:
-            if caveat not in existing:
-                state["caveats"].append(caveat)
-
-        return state
 
     # ── Node 6: Compile Report ───────────────────────────────────────
 

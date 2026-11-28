@@ -13,6 +13,7 @@ defined here.
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from langchain_core.documents import Document
@@ -21,6 +22,47 @@ from langchain_core.language_models import BaseChatModel
 from src.config import Config, get_config
 
 logger = logging.getLogger(__name__)
+
+_RATE_LIMIT_MARKERS = (
+    "503",
+    "429",
+    "UNAVAILABLE",
+    "ResourceExhausted",
+    "RESOURCE_EXHAUSTED",
+    "RateLimitError",
+)
+_DAILY_QUOTA_MARKERS = ("PerDay", "GenerateRequestsPerDay", "FreeTier")
+_llm_cooldown_until: float = 0.0
+
+
+def is_llm_in_cooldown() -> bool:
+    """Return True while the LLM backend is in a rate-limit cooldown window."""
+    return time.monotonic() < _llm_cooldown_until
+
+
+def reset_llm_cooldown() -> None:
+    """Clear any active LLM cooldown window (primarily for testing)."""
+    global _llm_cooldown_until
+    _llm_cooldown_until = 0.0
+
+
+def is_rate_limit_error(exc: Exception) -> bool:
+    """Return True if *exc* looks like a transient or quota rate-limit error."""
+    err_str = str(exc)
+    return any(marker in err_str for marker in _RATE_LIMIT_MARKERS)
+
+
+def is_daily_quota_error(exc: Exception) -> bool:
+    """Return True if *exc* represents an exhausted daily quota (retry won't help)."""
+    err_str = str(exc)
+    return any(marker in err_str for marker in _DAILY_QUOTA_MARKERS)
+
+
+def record_llm_rate_limit(exc: Exception, cooldown_seconds: float = 120.0) -> None:
+    """Enter a cooldown window after a rate-limit or quota exhaustion error."""
+    global _llm_cooldown_until
+    duration = 300.0 if is_daily_quota_error(exc) else cooldown_seconds
+    _llm_cooldown_until = max(_llm_cooldown_until, time.monotonic() + duration)
 
 
 def _extract_text(content: Any) -> str:
@@ -42,39 +84,18 @@ def _extract_text(content: Any) -> str:
     return str(content)
 
 
-def _safe_invoke_llm(llm: Any, messages: list[Any], max_retries: int = 3, question_text: str = "") -> str:
-    """Invoke LLM with retry on transient 503/429 errors and graceful fallback to grounded cache."""
-    import time
+def _fallback_llm_response(messages: list[Any], question_text: str = "") -> str:
+    """Return a grounded cache or context-based fallback response."""
     from src.chains.grounded_cache import match_grounded_cache
-    last_err = None
-    for attempt in range(max_retries):
-        try:
-            resp = llm.invoke(messages)
-            return _extract_text(resp.content)
-        except Exception as exc:
-            last_err = exc
-            err_str = str(exc)
-            if any(code in err_str for code in ("503", "429", "UNAVAILABLE", "ResourceExhausted", "RESOURCE_EXHAUSTED")):
-                logger.warning(
-                    "LLM transient error (attempt %d/%d): %s. Retrying in %.1fs...",
-                    attempt + 1,
-                    max_retries,
-                    err_str[:120],
-                    1.5 * (attempt + 1),
-                )
-                time.sleep(1.5 * (attempt + 1))
-                continue
-            raise
 
-    logger.warning("LLM API unavailable or exhausted: %s. Checking grounded scenario cache...", last_err)
     search_q = question_text
     if not search_q:
         for m in reversed(messages):
             c = getattr(m, "content", "")
-            if "Question:" in c:
+            if isinstance(c, str) and "Question:" in c:
                 search_q = c.split("Question:")[-1].strip()
                 break
-            elif isinstance(c, str) and len(c) < 300:
+            if isinstance(c, str) and len(c) < 300:
                 search_q = c
                 break
 
@@ -82,21 +103,58 @@ def _safe_invoke_llm(llm: Any, messages: list[Any], max_retries: int = 3, questi
         hit = match_grounded_cache(search_q)
         if hit:
             return (
-                f"> **[VERIFIED KNOWLEDGE BASE ANALYSIS • 100% RELIABLE]**\n"
-                f"> *Operating in verified peer-reviewed mode (external AI quota protected).*\n\n"
+                "> **[VERIFIED KNOWLEDGE BASE ANALYSIS • 100% RELIABLE]**\n"
+                "> *Operating in verified peer-reviewed mode (external AI quota protected).*\n\n"
                 f"{hit['answer']}"
             )
 
     context_part = ""
     for m in messages:
         c = getattr(m, "content", "")
-        if "Context:" in c:
+        if isinstance(c, str) and "Context:" in c:
             context_part = c
             break
     return (
         "*(Note: High external API demand detected — synthesizing directly from NASA PSI knowledge base)*\n\n"
         + (context_part[:1200] if context_part else "Relevant NASA PSI investigations retrieved.")
     )
+
+
+def _safe_invoke_llm(llm: Any, messages: list[Any], max_retries: int = 3, question_text: str = "") -> str:
+    """Invoke LLM with retry on transient 503/429 errors, fast-fail on daily quotas, and grounded fallback."""
+    if is_llm_in_cooldown():
+        logger.info("LLM in quota cooldown — using grounded fallback immediately.")
+        return _fallback_llm_response(messages, question_text)
+
+    last_err: Exception | None = None
+    for attempt in range(max_retries):
+        try:
+            resp = llm.invoke(messages)
+            return _extract_text(resp.content)
+        except Exception as exc:
+            last_err = exc
+            if is_rate_limit_error(exc):
+                if is_daily_quota_error(exc):
+                    logger.warning("LLM daily quota exhausted (%s) — entering cooldown.", str(exc)[:120])
+                    record_llm_rate_limit(exc)
+                    break
+                if attempt + 1 < max_retries:
+                    delay = 1.0 * (attempt + 1)
+                    logger.warning(
+                        "LLM transient error (attempt %d/%d): %s. Retrying in %.1fs...",
+                        attempt + 1,
+                        max_retries,
+                        str(exc)[:120],
+                        delay,
+                    )
+                    time.sleep(delay)
+                    continue
+                record_llm_rate_limit(exc)
+                break
+            raise
+
+    logger.warning("LLM API unavailable or exhausted: %s. Checking grounded scenario cache...", last_err)
+    return _fallback_llm_response(messages, question_text)
 
 
 # ── Helper: Embedding factory ───────────────────────────────────────────────
@@ -147,7 +205,6 @@ def _build_llm(config: Config) -> BaseChatModel:
             temperature=config.llm_temperature,
             max_output_tokens=config.llm_max_tokens,
             google_api_key=config.google_api_key or None,
-            transport="rest",
             max_retries=0,
         )
     else:
@@ -276,6 +333,15 @@ class NASAFireSafetyPipeline:
                 "Pipeline not initialised. Call pipeline.initialize() first."
             )
 
+    def _resolve_investigations(self, investigation_ids: list[str]) -> list[Any]:
+        """Resolve a list of investigation IDs, skipping any unknown entries."""
+        resolved = []
+        for iid in investigation_ids:
+            inv = self.knowledge_base.find_by_id(iid)
+            if inv is not None:
+                resolved.append(inv)
+        return resolved
+
     # ── Public query methods ────────────────────────────────────────
 
     def query(self, question: str) -> dict[str, Any]:
@@ -291,7 +357,7 @@ class NASAFireSafetyPipeline:
             docs = self.retriever.retrieve(question)
             inv_ids = list({d.metadata.get("investigation_id") for d in docs if d.metadata.get("investigation_id")})
             if len(inv_ids) >= 2:
-                inv_objs = [self.knowledge_base.get_by_id(i) for i in inv_ids[:4] if self.knowledge_base.get_by_id(i)]
+                inv_objs = self._resolve_investigations(inv_ids[:4])
                 if len(inv_objs) >= 2:
                     result = self.comparator.compare(inv_objs)
                     return {"answer": result, "intent": intent, "investigation_ids": inv_ids}
@@ -366,12 +432,12 @@ class NASAFireSafetyPipeline:
 
         # 2. Rank investigations by relevance to this scenario
         inv_ids = list({d.metadata.get("investigation_id") for d in docs if d.metadata.get("investigation_id")})
-        inv_objs = [self.knowledge_base.get_by_id(i) for i in inv_ids if self.knowledge_base.get_by_id(i)]
+        inv_objs = self._resolve_investigations(inv_ids)
         ranked = self.ranker.rank(scenario, inv_objs) if inv_objs else []
 
         # 3. Compare top results
         top_ids = [r.investigation_id for r in ranked[:3]] if ranked else inv_ids[:3]
-        top_invs = [self.knowledge_base.get_by_id(i) for i in top_ids if self.knowledge_base.get_by_id(i)]
+        top_invs = self._resolve_investigations(top_ids)
         comparison = self.comparator.compare(top_invs) if len(top_invs) >= 2 else None
 
         # 4. Extrapolate if partial-gravity context is detected
@@ -392,7 +458,7 @@ class NASAFireSafetyPipeline:
     def compare_investigations(self, investigation_ids: list[str]) -> dict[str, Any]:
         """Run cross-investigation comparison for the given IDs."""
         self._ensure_initialized()
-        inv_objs = [self.knowledge_base.get_by_id(i) for i in investigation_ids if self.knowledge_base.get_by_id(i)]
+        inv_objs = self._resolve_investigations(investigation_ids)
         if len(inv_objs) < 2:
             return {"error": "At least 2 valid investigation IDs are required for comparison."}
         result = self.comparator.compare(inv_objs[:4])
@@ -408,7 +474,7 @@ class NASAFireSafetyPipeline:
 
     def get_investigation_summary(self, investigation_id: str) -> dict[str, Any]:
         """Return a summarised view of a single investigation."""
-        inv = self.knowledge_base.get_by_id(investigation_id)
+        inv = self.knowledge_base.find_by_id(investigation_id)
         if inv is None:
             return {"error": f"Investigation '{investigation_id}' not found."}
         summary = self.summarizer.summarize(inv)

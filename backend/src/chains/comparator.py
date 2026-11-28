@@ -179,52 +179,57 @@ class CrossInvestigationComparator:
             summary["investigation_id"] = inv.id
             summary["acronym"] = inv.acronym
 
+        from src.pipeline import is_llm_in_cooldown, is_rate_limit_error, record_llm_rate_limit
+
         summaries_text = _summaries_to_text(summaries)
 
-        try:
-            result: ComparisonReport = self._chain.invoke(
-                {"investigation_summaries": summaries_text}
-            )
-            return result
-        except Exception as exc:
-            logger.warning("Comparator LLM call failed (%s) — using grounded metadata synthesis.", exc)
-            names = [inv.name for inv in investigations]
-            fuels = [", ".join(getattr(f, "material_name", "") for f in inv.fuels) for inv in investigations]
-            hardwares = list({inv.hardware_facility for inv in investigations})
-            return ComparisonReport(
-                shared_variables={
-                    "application_domain": "NASA Human Spaceflight Fire Safety",
-                    "database_source": "NASA Physical Sciences Informatics (PSI)",
-                    "investigations_evaluated": ", ".join(inv.acronym for inv in investigations),
+        if not is_llm_in_cooldown():
+            try:
+                result: ComparisonReport = self._chain.invoke(
+                    {"investigation_summaries": summaries_text}
+                )
+                return result
+            except Exception as exc:
+                if is_rate_limit_error(exc):
+                    record_llm_rate_limit(exc)
+                logger.warning("Comparator LLM call failed (%s) — using grounded metadata synthesis.", exc)
+
+        names = [inv.name for inv in investigations]
+        hardwares = list({inv.hardware_facility for inv in investigations})
+        return ComparisonReport(
+            shared_variables={
+                "application_domain": "NASA Human Spaceflight Fire Safety",
+                "database_source": "NASA Physical Sciences Informatics (PSI)",
+                "investigations_evaluated": ", ".join(inv.acronym for inv in investigations),
+            },
+            differing_variables=[
+                {
+                    "variable": "Gravity Regime",
+                    "values": {inv.acronym: inv.gravity.value for inv in investigations},
+                    "significance": "Governs natural convection, flame elongation, and soot residence time.",
                 },
-                differing_variables=[
-                    {
-                        "variable": "Gravity Regime",
-                        "values": {inv.acronym: inv.gravity.value for inv in investigations},
-                        "significance": "Governs natural convection, flame elongation, and soot residence time.",
-                    },
-                    {
-                        "variable": "Test Materials",
-                        "values": {inv.acronym: ", ".join(getattr(f, "material_name", "") for f in inv.fuels) for inv in investigations},
-                        "significance": "Determines pyrolysis temperature, oxygen index threshold, and smoke yield.",
-                    },
-                ],
-                hardware_relationships=[
-                    f"Investigations utilize flight & laboratory facilities ({', '.join(hardwares)}) to characterize combustion boundaries.",
-                ],
-                combined_insight=(
-                    f"Comparing {', '.join(names)} reveals that partial-gravity and microgravity combustion dynamics "
-                    "diverge significantly from 1g Earth baselines due to diminished buoyancy and altered oxygen diffusion transport."
-                ),
-                gap_analysis=(
-                    "Critical experimental data gap exists at intermediate partial gravities (0.16g Moon, 0.38g Mars) "
-                    "under low ventilation airflow conditions."
-                ),
-                recommendations=[
-                    "Validate flammability thresholds in partial-gravity drop tower or parabolic flight rigs.",
-                    "Calibrate multiphysics combustion models using NASA PSI empirical extinction boundaries.",
-                ],
-            )
+                {
+                    "variable": "Test Materials",
+                    "values": {inv.acronym: ", ".join(getattr(f, "material_name", "") for f in inv.fuels) for inv in investigations},
+                    "significance": "Determines pyrolysis temperature, oxygen index threshold, and smoke yield.",
+                },
+            ],
+            hardware_relationships=[
+                f"Investigations utilize flight & laboratory facilities ({', '.join(hardwares)}) to characterize combustion boundaries.",
+            ],
+            combined_insight=(
+                f"Comparing {', '.join(names)} reveals that partial-gravity and microgravity combustion dynamics "
+                "diverge significantly from 1g Earth baselines due to diminished buoyancy and altered oxygen diffusion transport."
+            ),
+            gap_analysis=(
+                "Critical experimental data gap exists at intermediate partial gravities (0.16g Moon, 0.38g Mars) "
+                "under low ventilation airflow conditions."
+            ),
+            recommendations=[
+                "Validate flammability thresholds in partial-gravity drop tower or parabolic flight rigs.",
+                "Calibrate multiphysics combustion models using NASA PSI empirical extinction boundaries.",
+            ],
+        )
 
     def compare_by_hardware(
         self,

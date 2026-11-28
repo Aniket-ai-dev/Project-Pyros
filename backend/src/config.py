@@ -29,7 +29,7 @@ class Config:
     )
     llm_model: str = os.getenv(
         "LLM_MODEL",
-        "gemini-3.5-flash" if os.getenv("LLM_PROVIDER") == "google" or (os.getenv("GOOGLE_API_KEY") and not os.getenv("OPENAI_API_KEY")) else "gpt-4o",
+        "gemini-3.5-flash-lite" if os.getenv("LLM_PROVIDER") == "google" or (os.getenv("GOOGLE_API_KEY") and not os.getenv("OPENAI_API_KEY")) else "gpt-4o",
     )
     llm_temperature: float = 0.1  # low for scientific accuracy
     llm_max_tokens: int = 4096
@@ -67,7 +67,7 @@ def get_config() -> Config:
     )
     model = os.getenv(
         "LLM_MODEL",
-        "gemini-3.5-flash" if provider == "google" else "gpt-4o",
+        "gemini-3.5-flash-lite" if provider == "google" else "gpt-4o",
     )
     return Config(
         llm_provider=provider,

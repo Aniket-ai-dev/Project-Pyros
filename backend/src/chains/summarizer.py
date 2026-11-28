@@ -155,6 +155,32 @@ class InvestigationSummarizer:
     # Public API
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _fallback_summary(investigation: Investigation) -> dict[str, Any]:
+        """Build a deterministic metadata summary when the LLM is unavailable."""
+        obj = getattr(investigation, "objectives", "") or investigation.name
+        findings = getattr(investigation, "key_findings", []) or [
+            f"NASA PSI flight dataset for {investigation.name} under {investigation.gravity.value} conditions."
+        ]
+        first_atm = investigation.atmosphere[0] if investigation.atmosphere else None
+        return {
+            "primary_objective": obj[:200],
+            "fuel_material": ", ".join(getattr(f, "material_name", "") for f in investigation.fuels) or "N/A",
+            "fuel_type": investigation.fuels[0].fuel_type.value if investigation.fuels else "solid",
+            "fuel_shape": (investigation.fuels[0].shape or "flat") if investigation.fuels else "flat",
+            "oxygen_pct": first_atm.oxygen_pct if first_atm else None,
+            "pressure_psi": first_atm.pressure_psi if first_atm else None,
+            "diluent": first_atm.diluent if first_atm else None,
+            "flow_velocity_cm_s": first_atm.flow_velocity_cm_s if first_atm else None,
+            "gravity_condition": investigation.gravity.value,
+            "fire_safety_pillar": investigation.fire_safety_pillar.value,
+            "key_findings": list(findings),
+            "fire_safety_significance": (
+                f"Characterizes flammability limits and combustion behavior for "
+                f"{investigation.fire_safety_pillar.value}."
+            ),
+        }
+
     def summarize(self, investigation: Investigation) -> dict[str, Any]:
         """Summarise a single investigation and return a structured dict.
 
@@ -168,24 +194,20 @@ class InvestigationSummarizer:
         dict
             Parsed summary fields as a plain dictionary.
         """
+        from src.pipeline import is_llm_in_cooldown, is_rate_limit_error, record_llm_rate_limit
+
+        if is_llm_in_cooldown():
+            return self._fallback_summary(investigation)
 
         prompt_vars = _format_investigation(investigation)
         try:
             result: InvestigationSummary = self._chain.invoke(prompt_vars)
             return result.model_dump()
         except Exception as exc:
+            if is_rate_limit_error(exc):
+                record_llm_rate_limit(exc)
             logger.warning("Summarizer single LLM failed (%s) — using metadata fallback.", exc)
-            obj = getattr(investigation, "objectives", "") or investigation.name
-            findings = getattr(investigation, "key_findings", [])
-            finding = findings[0] if findings else f"NASA PSI flight dataset for {investigation.name} under {investigation.gravity.value} conditions."
-            return {
-                "primary_objective": obj[:200],
-                "fuel_material": ", ".join(getattr(f, "material_name", "") for f in investigation.fuels) or "N/A",
-                "fuel_type": investigation.fuels[0].fuel_type.value if investigation.fuels else "solid",
-                "fuel_shape": investigation.fuels[0].shape or "flat" if investigation.fuels else "flat",
-                "key_finding": finding,
-                "fire_safety_significance": f"Characterizes flammability limits and combustion behavior for {investigation.fire_safety_pillar.value}."
-            }
+            return self._fallback_summary(investigation)
 
     def summarize_batch(
         self,
@@ -211,6 +233,10 @@ class InvestigationSummarizer:
         list[dict]
             One summary dict per investigation, in input order.
         """
+        from src.pipeline import is_llm_in_cooldown, is_rate_limit_error, record_llm_rate_limit
+
+        if is_llm_in_cooldown():
+            return [self._fallback_summary(inv) for inv in investigations]
 
         prompt_inputs = [_format_investigation(inv) for inv in investigations]
         try:
@@ -220,18 +246,7 @@ class InvestigationSummarizer:
             )
             return [r.model_dump() for r in results]
         except Exception as exc:
+            if is_rate_limit_error(exc):
+                record_llm_rate_limit(exc)
             logger.warning("Summarizer batch LLM failed (%s) — using metadata fallback.", exc)
-            fallback_list = []
-            for inv in investigations:
-                obj = getattr(inv, "objectives", "") or inv.name
-                findings = getattr(inv, "key_findings", [])
-                finding = findings[0] if findings else f"NASA PSI flight dataset for {inv.name} under {inv.gravity.value} conditions."
-                fallback_list.append({
-                    "primary_objective": obj[:200],
-                    "fuel_material": ", ".join(getattr(f, "material_name", "") for f in inv.fuels) or "N/A",
-                    "fuel_type": inv.fuels[0].fuel_type.value if inv.fuels else "solid",
-                    "fuel_shape": inv.fuels[0].shape or "flat" if inv.fuels else "flat",
-                    "key_finding": finding,
-                    "fire_safety_significance": f"Characterizes flammability limits and combustion behavior for {inv.fire_safety_pillar.value}."
-                })
-            return fallback_list
+            return [self._fallback_summary(inv) for inv in investigations]

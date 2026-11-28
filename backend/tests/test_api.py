@@ -120,4 +120,22 @@ class TestAPIEndpoints(unittest.TestCase):
         self.assertIn("answer", data)
         self.assertTrue(len(data["answer"]) > 100)
 
+    def test_compare_valid_and_missing_ids(self) -> None:
+        ok_resp = self.client.post("/compare", json={"investigation_ids": ["bre", "bass"]})
+        self.assertEqual(ok_resp.status_code, 200)
+        self.assertIn("compared_investigations", ok_resp.json())
+
+        missing_resp = self.client.post("/compare", json={"investigation_ids": ["bre", "nonexistent"]})
+        self.assertEqual(missing_resp.status_code, 404)
+
+    def test_scenario_and_extrapolate_endpoints(self) -> None:
+        payload = {"scenario": "Lunar base at 34% O2 and 10.2 psi"}
+        scen = self.client.post("/scenario", json=payload)
+        self.assertEqual(scen.status_code, 200)
+        self.assertIn("ranked_investigations", scen.json())
+
+        extrap = self.client.post("/extrapolate", json=payload)
+        self.assertEqual(extrap.status_code, 200)
+        self.assertIn("sources", extrap.json())
+
 

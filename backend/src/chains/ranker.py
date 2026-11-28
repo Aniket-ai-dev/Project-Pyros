@@ -151,42 +151,48 @@ class ScenarioRanker:
             Up to *top_k* ranked investigations, most relevant first.
         """
 
+        from src.pipeline import is_llm_in_cooldown, is_rate_limit_error, record_llm_rate_limit
+
         summaries_text = "\n\n".join(
             _investigation_to_brief(inv) for inv in investigations
         )
 
-        try:
-            result: RankingResult = self._chain.invoke(
-                {
-                    "scenario": scenario,
-                    "investigation_summaries": summaries_text,
-                    "top_k": str(top_k),
-                }
-            )
-            # Ensure sorted by rank and capped
-            ranked = sorted(result.rankings, key=lambda r: r.rank)
-            return ranked[:top_k]
-        except Exception as exc:
-            logger.warning("Ranker LLM call failed (%s) — using grounded keyword ranking.", exc)
-            words = set(scenario.lower().split())
-            scored = []
-            for inv in investigations:
-                fuels_str = " ".join(getattr(f, "material_name", "") for f in inv.fuels)
-                inv_text = f"{inv.name} {inv.acronym} {inv.project} {fuels_str} {inv.gravity.value}".lower()
-                matches = [w for w in words if len(w) > 3 and w in inv_text]
-                score = round(min(0.95, 0.5 + 0.1 * len(matches)), 2)
-                scored.append((score, inv, matches))
-            scored.sort(key=lambda x: x[0], reverse=True)
-            fallback_ranked = []
-            for rank, (score, inv, matches) in enumerate(scored[:top_k], 1):
-                fallback_ranked.append(
-                    RankedInvestigation(
-                        investigation_id=inv.id,
-                        rank=rank,
-                        relevance_score=score,
-                        justification=f"Selected based on matching conditions ({', '.join(matches) if matches else 'NASA PSI baseline'}) for {inv.name}.",
-                        matching_conditions=matches if matches else ["Microgravity combustion baseline"],
-                        gaps=["Specific partial-gravity flight validation data"],
-                    )
+        if not is_llm_in_cooldown():
+            try:
+                result: RankingResult = self._chain.invoke(
+                    {
+                        "scenario": scenario,
+                        "investigation_summaries": summaries_text,
+                        "top_k": str(top_k),
+                    }
                 )
-            return fallback_ranked
+                # Ensure sorted by rank and capped
+                ranked = sorted(result.rankings, key=lambda r: r.rank)
+                return ranked[:top_k]
+            except Exception as exc:
+                if is_rate_limit_error(exc):
+                    record_llm_rate_limit(exc)
+                logger.warning("Ranker LLM call failed (%s) — using grounded keyword ranking.", exc)
+
+        words = set(scenario.lower().split())
+        scored = []
+        for inv in investigations:
+            fuels_str = " ".join(getattr(f, "material_name", "") for f in inv.fuels)
+            inv_text = f"{inv.name} {inv.acronym} {inv.project} {fuels_str} {inv.gravity.value}".lower()
+            matches = [w for w in words if len(w) > 3 and w in inv_text]
+            score = round(min(0.95, 0.5 + 0.1 * len(matches)), 2)
+            scored.append((score, inv, matches))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        fallback_ranked = []
+        for rank, (score, inv, matches) in enumerate(scored[:top_k], 1):
+            fallback_ranked.append(
+                RankedInvestigation(
+                    investigation_id=inv.id,
+                    rank=rank,
+                    relevance_score=score,
+                    justification=f"Selected based on matching conditions ({', '.join(matches) if matches else 'NASA PSI baseline'}) for {inv.name}.",
+                    matching_conditions=matches if matches else ["Microgravity combustion baseline"],
+                    gaps=["Specific partial-gravity flight validation data"],
+                )
+            )
+        return fallback_ranked
